@@ -1,9 +1,12 @@
 import { preact, JSX } from "./dep.ts"
 
+import {OSDImage} from "./ui/osd-image.tsx"
+
 
 function App(): JSX.Element {
     return <body>
         Hi.
+        <OSDImage />
     </body>
 }
 
@@ -25,15 +28,16 @@ export function Index(): JSX.Element {
     </html>
 }
 
-export function hydrate_body(body_jsx:JSX.Element, id:string): void {
-    const body: Element|null = document.querySelector(`body#${id}`)
+export function hydrate_body(body_jsx:JSX.Element): void {
+    console.log('HYDARTION!')
+    const body: Element|null = document.querySelector(`body`)
     if(body && body.parentElement) {
         preact.hydrate(body_jsx, body.parentElement)
     }
 }
 
 if(!globalThis.Deno){
-    hydrate_body(<App />, 'base')
+    hydrate_body(<App />)
 }
 
 

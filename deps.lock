@@ -10,6 +10,7 @@
     "npm:@preact/signals-core@1.12.1": "1.12.1",
     "npm:@preact/signals@2.5.1": "2.5.1_preact@10.28.0",
     "npm:@types/node@*": "24.2.0",
+    "npm:openseadragon@6.0.1": "6.0.1",
     "npm:preact-render-to-string@6.6.5": "6.6.5_preact@10.28.0",
     "npm:preact@10.28.0": "10.28.0"
   },
@@ -48,6 +49,9 @@
         "undici-types"
       ]
     },
+    "openseadragon@6.0.1": {
+      "integrity": "sha512-tXqm73FlgqkiOJ91N0vSDjHm5RVEm2RNDBP360dE5YV2XpMmawhCRWDkkVfsRg3rNe0iv32ACGUQ4jViKR542A=="
+    },
     "preact-render-to-string@6.6.5_preact@10.28.0": {
       "integrity": "sha512-O6MHzYNIKYaiSX3bOw0gGZfEbOmlIDtDfWwN1JJdc/T3ihzRT6tGGSEWE088dWrEDGa1u7101q+6fzQnO9XCPA==",
       "dependencies": [
@@ -68,6 +72,7 @@
       "jsr:@std/path@1.1.2",
       "npm:@preact/signals-core@1.12.1",
       "npm:@preact/signals@2.5.1",
+      "npm:openseadragon@6.0.1",
       "npm:preact-render-to-string@6.6.5",
       "npm:preact@10.28.0"
     ]

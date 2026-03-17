@@ -11,7 +11,7 @@ import * as preact_ssr from "preact-render-to-string/jsx";
 
 const HARDCODED_OUTPUTFILE:string = './static/index.tsx.js'
 const HARDCODED_OUTPUTFILE_INDEX_HTML:string = './static/index.html'
-const HARDCODED_INDEX_TSX:string = './ui/index.tsx'
+const HARDCODED_INDEX_TSX:string = './frontend/index.tsx'
 
 
 

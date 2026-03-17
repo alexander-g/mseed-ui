@@ -8,6 +8,8 @@
     "@std/fs":              "jsr:@std/fs@1.0.19",
     "@std/internal":        "jsr:@std/internal@1.0.10",
     "@std/path":            "jsr:@std/path@1.1.2",
+
+    "openseadragon":        "npm:openseadragon@6.0.1",
   },
   "compilerOptions": {
     "lib": ["dom", "deno.ns"],
