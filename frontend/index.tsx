@@ -1,11 +1,15 @@
 import { preact, JSX } from "./dep.ts"
 
-import {OSDImage} from "./ui/osd-image.tsx"
+import { OSDImage } from "./ui/osd-image.tsx"
+import { DropZone }  from "./ui/file-input.tsx"
 
 
+
+/** Main application class */
 function App(): JSX.Element {
     return <body>
-        Hi.
+        <DropZone />
+
         <OSDImage />
     </body>
 }
@@ -29,7 +33,6 @@ export function Index(): JSX.Element {
 }
 
 export function hydrate_body(body_jsx:JSX.Element): void {
-    console.log('HYDARTION!')
     const body: Element|null = document.querySelector(`body`)
     if(body && body.parentElement) {
         preact.hydrate(body_jsx, body.parentElement)
