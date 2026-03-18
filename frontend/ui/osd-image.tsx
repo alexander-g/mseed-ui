@@ -5,12 +5,11 @@ import {JSX}       from 'preact';
 // import * as osd from 'openseadragon';
 
 
+import { is_deno } from "../lib/util.ts";
 
 
 
-export function is_deno(): boolean {
-    return (self.Deno != undefined);
-}
+
 
 
 // NOTE: do not import openseadragon in deno, compilation will fail

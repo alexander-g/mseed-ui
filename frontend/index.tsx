@@ -1,7 +1,26 @@
 import { preact, JSX } from "./dep.ts"
 
 import { OSDImage } from "./ui/osd-image.tsx"
-import { DropZone }  from "./ui/file-input.tsx"
+import { DropZone } from "./ui/file-input.tsx"
+
+import { test_pyo } from "./lib/pyodide.ts"
+
+
+class PyoTestButton extends preact.Component {
+    render(): JSX.Element {
+        return <button 
+            type    = 'button'
+            onClick = {this.onclick}
+        >
+            PYO
+        </button>
+    }
+
+    onclick = () => {
+        console.log('click');
+        test_pyo();
+    }
+}
 
 
 
@@ -10,6 +29,7 @@ function App(): JSX.Element {
     return <body>
         <DropZone />
 
+        <PyoTestButton />
         <OSDImage />
     </body>
 }

@@ -10,6 +10,8 @@
     "@std/path":            "jsr:@std/path@1.1.2",
 
     "openseadragon":        "npm:openseadragon@6.0.1",
+
+    "pyodide" :             "npm:pyodide@0.29.3",
   },
   "compilerOptions": {
     "lib": ["dom", "deno.ns"],
