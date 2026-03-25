@@ -1,0 +1,3 @@
+[submodule "wasm-cpp/libmseed"]
+	path = wasm-cpp/libmseed
+	url = https://github.com/EarthScope/libmseed

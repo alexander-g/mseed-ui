@@ -5,7 +5,9 @@ import { Signal }  from '@preact/signals'
 
 
 
-export class DropZone extends preact.Component {
+export class DropZone extends preact.Component<{
+    on_files: (files:File[]) => void;
+}> {
 
     $background:Signal<string|null> = new Signal(null)
 
@@ -55,15 +57,24 @@ export class DropZone extends preact.Component {
             this.$background.value = null;
     }
 
-    on_drop = (event:DragEvent) => {
+    on_drop = async (event:DragEvent) => {
         event.preventDefault();
         this.$background.value = null;
+        const dropped_items:DataTransferItem[] = 
+            Array.from(event.dataTransfer?.items ?? [])
+        console.log('# of dropped items: ', dropped_items.length)
 
-        for (const item of Array.from(event.dataTransfer?.items ?? [])) {
+        const valid_files_promises:Promise<File[]>[] = []
+        for(const item of dropped_items) {
             const entry:FileSystemEntry|null = item.webkitGetAsEntry?.();
-            if (entry)
-              traverse_entry(entry);
+            if(entry)
+                valid_files_promises.push( traverse_entry(entry) );
         }
+        const valid_files:File[] = 
+            (await Promise.all(valid_files_promises)).flat()
+        
+        console.log('# of valid files: ', valid_files.length)
+        this.props.on_files(valid_files)
     }
 
 }
@@ -71,18 +82,27 @@ export class DropZone extends preact.Component {
 
 
 
-function traverse_entry(entry:FileSystemEntry, path:string = ""): void {
-    if(entry.isFile) {
-        (entry as FileSystemFileEntry).file((file) => {
-            const full_path = `${path}${file.name}`;
-            console.log("File:", full_path, file.size);
-        });
-    } else if (entry.isDirectory) {
-        const dir_reader:FileSystemDirectoryReader = 
-            (entry as FileSystemDirectoryEntry).createReader();
-        dir_reader.readEntries((entries) => {
-            for (const child of entries)
-                traverse_entry(child, `${path}${entry.name}/`);
-        });
-    }
+function traverse_entry(entry:FileSystemEntry, path:string = ""): Promise<File[]> {
+
+    const promise:Promise<File[]> = new Promise( (resolve) => {
+        if(entry.isFile) {
+            (entry as FileSystemFileEntry).file((file) => {
+                const full_path = `${path}${file.name}`;
+                //console.log("File:", full_path, file.size);
+                resolve([file]);
+            });
+        } else if(entry.isDirectory) {
+            const dir_reader:FileSystemDirectoryReader = 
+                (entry as FileSystemDirectoryEntry).createReader();
+            dir_reader.readEntries(async (entries) => {
+                const output:File[] = []
+                for(const child of entries)
+                    output.push(
+                        ...(await traverse_entry(child, `${path}${entry.name}/`))
+                    );
+                resolve(output);
+            });
+        }
+    })
+    return promise;
 }
