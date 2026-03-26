@@ -13,6 +13,7 @@
 
     "d3":                   "npm:d3@7.9.0",
     "@types/d3":            "npm:@types/d3@7.4.3",
+    "pyodide" :             "npm:pyodide@0.29.3",
   },
   "compilerOptions": {
     "lib": ["dom", "deno.ns"],
