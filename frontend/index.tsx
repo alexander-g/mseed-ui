@@ -16,14 +16,18 @@ const tremorwasm:TremorWasm = await tremorwasm_initialize()
 
 /** Main application class */
 class App extends preact.Component {
-
-    $loaded_files:Signal<MSEED_Meta[]> = new Signal([])
+    
+    $files: Signal<File[]> = new Signal([])
+    $files_metadata: Signal<MSEED_Meta[]> = new Signal([])
 
 
     render(): JSX.Element {
         return <body>
             {/* <OSDImage /> */}
-            <MSEED_Heatmap $files={this.$loaded_files} />
+            <MSEED_Heatmap 
+                $files = {this.$files_metadata} 
+                on_click = { this.on_heatmap_item_select}
+            />
             
             <DropZone on_files={this.on_files}/>
         </body>
@@ -31,6 +35,7 @@ class App extends preact.Component {
 
     on_files = async (files:File[]) => {
         const all_metas:MSEED_Meta[] = []
+        const all_files:File[] = []
 
         const t0:number = performance.now()
         for(const f of files) {
@@ -41,10 +46,29 @@ class App extends preact.Component {
             }
             
             all_metas.push(meta);
+            all_files.push(f);
         }
         const t1:number = performance.now()
         console.log(`Metadata of ${all_metas.length} files loaded in ${t1-t0}`)
-        this.$loaded_files.value = all_metas;
+        
+        this.$files_metadata.value = all_metas;
+        this.$files.value = all_files;
+    }
+    
+    
+    on_heatmap_item_select = async (selected_file_index:number) => {
+        const file:File|undefined = this.$files.value[selected_file_index];
+        if(file == undefined)
+            return;
+        
+        console.log('reading file: ', file.name)
+        const data:Int32Array|Error = await tremorwasm.read_data(file)
+        if(data instanceof Error) {
+            console.log(`Could not read mseed data of ${file.name}`)
+            return
+        }
+
+        console.log('data size:', data.length)
     }
 }
 

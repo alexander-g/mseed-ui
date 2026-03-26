@@ -27,11 +27,14 @@ export type DataItem = {
 
 
 export class D3Heatamp extends preact.Component<{
-    //cols:   number,
-    //rows:   number,
     $data:  Readonly<Signal<DataItem[]>>,
+    $x_axis:Readonly<Signal<number[]>>,
+    $y_axis:Readonly<Signal<string[]>>,
+
     width:  number,
     height: number,
+
+    on_click: (selected:number) => void,
 }> {
     static override defaultProps = { /* cols: 50, rows: 30, */ width: 1400, height: 500 };
 
@@ -109,7 +112,7 @@ export class D3Heatamp extends preact.Component<{
 
     override componentDidMount(): void {
         const z = zoom<SVGSVGElement, unknown>()
-            .scaleExtent([1, 10])
+            .scaleExtent([1, 25])
             .on("zoom", (event) => {
                 this.setState({ transform: event.transform });
             });
@@ -150,6 +153,8 @@ export class D3Heatamp extends preact.Component<{
                 // @ts-ignore this is correct 
                 axisBottom(zx)
                 .tickValues(range(0, cols, 500))
+                // TODO: too many assumptions for this component
+                .tickFormat( t => strftime('%Y-%m-%d', new Date( this.props.$x_axis.value[Number(t)]! * 1000 ) )  )
             );
         select(this.yaxis_ref.current)
             .call(
@@ -157,7 +162,6 @@ export class D3Heatamp extends preact.Component<{
                 axisLeft(zy)
                 .tickValues(range(0, rows, 5))
                 .tickFormat( d => Math.floor(Number(d)).toFixed(0)  )
-                //.tickFormat( t => strftime('%Y-%m-%d', new Date( 1984, 0, Number(t) ) )  )
             );
         
         
@@ -176,10 +180,13 @@ export class D3Heatamp extends preact.Component<{
         if(data.length == 0)
             return null;
 
-        const all_x:number[]  = data.map( item => item.x ).sort()
-        const all_y:number[]  = data.map( item => item.y ).sort()
-        const ncols:number = (new Set(all_x)).size
-        const nrows:number = (new Set(all_y)).size
+        const all_x:number[]  = data.map( item => item.x ).sort((a,b)=>a-b)
+        const all_y:number[]  = data.map( item => item.y ).sort((a,b)=>a-b)
+
+
+        const ncols:number = all_x[all_x.length-1]! - all_x[0]!
+        const nrows:number = all_y[all_y.length-1]! - all_y[0]!
+
         return {
             cols: ncols,
             rows: nrows,
@@ -192,9 +199,6 @@ export class D3Heatamp extends preact.Component<{
             return;
         const { cols, rows } = colsrows;
 
-        /* const { width, height } = this.props;
-        const w:number = width - this.margin.left - this.margin.right;
-        const h:number = height - this.margin.top - this.margin.bottom */
 
         const [h,w] = [rows, cols];
         console.log('w/h', w,h)
@@ -229,7 +233,26 @@ export class D3Heatamp extends preact.Component<{
 
     svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = pointer(event, this.svgimage_ref.current);
-        console.log(mx,my)
+        const { width, height } = this.props;
+        const w:number = width - this.margin.left - this.margin.right;
+        const h:number = height - this.margin.top - this.margin.bottom;
+        const { cols, rows } = this.#rowscols!;
+
+        const imx:number = Math.floor((mx / w) * cols);
+        const imy:number = Math.floor((my / h) * rows);
+
+
+        const items:DataItem[] = this.props.$data.value
+        for(const itemindex in items) {
+            const item:DataItem = items[itemindex]!;
+            if(item.y == imy && item.x == imx) {
+                //console.log(item, this.props.$y_axis.value[item.y], new Date( this.props.$x_axis.value[item.x]! * 1000 ));
+                console.log(`Clicked on data item ${itemindex} at ${[imx, imy]}`)
+                this.props.on_click( Number(itemindex) );
+                return;
+            }
+        }
+        console.log(`No data item at ${[imx, imy]}`)
     }
 
 

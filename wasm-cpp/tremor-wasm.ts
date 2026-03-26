@@ -38,6 +38,12 @@ export type MSEED_Meta = {
     end:   Date
     code:  string
     samplerate: number
+    nsamples:   number
+}
+
+type MSEED_ReadResult = {
+    data: Int32Array|null;
+    meta: MSEED_Meta;
 }
 
 
@@ -45,6 +51,11 @@ export class TremorWasm {
     constructor(private wasm:TremorWASM_Module){}
 
     async read_metadata(file:File): Promise<MSEED_Meta|Error> {
+        const readresult:MSEED_ReadResult|Error = await this._read(file, 0);
+        return (readresult instanceof Error)? readresult : readresult.meta;
+    }
+
+    private async _read(file:File, nsamplestoread:number): Promise<MSEED_ReadResult|Error> {
         try {
             const buffer:Uint8Array = await file.bytes()
             const buffer_p:pointer  = this.#malloc(buffer.length)
@@ -55,6 +66,14 @@ export class TremorWasm {
             const nsamples_p:   pointer = this.#malloc(8);
             const samplerate_p: pointer = this.#malloc(8);
             const code_p:       pointer = this.#malloc(32);
+            
+            nsamplestoread = Math.max(0, nsamplestoread);
+            if(nsamplestoread < 0)
+                return new Error('Invalid number of samples to read')
+            const samplebuffersize:number = 
+                nsamplestoread * Int32Array.BYTES_PER_ELEMENT;
+            const samplebuffer_p:pointer = 
+                (nsamplestoread > 0) ? this.#malloc(samplebuffersize) : 0;
 
             const rc:number = this.wasm._read_mseed(
                 buffer_p,
@@ -64,8 +83,8 @@ export class TremorWasm {
                 nsamples_p, 
                 samplerate_p, 
                 code_p,
-                /*samplebuffer     = */ 0,
-                /*samplebuffersize = */ 0,
+                samplebuffer_p,
+                nsamplestoread,
             );
             if(rc != 0)
                 return new Error('Could not read mseed meta data')
@@ -98,21 +117,48 @@ export class TremorWasm {
                 this.wasm.HEAPU8.slice(
                     code_p, 
                     code_p + 32
-                ).buffer
-            );
+                ).buffer,
+            ).replace(/\0/g, '');
+
+            const samplebuffer:Int32Array|null = 
+                (nsamplestoread > 0)
+                ? new Int32Array(
+                    this.wasm.HEAPU8.slice(
+                        samplebuffer_p, 
+                        samplebuffer_p + samplebuffersize
+                    ).buffer
+                )
+                : null;
+            
         
             const t_start = new Date(Number(starttime_u64[0]! / 1000000n))
             const t_end   = new Date(Number(endtime_u64[0]! / 1000000n))
             return {
-                start:      t_start,
-                end:        t_end,
-                code:       code,
-                samplerate: Number(samplerate_f64[0])
+                meta: {
+                    start:      t_start,
+                    end:        t_end,
+                    code:       code,
+                    samplerate: Number(samplerate_f64[0]),
+                    nsamples:   Number(nsamples_u64[0])
+                },
+                data: samplebuffer,
             }
-
+        } catch(e) {
+            console.log('WASM error:', e)
+            return e as Error;
         } finally {
             this.#free_allocated_buffers();
         }
+    }
+
+    async read_data(file:File): Promise<Int32Array|Error> {
+        const meta:MSEED_Meta|Error = await this.read_metadata(file);
+        if(meta instanceof Error)
+            return meta as Error;
+
+        const readresult:MSEED_ReadResult|Error = 
+            await this._read(file, meta.nsamples)
+        return (readresult instanceof Error)? readresult : readresult.data!;
     }
 
 
@@ -148,115 +194,3 @@ export const initialize:Iinitialize = async () => {
 }
 
 
-
-async function test_wasm() {
-    const wasm:TremorWASM_Module = 
-        // deno-lint-ignore no-explicit-any
-        await (await import('./build-wasm/wasm-mseed.js')).default() as any;
-    //console.log(wasm)
-
-
-    const t0 = performance.now()
-    const buffer:Uint8Array = Deno.readFileSync('/home/superuser/Projects/geo-ui/wasm-cpp/9Y.A02..DH2.D.2022.077')
-    const buffer_p:pointer = wasm._malloc(buffer.length)
-    wasm.HEAPU8.set(buffer, buffer_p);
-
-    const starttime_p:  pointer = wasm._malloc(8);
-    const endtime_p:    pointer = wasm._malloc(8);
-    const nsamples_p:   pointer = wasm._malloc(8);
-    const samplerate_p: pointer = wasm._malloc(8);
-    const code_p:       pointer = wasm._malloc(32);
-
-
-    const rc:number = wasm._read_mseed(
-        buffer_p,
-        BigInt(buffer.length), 
-        starttime_p, 
-        endtime_p, 
-        nsamples_p, 
-        samplerate_p, 
-        code_p,
-        /*samplebuffer     = */ 0,
-        /*samplebuffersize = */ 0,
-    );
-    const t1 = performance.now()
-    console.log(t1-t0)
-    if(rc != 0) {
-        console.log('_read_mseed failed')
-        return
-    }
-
-
-    const starttime_u64:BigUint64Array = new BigUint64Array(
-        wasm.HEAPU8.slice(
-            starttime_p, 
-            starttime_p + 8
-        ).buffer
-    )
-    const endtime_u64:BigUint64Array = new BigUint64Array(
-        wasm.HEAPU8.slice(
-            endtime_p, 
-            endtime_p + 8
-        ).buffer
-    )
-    const nsamples_u64:BigUint64Array = new BigUint64Array(
-        wasm.HEAPU8.slice(
-            nsamples_p, 
-            nsamples_p + 8
-        ).buffer
-    )
-    const samplerate_f64:Float64Array = new Float64Array(
-        wasm.HEAPU8.slice(
-            samplerate_p, 
-            samplerate_p + 8
-        ).buffer
-    )
-    const code:string = new TextDecoder().decode(
-        wasm.HEAPU8.slice(
-            code_p, 
-            code_p + 32
-        ).buffer
-    );
-
-    const t_start = new Date(Number(starttime_u64[0]! / 1000000n))
-    const t_end   = new Date(Number(endtime_u64[0]! / 1000000n))
-    console.log('>>', t_start, t_end, nsamples_u64[0], samplerate_f64[0], code)
-
-
-    const nsamples:number = Number(nsamples_u64[0]);
-    const samplebuffer_p: pointer = wasm._malloc( nsamples );
-
-    const t2 = performance.now()
-    const rc2:number = wasm._read_mseed(
-        buffer_p,
-        BigInt(buffer.length), 
-        starttime_p, 
-        endtime_p, 
-        nsamples_p, 
-        samplerate_p, 
-        code_p,
-        samplebuffer_p,
-        nsamples,
-    );
-    const t3 = performance.now()
-    console.log(t3-t2)
-    if(rc2 != 0) {
-        console.log('_read_mseed failed')
-        return
-    }
-
-    const samplebuffer:Int32Array = new Int32Array(
-        wasm.HEAPU8.slice(
-            samplebuffer_p, 
-            samplebuffer_p + nsamples*4
-        ).buffer
-    )
-    console.log(samplebuffer)
-}
-
-
-
-if(import.meta.main) {
-    await test_wasm();
-    console.log('done')
-}
