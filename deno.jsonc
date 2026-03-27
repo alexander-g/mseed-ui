@@ -18,7 +18,6 @@
   "compilerOptions": {
     "lib": ["dom", "deno.ns"],
     "jsx": "react-jsx",
-    //"jsxImportSource": "https://esm.sh/preact@10.29.0",
     "jsxImportSource": "npm:preact@10.28.0",
 
     //to make sure that [][0] gives undefined
@@ -29,15 +28,15 @@
     "frozen": true
   },
   "tasks": {
-    //"compile_index": "./build.ts",
-    //"bundle_deps"  : "./backend/ts/esbuild.ts",
-    //"cache":         "deno cache --allow-import ./ui/dep.ts && touch /tmp/blargh.js && deno bundle /tmp/blargh.js && rm /tmp/blargh.js"
-    "install":        "deno install && deno task install-bundle",
+    "install": "deno install && deno task install-bundle && deno task install-pyodide",
 
     // still need to add --frozen=false after task: "deno task --frozen-false install-update"
     "install-update": "deno install --frozen=false",
 
     // to download esbuild
-    "install-bundle": "touch /tmp/blargh.js && deno bundle /tmp/blargh.js && rm /tmp/blargh.js"
+    "install-bundle": "touch /tmp/blargh.js && deno bundle /tmp/blargh.js && rm /tmp/blargh.js",
+
+    // to download all pyodide dependencies
+    "install-pyodide": "deno run --allow-read=./ --allow-write=./ --allow-net=cdn.jsdelivr.net frontend/lib/pyodide.ts"
   }
 }

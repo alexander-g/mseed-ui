@@ -6,11 +6,14 @@ import * as path from "@std/path"
 // NOTE: adding /jsr for pretty rendering
 import * as preact_ssr from "preact-render-to-string/jsx";
 
+import { initialize, type PYO } from "./frontend/lib/pyodide.ts"
 
 
 
-const HARDCODED_OUTPUTFILE:string = './static/index.tsx.js'
-const HARDCODED_OUTPUTFILE_INDEX_HTML:string = './static/index.html'
+const HARDCODED_OUTPUTDIR:string = 
+    path.fromFileUrl(import.meta.resolve('./static') )
+const HARDCODED_OUTPUTFILE_INDEX_JS:string   = 'index.tsx.js'
+const HARDCODED_OUTPUTFILE_INDEX_HTML:string = 'index.html'
 const HARDCODED_INDEX_TSX:string = './frontend/index.tsx'
 
 
@@ -75,9 +78,10 @@ async function bundle_index_js() {
             new Error(`Expected one output file. Got ${output.outputFiles.length}`)
         )
     
-    const outputfile:string = HARDCODED_OUTPUTFILE;
-    fs.ensureDirSync(path.dirname(outputfile));
-    Deno.writeTextFileSync(outputfile, output.outputFiles[0]!.text())
+    const outputpath:string = 
+        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_JS)
+    fs.ensureDirSync(path.dirname(outputpath));
+    Deno.writeTextFileSync(outputpath, output.outputFiles[0]!.text())
 }
 
 
@@ -93,15 +97,46 @@ async function compile_index_html() {
     const main_element:any = module.Index()
     const rendered:string  = preact_ssr.render(main_element, {}, {pretty:true})
 
-    const outputfile:string = HARDCODED_OUTPUTFILE_INDEX_HTML;
-    fs.ensureDirSync(path.dirname(outputfile));
-    Deno.writeTextFileSync(outputfile, rendered)
+    const outputpath:string = 
+        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_HTML)
+    fs.ensureDirSync(path.dirname(outputpath));
+    Deno.writeTextFileSync(outputpath, rendered)
 }
 
 
+async function copy_pyodide_files() {
+    const pyo:PYO|Error = await initialize()
+    if(pyo instanceof Error)
+        throw pyo as Error;
+
+    const filepaths:string[]|Error = pyo.get_files_for_vendoring();
+    if(filepaths instanceof Error)
+        throw filepaths as Error;
+
+    for(const filepath of filepaths) {
+        const basename:string = path.basename(filepath)
+        const outputpath:string = path.join(HARDCODED_OUTPUTDIR, basename)
+        Deno.copyFileSync(filepath, outputpath)
+    }
+}
+
+function clear_outputdir() {
+    try {
+        Deno.removeSync(HARDCODED_OUTPUTDIR, {recursive:true})
+    // deno-lint-ignore no-empty
+    } catch {}
+    fs.ensureDirSync(HARDCODED_OUTPUTDIR);
+}
+
+
+
+
 if(import.meta.main) {
+    clear_outputdir()
     await compile_index_html();
     await bundle_index_js();
+    await copy_pyodide_files();
+    console.log('done')
 }
 
 

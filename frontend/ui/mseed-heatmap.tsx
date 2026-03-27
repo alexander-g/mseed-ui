@@ -12,13 +12,21 @@ const HARDCODED_BIN_LENGTH_SECONDS:number = 60*5;
 
 
 type DataItemWithFile = DataItem & {
-    fileindex:number
+    fileindex: number,
+    timestamp: number,
+}
+
+export type InferenceEvent = {
+    code:string,
+    time:Date
 }
 
 
+
 export class MSEED_Heatmap extends preact.Component<{
-    $files: Readonly< Signal<MSEED_Meta[]> >
-    on_click: (selected_file_index:number) => void,
+    $files: Readonly< Signal<MSEED_Meta[]> >,
+    $inference: Readonly<Signal<InferenceEvent[]> >,
+    on_click: (selected_file_index:number, i0:number, i1:number) => void,
 }> {
     render(): JSX.Element {
         return <D3Heatamp
@@ -40,6 +48,10 @@ export class MSEED_Heatmap extends preact.Component<{
             this.$transformed_files.value = []
             return;
         }
+
+        const inference:InferenceEvent[] = this.props.$inference.value;
+        const inferencemap = inference2map(inference)
+
 
         const all_times:number[] = 
             files.map( item => [item.start.getTime(), item.end.getTime()] )
@@ -78,10 +90,19 @@ export class MSEED_Heatmap extends preact.Component<{
             const yindex:number = all_codes.indexOf(meta.code)
 
 
-            for(let j:number = index0; j < index1+1; j++)
+            for(let j:number = index0; j < index1+1; j++) {
+                const d = new Date( (j*HARDCODED_BIN_LENGTH_SECONDS+tstart)*1000 )
                 all_items.push( 
-                    {x:j, y:yindex, value:Math.random(), fileindex:Number(i)} 
+                    {
+                        x:         j, 
+                        y:         yindex, 
+                        //value:     Math.random(), 
+                        value:     find_inference(inferencemap, meta.code, d) * 0.9 + Math.random()*0.1,
+                        fileindex: Number(i), 
+                        timestamp: j*HARDCODED_BIN_LENGTH_SECONDS+tstart 
+                    } 
                 );
+            }
         }
         this.$transformed_files.value = all_items;
     })
@@ -93,8 +114,17 @@ export class MSEED_Heatmap extends preact.Component<{
             console.log(`No corresponding item for index ${index}`)
             return;
         }
+        const meta:MSEED_Meta = this.props.$files.value[item.fileindex]!
+        
+        const meta_start_s = meta.start.getTime() / 1000
+        const t0 = item.timestamp;
 
-        this.props.on_click(item.fileindex);
+        const start_seconds_within_file = t0 - meta_start_s;
+        console.log('DEBUG:', meta_start_s, t0, start_seconds_within_file)
+        
+        const i0 = (start_seconds_within_file) * meta.samplerate;
+        const i1 = (start_seconds_within_file + HARDCODED_BIN_LENGTH_SECONDS) * meta.samplerate;
+        this.props.on_click(item.fileindex, i0, i1);
     }
 
 
@@ -123,3 +153,28 @@ export class MSEED_Heatmap extends preact.Component<{
 }
 
 
+
+function inference2map(inferences:InferenceEvent[]): Record<string, Date[]> {
+    const output:Record<string, Date[]> = {}
+    for(const inference of inferences) {
+        output[inference.code] = (output[inference.code] ?? []).concat([inference.time])
+    }
+    return output;
+}
+
+function find_inference(inferencemap:Record<string, Date[]>, code:string, date:Date) {
+    for(const eventtime of inferencemap[code] ?? []) {
+        if(eventtime.getTime() == date.getTime())
+            return 1;
+    }
+    return 0;
+}
+
+
+function _find_inference(inference:InferenceEvent[], code:string, date:Date) {
+    for(const event of inference) {
+        if(event.code == code && event.time.getTime() == date.getTime())
+            return 1;
+    }
+    return 0;
+}

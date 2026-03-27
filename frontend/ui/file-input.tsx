@@ -81,28 +81,32 @@ export class DropZone extends preact.Component<{
 
 
 
+async function traverse_entry(entry:FileSystemEntry): Promise<File[]> {
+    if(entry.isFile) {
+        const f:File = await new Promise( (resolve) => {
+            (entry as FileSystemFileEntry).file(resolve)
+        } )
+        return [f]
+    } else if(entry.isDirectory) {
+        const dir_reader:FileSystemDirectoryReader = 
+            (entry as FileSystemDirectoryEntry).createReader();
 
-function traverse_entry(entry:FileSystemEntry, path:string = ""): Promise<File[]> {
+        const all:FileSystemEntry[] = []
+        // NOTE: chrome only returns 100 entries at a time, therefore while loop
+        while(true) {
+            const entries:FileSystemEntry[] = await new Promise( (resolve) => {
+                dir_reader.readEntries(resolve)
+            } )
+            if(entries.length == 0)
+                break;
 
-    const promise:Promise<File[]> = new Promise( (resolve) => {
-        if(entry.isFile) {
-            (entry as FileSystemFileEntry).file((file) => {
-                const full_path = `${path}${file.name}`;
-                //console.log("File:", full_path, file.size);
-                resolve([file]);
-            });
-        } else if(entry.isDirectory) {
-            const dir_reader:FileSystemDirectoryReader = 
-                (entry as FileSystemDirectoryEntry).createReader();
-            dir_reader.readEntries(async (entries) => {
-                const output:File[] = []
-                for(const child of entries)
-                    output.push(
-                        ...(await traverse_entry(child, `${path}${entry.name}/`))
-                    );
-                resolve(output);
-            });
+            all.push(...entries)
         }
-    })
-    return promise;
+        
+        const all_files:File[] = []
+        for(const entry of all)
+            all_files.push( ...(await traverse_entry(entry)) )
+        return all_files
+    } else
+        return []
 }

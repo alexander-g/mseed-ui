@@ -102,8 +102,6 @@ export class D3Heatamp extends preact.Component<{
     #rowscols:{cols:number, rows:number}|null = null
 
     #_ = this.props.$data.subscribe( () => {
-        console.log('$data', this.props.$data.value.length);
-        
         this.#rowscols = this.#get_rows_cols()
         this.update_axes()
         this.update_heatmap()
@@ -215,9 +213,9 @@ export class D3Heatamp extends preact.Component<{
         const buffer:Uint8ClampedArray = imdata.data; // w*h*4
         for(const item of this.props.$data.value) {
             const index:number = item.y * w * 4 + item.x * 4;
-            buffer[index + 0] = (item.y / h) * 255; 
+            buffer[index + 0] = item.value * 255; 
             buffer[index + 1] = item.value * 255;
-            buffer[index + 2] = item.value * 255;
+            buffer[index + 2] = 0;
             buffer[index + 3] = 255;
         }
         ctx.putImageData(imdata,0,0);
