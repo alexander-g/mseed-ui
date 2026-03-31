@@ -1,6 +1,6 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
 
-import {type MSEED_Meta} from "../../wasm-cpp/tremor-wasm.ts"
+import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
 import { D3Heatamp, type DataItem } from "../ui/d3-heatmap.tsx"
 
 import { range } from 'd3';

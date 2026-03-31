@@ -1,3 +1,4 @@
 static/
 *.tar
 wasm-cpp/build*
+tests/coverage

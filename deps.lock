@@ -474,6 +474,10 @@
       "integrity": "sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg=="
     }
   },
+  "remote": {
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assert.ts": "b22b57c970931709293a7a4c1e8260588985105349dbe98aec5bf6eb6b792284",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assertion_error.ts": "f0af4185f68c474917279205950926ab66cfcee5d0211889d86a12c90cc9ba90"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@std/fs@1.0.19",

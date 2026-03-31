@@ -8,7 +8,7 @@ import {
     initialize as tremorwasm_initialize,
     type TremorWasm,
     type MSEED_Meta,
-} from "../wasm-cpp/tremor-wasm.ts"
+} from "../wasm-cpp/mseed-wasm.ts"
 
 
 const tremorwasm:TremorWasm = await tremorwasm_initialize()

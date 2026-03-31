@@ -65,7 +65,6 @@ async function bundle_index_js() {
     })
 
     if(!output.success) {
-        //TODO: return new Error(`deno bundle failed with code ${output.code}`)
         const errormessages:string = output.errors.map(
             (e:{text:string}) => e.text
         ).join('\n\n')
@@ -135,7 +134,10 @@ if(import.meta.main) {
     clear_outputdir()
     await compile_index_html();
     await bundle_index_js();
-    await copy_pyodide_files();
+    
+    if(!Deno.args.includes('--no-pyodide'))
+        await copy_pyodide_files();
+
     console.log('done')
 }
 
