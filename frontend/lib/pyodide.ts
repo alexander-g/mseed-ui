@@ -60,15 +60,19 @@ plt.close(fig)
 
 
 
-export async function initialize(): Promise<PYO|Error> {
-    try{
+const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.29.3/full'
+
+
+
+export
+async function initialize(vendored:boolean = is_deno()): Promise<PYO|Error> {
+    try {
         const pyodide:pyo.PyodideAPI = await pyo.loadPyodide({
-            // if in browser, files are vendored
-            indexURL: is_deno()? undefined : '',
+            indexURL: vendored? '' : PYODIDE_CDN_URL,
+            packageBaseUrl: (is_deno() || vendored)? undefined : PYODIDE_CDN_URL,
+            packages: ['numpy', 'matplotlib']
         });
 
-        await pyodide.loadPackage('numpy')
-        await pyodide.loadPackage('matplotlib')
         pyodide.runPythonAsync("import numpy as np; import matplotlib.pylab as plt;");
 
         return new PYO(pyodide);

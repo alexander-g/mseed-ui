@@ -3,6 +3,7 @@ import { preact, Signal, JSX } from "./dep.ts"
 import { DropZone }  from "./ui/file-input.tsx"
 import { MSEED_Heatmap, type InferenceEvent } from "./ui/mseed-heatmap.tsx"
 import { initialize as pyo_initialize, PYO } from "./lib/pyodide.ts"
+import { is_deno } from "./lib/util.ts";
 
 import {
     initialize as tremorwasm_initialize,
@@ -15,6 +16,19 @@ const tremorwasm:TremorWasm = await tremorwasm_initialize()
 
 
 
+
+
+export type AppConfig = null | {
+    /** Whether to fetch pyodide files from "/" (true) or from CDN (false) */
+    pyodide_vendored: boolean,
+}
+
+// app config is set during build in a <script> inside <Head>
+declare global {
+    interface Window {
+        app_config: AppConfig;
+    }
+}
 
 
 
@@ -75,7 +89,9 @@ class App extends preact.Component {
     }
 
     override async componentDidMount(): Promise<void> {
-        const pyo:PYO|Error = await pyo_initialize()
+        const pyodide_vendored:boolean = 
+            self.app_config?.pyodide_vendored ?? is_deno();
+        const pyo:PYO|Error = await pyo_initialize(pyodide_vendored)
         if(pyo instanceof Error) {
             console.error('Could not load pyodide')
             console.error(pyo as Error)
@@ -133,19 +149,29 @@ async function read_csv_inference_file(file:File): Promise<InferenceEvent[]|Erro
 }
 
 
-function Head(props:{title:string, import_src:string}): JSX.Element {
+type HeadProps = {
+    title:      string,
+    import_src: string,
+    config:     AppConfig,
+}
+
+function Head(props:HeadProps): JSX.Element {
+    const configjson:string = JSON.stringify(props.config).replace(/</g, "\\u003c");
     return <head>
         <title>{ props.title }</title>
         <script type="module" src={props.import_src}></script>
+        <script dangerouslySetInnerHTML={ {
+            __html: `window.app_config = ${ configjson }`
+        } } />
     </head>
 }
 
 
 
 /** Main JSX entry point */
-export function Index(): JSX.Element {
+export function Index(config?:AppConfig): JSX.Element {
     return <html>
-        <Head title="Tremor UI" import_src="index.tsx.js" />
+        <Head title="MSEED UI" import_src="index.tsx.js" config={config ?? null}/>
         <App />
     </html>
 }
