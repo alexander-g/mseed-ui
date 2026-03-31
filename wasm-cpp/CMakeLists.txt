@@ -23,13 +23,6 @@ else()
   set(RUNNING_EMSCRIPTEN FALSE)
 endif()
 
-if(NOT RUNNING_EMSCRIPTEN)
-    add_executable(wasm-mseed src/wasm-mseed.cpp)
-    target_link_libraries(wasm-mseed PRIVATE mseed::mseed)
-    target_compile_options(wasm-mseed PRIVATE -g3)
-    target_link_options(wasm-mseed PRIVATE -static-libstdc++ -static-libgcc)
-endif()
-
 
 
 if(RUNNING_EMSCRIPTEN)

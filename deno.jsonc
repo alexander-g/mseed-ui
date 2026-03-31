@@ -5,6 +5,8 @@
     "@preact/signals-core": "npm:@preact/signals-core@1.12.1",
     "preact-render-to-string": "npm:preact-render-to-string@6.6.5",
 
+    // to hell with jsr
+    "asserts":              "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assert.ts",
     "@std/fs":              "jsr:@std/fs@1.0.19",
     "@std/internal":        "jsr:@std/internal@1.0.10",
     "@std/path":            "jsr:@std/path@1.1.2",

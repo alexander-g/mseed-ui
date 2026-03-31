@@ -1,0 +1,56 @@
+name: CI
+
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release:
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      
+      - uses: pyodide/setup-emsdk@v15
+        with:
+          version: 3.1.69
+          actions-cache-folder: 'emsdk-cache'
+      
+      - name: Build-WASM
+        run: |
+          emcc -v
+          mkdir wasm-cpp/build-wasm
+          cd wasm-cpp/build-wasm
+          emcmake cmake ..                      \
+            -DCMAKE_BUILD_TYPE=Release          \
+            -DCMAKE_VERBOSE_MAKEFILE=ON
+          emmake make
+          # ../../deno.sh bundle --minify --outdir=./bundle ../wasm-cpp/mseed-wasm.ts
+      
+      - name: Deno
+        run: |
+          ./deno.sh task install
+      
+      - name: Test
+        run: |
+          ./run_tests.sh
+      
+      - name: Build-App
+        run: |
+          ./build.ts --no-pyodide
+      
+      - name: Archive Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: modules
+          path: |
+            static/*
+          if-no-files-found: error
+
