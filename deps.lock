@@ -476,7 +476,18 @@
   },
   "remote": {
     "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assert.ts": "b22b57c970931709293a7a4c1e8260588985105349dbe98aec5bf6eb6b792284",
-    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assertion_error.ts": "f0af4185f68c474917279205950926ab66cfcee5d0211889d86a12c90cc9ba90"
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assertion_error.ts": "f0af4185f68c474917279205950926ab66cfcee5d0211889d86a12c90cc9ba90",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_common.ts": "1099c104b2c716c52d0759c7d4a518ed1d509a867fad4c18c724e224e51f5b7a",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_entities.ts": "15d876a3267f8063076beff812bc20a16a0184d69b2bfba0068f954e326005eb",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_name_chars.ts": "4dbc4c0feb91d745e9a9b16be3daa8212bcd3fc0f708030ed6eefd6b0fddb978",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_parse_sync.ts": "f1edadbfedaca05b367344827f6de6d19f59aa79597ad6dafb2db9e748f41a1f",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_parser.ts": "572c19fc2c5bad3f0855ad917670ec0444b46488826cd3857d09999029ff6806",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/_tokenizer.ts": "d592a38ed119608f8bc4ed55878fb306eb94c7f78a1687636c105d9a58f8e3ea",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/mod.ts": "be531f40fe22ea40cab195357c65e1959628b9a3bddd6ebf2f55eddf4ae44a17",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/parse.ts": "b04576528b801cf99b65e5c9007257bdb3ec5d3728cb7896e1ce7683b9348215",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/parse_stream.ts": "2686a7c7a5f4e6093fa031e28e2bf63aa1a2853ec2c2f01b8a71cfbfa41ec159",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/stringify.ts": "b7d1adaa22fbef1d4560d4ff9bc9860e4059dc2a82e7cb16d6b602e02147f5c2",
+    "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/types.ts": "91905d514cc777c6db48893751541583f62677841f4be537a389af9cfd427826"
   },
   "workspace": {
     "dependencies": [

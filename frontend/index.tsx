@@ -1,18 +1,25 @@
 import { preact, Signal, JSX } from "./dep.ts"
 
 import { DropZone }  from "./ui/file-input.tsx"
-import { MSEED_Heatmap, type InferenceEvent } from "./ui/mseed-heatmap.tsx"
-import { initialize as pyo_initialize, PYO } from "./lib/pyodide.ts"
+import { 
+    MSEED_Heatmap, 
+    type InferenceEvent 
+} from "./ui/mseed-heatmap.tsx"
+import { 
+    initialize as pyo_initialize, 
+    type PYO 
+} from "./lib/pyodide.ts"
+import { 
+    process_dropped_files, 
+    tremorwasm,  
+    type ProcessedFiles 
+} from "./lib/file-input.ts"
 import { is_deno } from "./lib/util.ts";
 
-import {
-    initialize as tremorwasm_initialize,
-    type TremorWasm,
-    type MSEED_Meta,
-} from "../wasm-cpp/mseed-wasm.ts"
+import { type MSEED_Meta } from "../wasm-cpp/mseed-wasm.ts"
 
 
-const tremorwasm:TremorWasm = await tremorwasm_initialize()
+//const tremorwasm:TremorWasm = await tremorwasm_initialize()
 
 
 
@@ -58,34 +65,20 @@ class App extends preact.Component {
     }
 
     on_files = async (files:File[]) => {
-        const all_metas:MSEED_Meta[] = []
-        const all_inference_events:InferenceEvent[] = []
-        const all_files:File[] = []
 
         const t0:number = performance.now()
-        for(const f of files) {
-            const meta:MSEED_Meta|Error = await tremorwasm.read_metadata(f)
-            if(meta instanceof Error) {
-                const inference:InferenceEvent[]|Error = await read_csv_inference_file(f)
-                if(inference instanceof Error){
-                    console.log(`Could not read ${f.name}`)
-                    continue;
-                }
-                
-                all_inference_events.push(...inference);
-                continue;
-            }
-            
-            all_metas.push(meta);
-            all_files.push(f);
-        }
+        const processed:ProcessedFiles = await process_dropped_files(files)
         const t1:number = performance.now()
-        console.log(`Metadata of ${all_metas.length} files loaded in ${t1-t0}`)
-        console.log(`${all_inference_events.length} inference events loaded`)
+
+        console.log(`Files loaded in ${t1-t0} ms`)
+        console.log(`# of MSEED files:      ${processed.mseeds.length}`)
+        console.log(`# of stations:         ${processed.stations.length}`)
+        console.log(`# of inference events: ${processed.inference_events.length}`)
+        console.log(`# of unknown files:    ${processed.unknown_files.length}`)
         
-        this.$inference.value = all_inference_events;
-        this.$files_metadata.value = all_metas;
-        this.$files.value = all_files;
+        this.$inference.value      = processed.inference_events;
+        this.$files_metadata.value = processed.mseeds.map( m => m.meta );
+        this.$files.value          = processed.mseeds.map( m => m.file );
     }
 
     override async componentDidMount(): Promise<void> {
@@ -127,26 +120,6 @@ class App extends preact.Component {
 
 
 
-async function read_csv_inference_file(file:File): Promise<InferenceEvent[]|Error> {
-    try {
-        const code:string = file.name.split('.').slice(0,4).join('.')
-        const content:string = await file.text()
-        const lines:string[] = content.trim().split('\n')
-
-        const inference:InferenceEvent[] = []
-        for(const line of lines) {
-            const d = new Date(line)
-            if(isNaN(d.getTime())) {
-                return new Error();
-            }
-
-            inference.push( {code, time:d} )
-        }
-        return inference;
-    } catch {
-        return new Error('Could not read inference csv file')
-    }
-}
 
 
 type HeadProps = {

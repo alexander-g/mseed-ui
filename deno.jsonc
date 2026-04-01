@@ -7,6 +7,8 @@
 
     // to hell with jsr
     "asserts":              "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2025.08.13/assert/assert.ts",
+    "xml":                  "https://raw.githubusercontent.com/denoland/std/refs/tags/release-2026.02.20/xml/mod.ts",
+
     "@std/fs":              "jsr:@std/fs@1.0.19",
     "@std/internal":        "jsr:@std/internal@1.0.10",
     "@std/path":            "jsr:@std/path@1.1.2",
