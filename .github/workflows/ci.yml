@@ -32,7 +32,6 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release          \
             -DCMAKE_VERBOSE_MAKEFILE=ON
           emmake make
-          # ../../deno.sh bundle --minify --outdir=./bundle ../wasm-cpp/mseed-wasm.ts
       
       - name: Deno
         run: |
@@ -44,13 +43,45 @@ jobs:
       
       - name: Build-App
         run: |
-          ./build.ts --no-pyodide
+          ./build.ts --no-pyodide --minify
       
       - name: Archive Build
         uses: actions/upload-artifact@v4
         with:
-          name: modules
+          name: pagebuild
           path: |
             static/*
           if-no-files-found: error
 
+  deploy:
+    needs:   build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: ${{ github.event.inputs.release == 'true' }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pagebuild
+          path: artifact/
+
+      - name: Release
+        run: |
+          TAGNAME=v$(date +%F)
+          echo $TAGNAME
+
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp artifact/index.* ./
+          rm -r artifact
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ./index.*
+          git commit -m "$TAGNAME"
+          git tag --force $TAGNAME
+          git push origin gh-pages
+          git push origin --tags
