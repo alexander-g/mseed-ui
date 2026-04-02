@@ -1,4 +1,5 @@
-import { preact, Signal, JSX } from "../dep.ts"
+import { preact, Signal, signals, JSX } from "../dep.ts"
+import { OverlayDiv } from "./overlay-div.tsx";
 
 import * as d3 from "d3";
 import * as d3tile from "d3-tile"
@@ -35,12 +36,15 @@ export class D3Map extends preact.Component<D3MapProps> {
     /** SVG bubbles */
     $svg_annotations:Signal<JSX.Element[]> = new Signal([])
 
+    $markers_empty:Readonly<Signal<boolean>> = signals.computed(
+        () => (this.props.$markers.value.length == 0)
+    )
 
 
     render(): JSX.Element {
         const { width, height } = this.props;
 
-        return <div class="d3-container d3-map">
+        return <div class="d3-container d3-map" style={{position:"relative"}}>
             <svg
                 ref = {this.svg_ref} 
                 // TODO: viewbox =
@@ -57,6 +61,10 @@ export class D3Map extends preact.Component<D3MapProps> {
                     { this.$svg_annotations }
                 </g>
             </svg>
+
+            <OverlayDiv $visible={this.$markers_empty} >
+                No stations loaded.
+            </OverlayDiv>
         </div>
     }
 

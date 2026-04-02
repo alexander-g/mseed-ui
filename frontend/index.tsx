@@ -10,6 +10,7 @@ import {
     initialize as pyo_initialize, 
     type PYO 
 } from "./lib/pyodide.ts"
+import { PlotImage } from "./ui/plot-image.tsx"
 
 import { 
     process_dropped_files, 
@@ -51,7 +52,7 @@ class App extends preact.Component {
     $inference: Signal<InferenceEvent[]>  = new Signal([])
     $stations:  Signal<Station[]> = new Signal([])
 
-    plotimg_ref:preact.RefObject<HTMLImageElement> = preact.createRef()
+    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
 
     $initialized: Readonly<Signal<boolean>> = signals.computed(
         () => this.$files.value.length > 0
@@ -65,8 +66,14 @@ class App extends preact.Component {
                 $inference = {this.$inference}
                 on_click   = {this.on_heatmap_item_select}
             />
-            <img ref={this.plotimg_ref}/>
-            <D3Map $markers={this.$stations} />
+            <div
+                style = {{
+                    display: 'flex'
+                }}
+            >
+                <PlotImage ref={this.plotimg_ref} />
+                <D3Map $markers={this.$stations} />
+            </div>
             
             <DropZone 
                 $initialized = {this.$initialized}
@@ -120,13 +127,7 @@ class App extends preact.Component {
         console.log('data size:', data.length, i0, i1)
 
         const pngfile:File = await this.pyodide!.plot_data( data.slice(i0, i1) )
-        const objurl:string = URL.createObjectURL(pngfile)
-        this.plotimg_ref.current!.src = objurl
-        this.plotimg_ref.current?.addEventListener(
-            'load',
-            () => URL.revokeObjectURL(objurl),
-            {once:true}
-        )
+        this.plotimg_ref.current?.set_src(pngfile)
     }
 }
 
