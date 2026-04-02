@@ -5,16 +5,19 @@ import {
     MSEED_Heatmap, 
     type InferenceEvent 
 } from "./ui/mseed-heatmap.tsx"
+import { D3Map } from "./ui/d3-map.tsx"
 import { 
     initialize as pyo_initialize, 
     type PYO 
 } from "./lib/pyodide.ts"
+
 import { 
     process_dropped_files, 
     tremorwasm,  
     type ProcessedFiles 
-} from "./lib/file-input.ts"
-import { is_deno } from "./lib/util.ts";
+}                       from "./lib/file-input.ts"
+import type { Station } from "./lib/station-xml.ts"
+import { is_deno }      from "./lib/util.ts";
 
 import { type MSEED_Meta } from "../wasm-cpp/mseed-wasm.ts"
 
@@ -46,6 +49,7 @@ class App extends preact.Component {
     $files: Signal<File[]> = new Signal([])
     $files_metadata: Signal<MSEED_Meta[]> = new Signal([])
     $inference: Signal<InferenceEvent[]>  = new Signal([])
+    $stations:  Signal<Station[]> = new Signal([])
 
     plotimg_ref:preact.RefObject<HTMLImageElement> = preact.createRef()
 
@@ -56,9 +60,10 @@ class App extends preact.Component {
             <MSEED_Heatmap 
                 $files     = {this.$files_metadata} 
                 $inference = {this.$inference}
-                on_click   = { this.on_heatmap_item_select}
+                on_click   = {this.on_heatmap_item_select}
             />
             <img ref={this.plotimg_ref}/>
+            <D3Map $markers={this.$stations} />
             
             <DropZone on_files={this.on_files}/>
         </body>
@@ -79,6 +84,7 @@ class App extends preact.Component {
         this.$inference.value      = processed.inference_events;
         this.$files_metadata.value = processed.mseeds.map( m => m.meta );
         this.$files.value          = processed.mseeds.map( m => m.file );
+        this.$stations.value       = processed.stations
     }
 
     override async componentDidMount(): Promise<void> {

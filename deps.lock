@@ -9,8 +9,10 @@
     "jsr:@std/path@^1.1.1": "1.1.2",
     "npm:@preact/signals-core@1.12.1": "1.12.1",
     "npm:@preact/signals@2.5.1": "2.5.1_preact@10.28.0",
+    "npm:@types/d3-tile@1.0.1": "1.0.1",
     "npm:@types/d3@7.4.3": "7.4.3",
     "npm:@types/node@*": "24.2.0",
+    "npm:d3-tile@1.0.0": "1.0.0",
     "npm:d3@7.9.0": "7.9.0_d3-selection@3.0.0",
     "npm:openseadragon@6.0.1": "6.0.1",
     "npm:preact-render-to-string@6.6.5": "6.6.5_preact@10.28.0",
@@ -147,6 +149,12 @@
       "integrity": "sha512-lae0iWfcDeR7qt7rA88BNiqdvPS5pFVPpo5OfjElwNaT2yyekbM0C9vK+yqBqEmHr6lDkRnYNoTBYlAgJa7a4w==",
       "dependencies": [
         "@types/d3-path"
+      ]
+    },
+    "@types/d3-tile@1.0.1": {
+      "integrity": "sha512-xOGszy0zoRtbqxUdybhQp8CpYaY6SlRE+EIB8WQTPPFmDKwcKDWU4ErcsozVSL65TrepIDnfGBTIPexvxkyeNw==",
+      "dependencies": [
+        "@types/d3-zoom"
       ]
     },
     "@types/d3-time-format@4.0.3": {
@@ -353,6 +361,9 @@
         "d3-path"
       ]
     },
+    "d3-tile@1.0.0": {
+      "integrity": "sha512-79fnTKpPMPDS5xQ0xuS9ir0165NEwwkFpe/DSOmc2Gl9ldYzKKRDWogmTTE8wAJ8NA7PMapNfEcyKhI9Lxdu5Q=="
+    },
     "d3-time-format@4.1.0": {
       "integrity": "sha512-dJxPBlzC7NugB2PDLwo9Q8JiTR3M3e4/XANkreKSUxF8vvXKqm1Yfq4Q5dl8budlunRVlUUaDUgFt7eA8D6NLg==",
       "dependencies": [
@@ -496,7 +507,9 @@
       "jsr:@std/path@1.1.2",
       "npm:@preact/signals-core@1.12.1",
       "npm:@preact/signals@2.5.1",
+      "npm:@types/d3-tile@1.0.1",
       "npm:@types/d3@7.4.3",
+      "npm:d3-tile@1.0.0",
       "npm:d3@7.9.0",
       "npm:openseadragon@6.0.1",
       "npm:preact-render-to-string@6.6.5",
