@@ -1,4 +1,4 @@
-import { preact, Signal, JSX } from "./dep.ts"
+import { preact, Signal, signals, JSX } from "./dep.ts"
 
 import { DropZone }  from "./ui/file-input.tsx"
 import { 
@@ -53,6 +53,9 @@ class App extends preact.Component {
 
     plotimg_ref:preact.RefObject<HTMLImageElement> = preact.createRef()
 
+    $initialized: Readonly<Signal<boolean>> = signals.computed(
+        () => this.$files.value.length > 0
+    )
 
     render(): JSX.Element {
         return <body>
@@ -65,7 +68,10 @@ class App extends preact.Component {
             <img ref={this.plotimg_ref}/>
             <D3Map $markers={this.$stations} />
             
-            <DropZone on_files={this.on_files}/>
+            <DropZone 
+                $initialized = {this.$initialized}
+                on_files     = {this.on_files}
+            />
         </body>
     }
 

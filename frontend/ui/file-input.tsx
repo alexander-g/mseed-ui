@@ -3,13 +3,27 @@ import { JSX }     from 'preact'
 import { Signal }  from '@preact/signals'
 
 
+const MESSAGE_UNINITIALIZED = 'Drop MSEED files to get started.'
+const MESSAGE_CAN_DROP      = 'Drop files here.'
+const MESSAGE_LOADING       = 'Loading...'
+
+const BACKGROUNDCOLOR_UNINITIALIZED = 'honeydew'
+const BACKGROUNDCOLOR_CAN_DROP      = 'lightblue'
 
 
 export class DropZone extends preact.Component<{
-    on_files: (files:File[]) => void;
+    $initialized: Readonly<Signal<boolean>>
+    on_files:     (files:File[]) => void|Promise<void>;
 }> {
 
-    $background:Signal<string|null> = new Signal(null)
+    $css_display:Signal<'none'|'flex'> = new Signal('flex')
+    $background: Signal<string|null>   = new Signal(BACKGROUNDCOLOR_UNINITIALIZED)
+    $message:    Signal<string>        = new Signal(MESSAGE_UNINITIALIZED)
+    $opacity:    Signal<0|1>           = new Signal(1)
+
+    #_ = this.props.$initialized.subscribe(
+        (value:boolean) => { this.$opacity.value = value? 0 : 1; }
+    )
 
     render(): JSX.Element {
         return <div
@@ -20,10 +34,15 @@ export class DropZone extends preact.Component<{
                 height:     '100%',
                 top:         0,
                 left:        0,
-                pointerEvents: 'none',
+                opacity:     this.$opacity.value,
+                pointerEvents:  'none',
+                fontFamily:     'sans-serif',
+                display:        this.$css_display.value,
+                justifyContent: 'center',
+                alignItems:     'center',
             }}
         >
-
+            { this.$message }
         </div>
     }
 
@@ -46,35 +65,49 @@ export class DropZone extends preact.Component<{
 
     on_drag_enter = (event:DragEvent) => {
         event.preventDefault();
-        this.$background.value = 'pink';
+        this.$message.value    = MESSAGE_CAN_DROP;
+        this.$background.value = BACKGROUNDCOLOR_CAN_DROP;
+        this.$opacity.value    = 1;
+
         this.#current_drag_target = event.target;
     }
 
     on_drag_leave = (event:DragEvent) => {
         event.preventDefault();
 
-        if(this.#current_drag_target == event.target)
-            this.$background.value = null;
+        if(this.#current_drag_target == event.target) {
+            this.$message.value    = MESSAGE_UNINITIALIZED;
+            this.$background.value = BACKGROUNDCOLOR_UNINITIALIZED;
+            this.$opacity.value    = this.props.$initialized.value? 0 : 1;
+        }
     }
 
     on_drop = async (event:DragEvent) => {
         event.preventDefault();
-        this.$background.value = null;
-        const dropped_items:DataTransferItem[] = 
-            Array.from(event.dataTransfer?.items ?? [])
-        console.log('# of dropped items: ', dropped_items.length)
 
-        const valid_files_promises:Promise<File[]>[] = []
-        for(const item of dropped_items) {
-            const entry:FileSystemEntry|null = item.webkitGetAsEntry?.();
-            if(entry)
-                valid_files_promises.push( traverse_entry(entry) );
+        this.$message.value = MESSAGE_LOADING;
+
+        try {
+            const dropped_items:DataTransferItem[] = 
+                Array.from(event.dataTransfer?.items ?? [])
+            console.log('# of dropped items: ', dropped_items.length)
+
+            const valid_files_promises:Promise<File[]>[] = []
+            for(const item of dropped_items) {
+                const entry:FileSystemEntry|null = item.webkitGetAsEntry?.();
+                if(entry)
+                    valid_files_promises.push( traverse_entry(entry) );
+            }
+            const valid_files:File[] = 
+                (await Promise.all(valid_files_promises)).flat()
+            
+            console.log('# of valid files: ', valid_files.length)
+            await this.props.on_files(valid_files)
+        } finally {
+            this.$message.value    = MESSAGE_UNINITIALIZED;
+            this.$background.value = BACKGROUNDCOLOR_UNINITIALIZED;
+            this.$opacity.value    = this.props.$initialized.value? 0 : 1;
         }
-        const valid_files:File[] = 
-            (await Promise.all(valid_files_promises)).flat()
-        
-        console.log('# of valid files: ', valid_files.length)
-        this.props.on_files(valid_files)
     }
 
 }
