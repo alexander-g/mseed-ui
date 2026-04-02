@@ -7,6 +7,7 @@ import * as path from "@std/path"
 import * as preact_ssr from "preact-render-to-string/jsx";
 
 import { initialize, type PYO } from "./frontend/lib/pyodide.ts"
+import type { AppConfig, Index } from "./frontend/index.tsx";
 
 
 
@@ -51,7 +52,7 @@ declare global {
 }
 
 
-async function bundle_index_js() {
+async function bundle_index_js(minify:boolean) {
     if(!Deno.bundle) 
         throw new Error(`No Deno.bundle(). Forgot --unstable-bundle?`)
 
@@ -59,9 +60,9 @@ async function bundle_index_js() {
         entrypoints: [HARDCODED_INDEX_TSX],
         output:      "dist",
         platform:    "browser",
-        minify:      false,
+        minify:      minify,
         write:       false,
-        sourcemap:   'inline'
+        sourcemap:   minify? undefined : 'inline'
     })
 
     if(!output.success) {
@@ -85,16 +86,16 @@ async function bundle_index_js() {
 
 
 
-async function compile_index_html() {
-    const module: { Index?: (props?:Record<string, unknown>) => unknown } = 
+async function compile_index_html(app_config:AppConfig) {
+    const module: { Index?: typeof Index } = 
         await import(HARDCODED_INDEX_TSX);
     if(!module.Index)
         throw new Error('Could not find <Index/> component')
     
     
     // deno-lint-ignore no-explicit-any
-    const main_element:any = module.Index()
-    const rendered:string  = preact_ssr.render(main_element, {}, {pretty:true})
+    const main_element:any = module.Index(app_config)
+    const rendered:string  = preact_ssr.render(main_element, {}, {pretty:true, jsx:false})
 
     const outputpath:string = 
         path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_HTML)
@@ -131,11 +132,14 @@ function clear_outputdir() {
 
 
 if(import.meta.main) {
+    const pyodide_vendored:boolean = !Deno.args.includes('--no-pyodide');
+    const minify:boolean = Deno.args.includes('--minify')
+
     clear_outputdir()
-    await compile_index_html();
-    await bundle_index_js();
+    await compile_index_html({pyodide_vendored});
+    await bundle_index_js(minify);
     
-    if(!Deno.args.includes('--no-pyodide'))
+    if(pyodide_vendored)
         await copy_pyodide_files();
 
     console.log('done')
