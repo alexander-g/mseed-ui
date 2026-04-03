@@ -21,8 +21,10 @@ async function fetch_file_sizes_from_page(url:URL, filenames:string[]): Promise<
     for(const filename of filenames) {
         const fileurl:URL = new URL(filename, url);
         const response:Response|null = await fetch(fileurl).catch( _ => null )
-        if(!response?.ok)
+        if(!response?.ok) {
+            console.log(`Could not fetch ${fileurl}`, response?.statusText)
             continue;
+        }
 
         const bytes:ArrayBuffer|undefined = 
             await response?.arrayBuffer().catch(_ => undefined)

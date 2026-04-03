@@ -54,21 +54,40 @@ jobs:
           if-no-files-found: error
 
       - name: Compare bundle size
+        id: bundle_comparison
         if: ${{ github.event_name == 'pull_request' }}
         run: |
+          REPONAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
+          DEPLOYMENTURL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPONAME}/"
+          echo $DEPLOYMENTURL
+
           ./deno.sh run             \
             --allow-read=./         \
             --allow-net=*.github.io \
             .github/scripts/compare_bundle_size.ts \
-            https://${{ github.repository_owner }}.github.io/${{ github.repository }} \
+            "$DEPLOYMENTURL" \
             ./static/ \
             > bundle_comparison.md
-      
+          cat bundle_comparison.md
+
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          cat bundle_comparison.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+    outputs:
+      bundle_report: ${{ steps.bundle_comparison.outputs.report }}
+
+  # as own job for minimal permissions
+  comment-in-pr:
+    needs: build
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions: 
+      pull-requests: write 
+    steps:
       - name: Comment to PR
-        if: ${{ github.event_name == 'pull_request' }}
         uses: thollander/actions-comment-pull-request@v3
         with:
-          file-path: bundle_comparison.md
+          message: ${{ needs.build.outputs.bundle_report }}
           comment-tag: bundlecomparison
 
 
