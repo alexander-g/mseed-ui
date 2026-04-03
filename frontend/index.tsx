@@ -7,8 +7,8 @@ import {
 } from "./ui/mseed-heatmap.tsx"
 import { D3Map } from "./ui/d3-map.tsx"
 import { 
-    initialize as pyo_initialize, 
-    type PYO 
+    initialize_in_worker as pyo_initialize, 
+    type IPyodide 
 } from "./lib/pyodide.ts"
 import { PlotImage } from "./ui/plot-image.tsx"
 
@@ -45,7 +45,7 @@ declare global {
 
 /** Main application class */
 class App extends preact.Component {
-    pyodide:PYO|undefined;
+    pyodide:IPyodide|undefined;
     
     $files: Signal<File[]> = new Signal([])
     $files_metadata: Signal<MSEED_Meta[]> = new Signal([])
@@ -103,7 +103,7 @@ class App extends preact.Component {
     override async componentDidMount(): Promise<void> {
         const pyodide_vendored:boolean = 
             self.app_config?.pyodide_vendored ?? is_deno();
-        const pyo:PYO|Error = await pyo_initialize(pyodide_vendored)
+        const pyo:IPyodide|Error = await pyo_initialize(pyodide_vendored)
         if(pyo instanceof Error) {
             console.error('Could not load pyodide')
             console.error(pyo as Error)
@@ -126,7 +126,12 @@ class App extends preact.Component {
         }
         console.log('data size:', data.length, i0, i1)
 
-        const pngfile:File = await this.pyodide!.plot_data( data.slice(i0, i1) )
+        const pngfile:File|Error = await this.pyodide!.plot_data( data.slice(i0, i1) )
+        if(pngfile instanceof Error) {
+            console.error(`Error plotting data: ${pngfile.message}`)
+            return;
+        }
+
         this.plotimg_ref.current?.set_src(pngfile)
     }
 }
