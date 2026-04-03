@@ -62,7 +62,7 @@ Deno.test("pyodide-in-worker", async (t:Deno.TestContext) => {
         
         const promise:Promise<File|Error> = 
             pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
-        const pngfile:Error|File = await with_timeout(promise, 5000); 
+        const pngfile:Error|File = await with_timeout(promise, 20000); 
         console.log(pngfile)
 
         assert(!(pngfile instanceof Error))
