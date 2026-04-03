@@ -53,6 +53,26 @@ jobs:
             static/*
           if-no-files-found: error
 
+      - name: Compare bundle size
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          ./deno.sh run             \
+            --allow-read=./         \
+            --allow-net=*.github.io \
+            .github/scripts/compare_bundle_size.ts \
+            https://${{ github.repository_owner }}.github.io/${{ github.repository }} \
+            ./static/ \
+            > bundle_comparison.md
+      
+      - name: Comment to PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: bundle_comparison.md
+          comment-tag: bundlecomparison
+
+
+
   deploy:
     needs:   build
     runs-on: ubuntu-latest
