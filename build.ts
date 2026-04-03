@@ -6,7 +6,7 @@ import * as path from "@std/path"
 // NOTE: adding /jsr for pretty rendering
 import * as preact_ssr from "preact-render-to-string/jsx";
 
-import { initialize, type PYO } from "./frontend/lib/pyodide.ts"
+import { initialize, type Pyodide } from "./frontend/lib/pyodide.ts"
 import type { AppConfig, Index } from "./frontend/index.tsx";
 
 
@@ -17,6 +17,8 @@ const HARDCODED_OUTPUTFILE_INDEX_JS:string   = 'index.tsx.js'
 const HARDCODED_OUTPUTFILE_INDEX_HTML:string = 'index.html'
 const HARDCODED_INDEX_TSX:string = './frontend/index.tsx'
 
+const HARDCODED_PYODIDE_WORKER_JS:string = './frontend/lib/pyodide-worker.ts'
+const HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS:string = 'pyodide-worker.ts.js'
 
 
 
@@ -52,12 +54,12 @@ declare global {
 }
 
 
-async function bundle_index_js(minify:boolean) {
+async function bundle_js_file(inputpath:string, outputpath:string,  minify:boolean) {
     if(!Deno.bundle) 
         throw new Error(`No Deno.bundle(). Forgot --unstable-bundle?`)
 
     const output:Deno.BundleResult = await Deno.bundle({
-        entrypoints: [HARDCODED_INDEX_TSX],
+        entrypoints: [inputpath],
         output:      "dist",
         platform:    "browser",
         minify:      minify,
@@ -78,10 +80,21 @@ async function bundle_index_js(minify:boolean) {
             new Error(`Expected one output file. Got ${output.outputFiles.length}`)
         )
     
-    const outputpath:string = 
-        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_JS)
     fs.ensureDirSync(path.dirname(outputpath));
     Deno.writeTextFileSync(outputpath, output.outputFiles[0]!.text())
+}
+
+
+async function bundle_index_js(minify:boolean) {
+    const outputpath:string = 
+        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_JS)
+    return await bundle_js_file(HARDCODED_INDEX_TSX, outputpath, minify)
+}
+
+async function bundle_pyodide_worker(minify:boolean) {
+    const outputpath:string = 
+        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS)
+    return await bundle_js_file(HARDCODED_PYODIDE_WORKER_JS, outputpath, minify)
 }
 
 
@@ -105,7 +118,7 @@ async function compile_index_html(app_config:AppConfig) {
 
 
 async function copy_pyodide_files() {
-    const pyo:PYO|Error = await initialize()
+    const pyo:Pyodide|Error = await initialize()
     if(pyo instanceof Error)
         throw pyo as Error;
 
@@ -138,6 +151,7 @@ if(import.meta.main) {
     clear_outputdir()
     await compile_index_html({pyodide_vendored});
     await bundle_index_js(minify);
+    await bundle_pyodide_worker(minify);
     
     if(pyodide_vendored)
         await copy_pyodide_files();

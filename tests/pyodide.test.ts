@@ -1,7 +1,12 @@
 import { assert } from "asserts"
 
 
-import { initialize, type PYO } from "../frontend/lib/pyodide.ts"
+import { 
+    initialize, 
+    initialize_in_worker,
+    type Pyodide,
+    type IPyodide 
+} from "../frontend/lib/pyodide.ts"
 
 
 
@@ -13,8 +18,8 @@ export function sleep(ms: number): Promise<unknown> {
 }
 
 
-Deno.test( "pyodide", async (t:Deno.TestContext) => {
-    const pyo:PYO|Error = await initialize();
+Deno.test( "pyodide-main-thread", async (t:Deno.TestContext) => {
+    const pyo:Pyodide|Error = await initialize();
     assert(!(pyo instanceof Error))
 
     await t.step("get_vendoring_files", () => {
@@ -35,4 +40,33 @@ Deno.test( "pyodide", async (t:Deno.TestContext) => {
     await sleep(10);
 } )
 
+
+
+function with_timeout<T>(promise: Promise<T>, ms: number) {
+    let timer = 0;
+    return new Promise<T>((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("timeout")), ms);
+        Promise.resolve(promise).then(
+            (v) => { clearTimeout(timer); resolve(v); },
+            (e) => { clearTimeout(timer); reject(e); },
+        );
+    });
+}
+
+
+Deno.test("pyodide-in-worker", async (t:Deno.TestContext) => {
+    const pyo:IPyodide|Error = await initialize_in_worker()
+    assert(!(pyo instanceof Error))
+
+    await t.step("run_maplotlib_plot", async () => {
+        
+        const promise:Promise<File|Error> = 
+            pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
+        const pngfile:Error|File = await with_timeout(promise, 20000); 
+        console.log(pngfile)
+
+        assert(!(pngfile instanceof Error))
+        assert( (await pngfile.arrayBuffer()).byteLength > 0 )
+    })
+})
 

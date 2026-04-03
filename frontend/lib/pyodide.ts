@@ -1,10 +1,37 @@
 import * as pyo from 'pyodide'
 
 import { is_deno } from "./util.ts";
+import type { 
+    WorkerInitCommand,
+    WorkerPlotDataCommand,
+    WorkerMessage,
+} from "./pyodide-worker.ts";
+
+
+export interface IPyodide {
+    /** Plot a 1D time series via matplotlib and return a PNG file. */
+    plot_data(data:Int32Array): Promise<File|Error>;
+}
 
 
 
-export class PYO {
+
+/** Public interface for pyodide running in a worker */
+export class PyodideInWorker implements IPyodide {
+    constructor(private readypromise:Promise<PyodideToWorkerInterface|Error>){}
+
+    async plot_data(data:Int32Array): Promise<File|Error> {
+        const internal:IPyodide|Error = await this.readypromise;
+        if(internal instanceof Error)
+            return internal as Error;
+
+        return internal.plot_data(data)
+    }
+}
+
+
+/** Pyodide module in the main thread */
+export class Pyodide implements IPyodide {
     constructor(private pyodide:pyo.PyodideAPI){}
 
     async plot_data(data:Int32Array): Promise<File> {
@@ -59,13 +86,57 @@ plt.close(fig)
 `
 
 
+class PyodideToWorkerInterface implements IPyodide {
+    constructor(private worker:Worker){}
+
+    plot_data(data: Int32Array): Promise<File|Error> {
+        const command:WorkerPlotDataCommand = {
+            command: 'plot-data',
+            data:    data,
+        }
+        const promise:Promise<File|Error> = 
+            new Promise( (resolve: (x:File|Error) => void) => {
+                this.worker.addEventListener('message', (e:MessageEvent) => {
+                    const message:WorkerMessage = e.data;
+                    
+                    if(message instanceof Error) {
+                        resolve(message as Error)
+                        return;
+                    } else if (message.message != 'plot-data-result') {
+                        resolve(
+                            new Error(`Unexpected worker message: ${message.message}`)
+                        )
+                        return;
+                    }
+                    // else   
+
+                    const pngfile = new File([message.outputdata_png], 'plot.png')
+                    resolve(pngfile)
+                    return;
+                })
+            } )
+        this.worker.postMessage(command);
+        return promise;
+    }
+}
+
+
+function get_worker_url(): URL {
+    const ending:'.ts'|'.ts.js' = 
+        is_deno()
+        ? '.ts'
+        : '.ts.js';
+    return new URL('./pyodide-worker'+ending, import.meta.url)
+}
+
+
 
 const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.29.3/full'
 
 
-
+/** Initialize pyodide in the main thread */
 export
-async function initialize(vendored:boolean = is_deno()): Promise<PYO|Error> {
+async function initialize(vendored:boolean = is_deno()): Promise<Pyodide|Error> {
     try {
         const pyodide:pyo.PyodideAPI = await pyo.loadPyodide({
             indexURL: vendored? '' : PYODIDE_CDN_URL,
@@ -75,18 +146,56 @@ async function initialize(vendored:boolean = is_deno()): Promise<PYO|Error> {
 
         pyodide.runPythonAsync("import numpy as np; import matplotlib.pylab as plt;");
 
-        return new PYO(pyodide);
+        return new Pyodide(pyodide);
     } catch(e) {
         return e as Error;
     }
 }
 
+/** Initialize pyodide in the worker thread */
+export async function initialize_in_worker(
+    vendored:boolean = is_deno()
+): Promise<PyodideInWorker|Error> {
+    const worker = new Worker( get_worker_url(), {type:'module'} )
+        
+    const errorpromise = new Promise((resolve: (x:Error) => void) => {
+        worker.addEventListener('error', (e:ErrorEvent) => {
+            e.preventDefault()
+            console.error('Error in worker:', e.message)
+            resolve(new Error(e.message))
+        })
+    })
+
+    const resultfilepromise:Promise<PyodideToWorkerInterface|Error> = 
+        new Promise( (resolve: (x:PyodideToWorkerInterface|Error) => void) => {
+            worker.onmessage = (e:MessageEvent) => {
+                const message:WorkerMessage = e.data;
+                if(message instanceof Error)
+                    resolve(message as Error)
+
+                const internal = new PyodideToWorkerInterface(worker)
+                resolve(internal); // all ok
+            }
+            worker.onerror = (e:ErrorEvent) => {
+                e.preventDefault()
+                console.error('Error in worker:', e.message)
+                resolve(new Error(e.message))
+            }
+
+            const initcommand:WorkerInitCommand = {command:'init', vendored}
+            worker.postMessage(initcommand);
+        })
+    
+    const combinedpromise:Promise<PyodideToWorkerInterface|Error> = 
+        Promise.race([errorpromise, resultfilepromise])
+    return new PyodideInWorker(combinedpromise);
+}
 
 
 
 
 if(import.meta.main) {
-    const pyodide:PYO|Error = await initialize()
+    const pyodide:Pyodide|Error = await initialize()
     if(pyodide instanceof Error)
         throw pyodide as Error;
     
