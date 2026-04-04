@@ -6,6 +6,11 @@ import { assert } from "asserts";
 const STATIONSXMLFILE:string = path.fromFileUrl(
     import.meta.resolve('./assets/stations.xml')
 )
+const QUAKEMLFILE:string = path.fromFileUrl(
+    import.meta.resolve('./assets/events.xml')
+)
+
+
 
 
 Deno.test('parse_stationxml', async () => {
@@ -15,6 +20,15 @@ Deno.test('parse_stationxml', async () => {
 
     assert(output0.length == 23 )
 })
+
+
+Deno.test('parse_stationxml.invalid', async () => {
+    const f:File = new File([Deno.readFileSync(QUAKEMLFILE)], "stations.xml")
+    const output0:Station[]|Error = await parse_stationxml_file(f)
+    assert(output0 instanceof Error)
+})
+
+
 
 
 

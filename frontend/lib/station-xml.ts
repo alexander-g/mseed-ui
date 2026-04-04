@@ -23,6 +23,9 @@ export async function parse_stationxml_file(file:File): Promise<Station[]|Error>
         const text:string = await file.text()
         const xml:XmlDocument = parse(text);
 
+        if(xml.root.name.local != 'FDSNStationXML')
+            return new Error('Not a STATIONXML file')
+
         const all_stations:Station[] = []
         for(const child of xml.root.children) {
             if(child.type == 'element' && child.name.local == 'Network')

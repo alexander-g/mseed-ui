@@ -171,10 +171,3 @@ function find_inference(inferencemap:Record<string, Date[]>, code:string, date:D
 }
 
 
-function _find_inference(inference:InferenceEvent[], code:string, date:Date) {
-    for(const event of inference) {
-        if(event.code == code && event.time.getTime() == date.getTime())
-            return 1;
-    }
-    return 0;
-}
