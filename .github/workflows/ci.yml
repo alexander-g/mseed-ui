@@ -115,11 +115,13 @@ jobs:
 
           git fetch origin gh-pages
           git checkout gh-pages
-          cp artifact/index.* ./
+          cp artifact/* ./
           rm -r artifact
+          ls ./
+
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add ./index.*
+          git add ./*
           git commit -m "$TAGNAME"
           git tag --force $TAGNAME
           git push origin gh-pages
