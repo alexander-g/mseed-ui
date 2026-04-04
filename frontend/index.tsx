@@ -85,7 +85,12 @@ class App extends preact.Component {
     on_files = async (files:File[]) => {
 
         const t0:number = performance.now()
-        const processed:ProcessedFiles = await process_dropped_files(files)
+        const processed:ProcessedFiles = await process_dropped_files(
+            files,
+            (processed: number, total: number) => {
+                console.log(`Progress: ${processed}/${total} files processed`)
+            }
+        )
         const t1:number = performance.now()
 
         console.log(`Files loaded in ${t1-t0} ms`)

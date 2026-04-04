@@ -20,6 +20,9 @@ const HARDCODED_INDEX_TSX:string = './frontend/index.tsx'
 const HARDCODED_PYODIDE_WORKER_JS:string = './frontend/lib/pyodide-worker.ts'
 const HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS:string = 'pyodide-worker.ts.js'
 
+const HARDCODED_MSEED_WORKER_JS:string = './frontend/lib/mseed-worker.ts'
+const HARDCODED_OUTPUTFILE_MSEED_WORKER_JS:string = 'mseed-worker.ts.js'
+
 
 
 // adding bundle etc to Deno because otherwise always get errors during checks
@@ -97,6 +100,12 @@ async function bundle_pyodide_worker(minify:boolean) {
     return await bundle_js_file(HARDCODED_PYODIDE_WORKER_JS, outputpath, minify)
 }
 
+async function bundle_mseed_worker(minify:boolean) {
+    const outputpath:string = 
+        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_MSEED_WORKER_JS)
+    return await bundle_js_file(HARDCODED_MSEED_WORKER_JS, outputpath, minify)
+}
+
 
 
 async function compile_index_html(app_config:AppConfig) {
@@ -152,6 +161,7 @@ if(import.meta.main) {
     await compile_index_html({pyodide_vendored});
     await bundle_index_js(minify);
     await bundle_pyodide_worker(minify);
+    await bundle_mseed_worker(minify);
     
     if(pyodide_vendored)
         await copy_pyodide_files();
