@@ -15,11 +15,12 @@ import { PlotImage } from "./ui/plot-image.tsx"
 import { 
     process_dropped_files, 
     tremorwasm,  
-    type ProcessedFiles 
+    type ProcessedFiles,
+    type MSEED_FileAndMeta,
 }                       from "./lib/file-input.ts"
 import type { Station } from "./lib/station-xml.ts"
-import { is_deno }      from "./lib/util.ts";
-
+import type { QuakeEvent } from "./lib/quakeml.ts"
+import { is_deno }         from "./lib/util.ts";
 import { type MSEED_Meta } from "../wasm-cpp/mseed-wasm.ts"
 
 
@@ -28,16 +29,36 @@ import { type MSEED_Meta } from "../wasm-cpp/mseed-wasm.ts"
 
 
 
-
+/** Config set during build */
 export type AppConfig = null | {
     /** Whether to fetch pyodide files from "/" (true) or from CDN (false) */
     pyodide_vendored: boolean,
 }
 
-// app config is set during build in a <script> inside <Head>
+/** Top-level currently loaded data */
+type AppState = {
+    /** Main MSEED data files */
+    $mseeds: Signal<MSEED_FileAndMeta[]>;
+
+    /** Events recognized as positive during inference. */
+    $inference: Signal<InferenceEvent[]>;
+
+    /** Stations from a stationxml file */
+    $stations: Signal<Station[]>;
+
+    /** Events from a quakeml file */
+    $events: Signal<QuakeEvent[]>;
+}
+
+
+
 declare global {
     interface Window {
+        /** App config is set during build in a <script> inside <Head> */
         app_config: AppConfig;
+
+        /** App state, global for debugging */
+        app_state: AppState;
     }
 }
 
@@ -47,23 +68,30 @@ declare global {
 class App extends preact.Component {
     pyodide:IPyodide|undefined;
     
-    $files: Signal<File[]> = new Signal([])
-    $files_metadata: Signal<MSEED_Meta[]> = new Signal([])
-    $inference: Signal<InferenceEvent[]>  = new Signal([])
-    $stations:  Signal<Station[]> = new Signal([])
+    app_state:AppState = {
+        $mseeds:    new Signal([]),
+        $inference: new Signal([]),
+        $stations:  new Signal([]),
+        $events:    new Signal([]),
+    }
 
-    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
 
     $initialized: Readonly<Signal<boolean>> = signals.computed(
-        () => this.$files.value.length > 0
+        () => this.app_state.$mseeds.value.length > 0
     )
+
+    $mseed_meta: Readonly<Signal<MSEED_Meta[]>> = signals.computed(
+        () => this.app_state.$mseeds.value.map( m => m.meta )
+    )
+
+    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
 
     render(): JSX.Element {
         return <body>
             {/* <OSDImage /> */}
             <MSEED_Heatmap 
-                $files     = {this.$files_metadata} 
-                $inference = {this.$inference}
+                $files     = {this.$mseed_meta} 
+                $inference = {this.app_state.$inference}
                 on_click   = {this.on_heatmap_item_select}
             />
             <div
@@ -72,7 +100,7 @@ class App extends preact.Component {
                 }}
             >
                 <PlotImage ref={this.plotimg_ref} />
-                <D3Map $markers={this.$stations} />
+                <D3Map $markers={this.app_state.$stations} />
             </div>
             
             <DropZone 
@@ -97,15 +125,19 @@ class App extends preact.Component {
         console.log(`# of MSEED files:      ${processed.mseeds.length}`)
         console.log(`# of stations:         ${processed.stations.length}`)
         console.log(`# of inference events: ${processed.inference_events.length}`)
+        console.log(`# of QUAKEML events:   ${processed.events.length}`)
         console.log(`# of unknown files:    ${processed.unknown_files.length}`)
         
-        this.$inference.value      = processed.inference_events;
-        this.$files_metadata.value = processed.mseeds.map( m => m.meta );
-        this.$files.value          = processed.mseeds.map( m => m.file );
-        this.$stations.value       = processed.stations
+        this.app_state.$inference.value = processed.inference_events;
+        this.app_state.$mseeds.value    = processed.mseeds;
+        this.app_state.$stations.value  = processed.stations
+        this.app_state.$events.value    = processed.events;
     }
 
     override async componentDidMount(): Promise<void> {
+        // for debugging
+        self.app_state = this.app_state
+
         const pyodide_vendored:boolean = 
             self.app_config?.pyodide_vendored ?? is_deno();
         const pyo:IPyodide|Error = await pyo_initialize(pyodide_vendored)
@@ -119,7 +151,8 @@ class App extends preact.Component {
     
     
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        const file:File|undefined = this.$files.value[selected_file_index];
+        const mseedfiles:File[] = this.app_state.$mseeds.value.map( m => m.file)
+        const file:File|undefined = mseedfiles[selected_file_index];
         if(file == undefined)
             return;
         

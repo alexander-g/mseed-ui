@@ -1,4 +1,5 @@
 import type { Station }        from "./station-xml.ts"
+import type { QuakeEvent }     from "./quakeml.ts"
 import type { InferenceEvent } from "../ui/mseed-heatmap.tsx"
 import { WorkerPool }          from "./worker-pool.ts"
 import type { FileResult }     from "./mseed-worker.ts"
@@ -21,6 +22,7 @@ export type ProcessedFiles = {
     mseeds:     MSEED_FileAndMeta[];
     stations:   Station[];
     inference_events: InferenceEvent[];
+    events:     QuakeEvent[];
 
     unknown_files: File[];
 }
@@ -38,6 +40,7 @@ export async function process_dropped_files(
     const all_meta:MSEED_FileAndMeta[]   = []
     const all_stations:Station[]         = []
     const all_inference:InferenceEvent[] = []
+    const all_events:  QuakeEvent[]      = []
     const all_unknown: File[]            = []
 
     // Determine worker pool size based on CPU cores
@@ -82,6 +85,8 @@ export async function process_dropped_files(
                         all_stations.push(...file_result.stations)
                     else if (file_result.type === 'inference')
                         all_inference.push(...file_result.inference)
+                    else if (file_result.type === 'quakeevent')
+                        all_events.push(...file_result.quakeevents)
                     else if (file_result.type === 'unknown')
                         all_unknown.push(file_result.file)
                 }
@@ -106,6 +111,7 @@ export async function process_dropped_files(
         mseeds:           all_meta,
         stations:         all_stations,
         inference_events: all_inference,
+        events:           all_events,
         unknown_files:    all_unknown,
     }
 }

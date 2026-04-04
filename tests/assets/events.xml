@@ -1,0 +1,2399 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:local/964d2dc2-51e9-44e4-bc25-1f1e5adb929e">
+    <event publicID="smi:local/b5d8984c-0dff-4759-8ff5-3da7d6817e75">
+      <origin publicID="smi:local/4871dbb0-93f9-4171-9bba-4df6f86a864e">
+        <time>
+          <value>2018-01-01T01:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.332</value>
+        </latitude>
+        <longitude>
+          <value>-122.859</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d4f272fb-a39e-4c94-b993-6bffc8d66730">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/588444fa-4a5d-44a2-b79f-d77143cb00a4">
+      <origin publicID="smi:local/270c97fb-dedf-4459-a3f1-d9cdc85e41ce">
+        <time>
+          <value>2018-01-01T01:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.297</value>
+        </latitude>
+        <longitude>
+          <value>-122.865</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f154ff9b-4915-4aed-b608-88000999ddb9">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/67f4ab27-fcaa-43ee-8a6f-c5845299cc91">
+      <origin publicID="smi:local/7102aafc-764f-49f7-9d40-3d4e31d2653d">
+        <time>
+          <value>2018-01-01T01:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.342</value>
+        </latitude>
+        <longitude>
+          <value>-122.575</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/036e177e-2bd2-4e9a-91c6-7fe9812a0ac9">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5deaa190-e7ca-4059-884a-3c3a4d444c5b">
+      <origin publicID="smi:local/425e48c8-914d-46ce-8ae8-8440177bd93c">
+        <time>
+          <value>2018-01-01T01:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.263</value>
+        </latitude>
+        <longitude>
+          <value>-122.828</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/381ffc1a-64e5-44a1-8037-44a6693828c8">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/65c31738-ee2f-4b69-82e0-1ca42cbc0eb4">
+      <origin publicID="smi:local/dc96ef7c-abec-48a1-bfbf-39295480386e">
+        <time>
+          <value>2018-01-01T01:47:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.285</value>
+        </latitude>
+        <longitude>
+          <value>-122.769</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/39a6e567-6855-430b-b509-4f4265b694bc">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/fcfb1d11-9634-4dc1-8431-559d5261028d">
+      <origin publicID="smi:local/5182999f-355a-44e9-a847-1b5494b09697">
+        <time>
+          <value>2018-01-01T01:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.272</value>
+        </latitude>
+        <longitude>
+          <value>-122.828</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/10834a83-03ca-44ac-b35e-d66e1dcc395f">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8df9306d-ae02-4682-a89f-03b1f49a37ae">
+      <origin publicID="smi:local/0542a0a6-f90a-43f2-b6da-a1f3496a7db3">
+        <time>
+          <value>2018-01-01T01:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.248</value>
+        </latitude>
+        <longitude>
+          <value>-122.863</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/889abb48-831d-4f41-95fd-f0c3d64b6705">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/764a8eeb-4459-4428-9d52-fd4ca0d00f11">
+      <origin publicID="smi:local/44da898a-2ceb-42ed-90bc-311a3ff2dcd7">
+        <time>
+          <value>2018-01-01T01:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.312</value>
+        </latitude>
+        <longitude>
+          <value>-122.542</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0aa0f646-e188-47ef-8b87-7a1429e9b31d">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/ccbd4865-2e66-48bc-8acd-ca2f580f14bd">
+      <origin publicID="smi:local/49663266-4083-452f-8174-de1f07b4c7b2">
+        <time>
+          <value>2018-01-01T01:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.279</value>
+        </latitude>
+        <longitude>
+          <value>-122.896</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/bc864b14-0f44-4525-97d2-acf74a2144c5">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e04999b5-fbee-4a2e-9637-da27abc447fc">
+      <origin publicID="smi:local/50bed7e8-9571-4bb4-be01-2d94cf3a5a9a">
+        <time>
+          <value>2018-01-01T02:00:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.299</value>
+        </latitude>
+        <longitude>
+          <value>-122.848</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0550c001-9461-4910-9ca1-a930810c7859">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3559b2f2-516b-46bc-9d3f-09c8b7f3cca6">
+      <origin publicID="smi:local/05bdb41b-a1a1-475e-9a3d-0652ef658212">
+        <time>
+          <value>2018-01-01T02:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.364</value>
+        </latitude>
+        <longitude>
+          <value>-122.825</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c92ed8ea-50e4-47a9-9d9c-841e53eff651">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f32e846f-9a16-482b-81f8-2e504c2ba25d">
+      <origin publicID="smi:local/ec51a44d-5a26-4054-baad-41571055d3f5">
+        <time>
+          <value>2018-01-01T02:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.306</value>
+        </latitude>
+        <longitude>
+          <value>-122.822</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3b65a83c-4ee9-4bfc-9ddf-adaebe4d24f6">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/53713fb4-67e2-49d9-9315-d0de574e78b9">
+      <origin publicID="smi:local/c3e8449f-9d80-4193-9235-32d3d885a54c">
+        <time>
+          <value>2018-01-01T02:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.282</value>
+        </latitude>
+        <longitude>
+          <value>-122.781</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/23925607-8240-4e0b-86a2-2be2272a11aa">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8d166d6b-c816-4048-bbce-75b19fc22ec7">
+      <origin publicID="smi:local/ed749e88-821a-4970-af13-97924119743a">
+        <time>
+          <value>2018-01-01T02:17:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.285</value>
+        </latitude>
+        <longitude>
+          <value>-122.615</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/79caa25b-9b03-47d8-a309-2887b99c9017">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/a36e9240-e348-44e9-b8c5-7cc599589665">
+      <origin publicID="smi:local/3ff75ffa-c86f-443a-b1a1-eeff5e27cd39">
+        <time>
+          <value>2018-01-01T02:20:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.348</value>
+        </latitude>
+        <longitude>
+          <value>-122.822</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0c92cb21-1811-418e-af28-666cee666eee">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/afd1b2b7-f928-4fe9-abbc-e0047f287455">
+      <origin publicID="smi:local/2c9d78c8-c238-4c88-a5b1-af492b99c834">
+        <time>
+          <value>2018-01-01T02:27:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.338</value>
+        </latitude>
+        <longitude>
+          <value>-122.877</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3591f71b-01c0-4c6b-8d4b-d9abe5943d5e">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5ef5964e-3cae-4096-9441-bd2189ffd6a3">
+      <origin publicID="smi:local/4e09fd7b-a1c7-4b53-9207-e03efa636dcc">
+        <time>
+          <value>2018-01-01T02:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.356</value>
+        </latitude>
+        <longitude>
+          <value>-122.834</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/128f6da1-1bf4-4338-8e3c-a663f968af8a">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/a0b512d9-a52c-4ae8-aa11-d8a484597906">
+      <origin publicID="smi:local/8adbc23b-8f98-47a3-9216-4396f87c83a0">
+        <time>
+          <value>2018-01-01T02:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.344</value>
+        </latitude>
+        <longitude>
+          <value>-122.888</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/4fc751af-63db-4c9e-84c5-fb33fb422294">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/c722498c-afc2-4927-8094-3ab03edcf6fc">
+      <origin publicID="smi:local/cdd44fc8-78fd-47bf-94ae-bae7a661373b">
+        <time>
+          <value>2018-01-01T02:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.325</value>
+        </latitude>
+        <longitude>
+          <value>-122.935</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/cb801efb-9a0b-48e6-9a32-302a82d43f71">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/9622d917-1515-47e4-a6f7-815dd3a452a6">
+      <origin publicID="smi:local/6d2e1b11-59b4-4018-ba82-b8ef7602283b">
+        <time>
+          <value>2018-01-01T02:47:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.229</value>
+        </latitude>
+        <longitude>
+          <value>-122.973</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/bdfcf1ec-4fd1-4499-bbac-4108cc4bc825">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8d4f1740-2e18-4a2f-8beb-362565226155">
+      <origin publicID="smi:local/58820ce6-f92a-49c5-922c-bd4bf7813b84">
+        <time>
+          <value>2018-01-01T02:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.304</value>
+        </latitude>
+        <longitude>
+          <value>-122.853</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/a0bf33b0-d8c2-45dc-b598-cab4a024ec0a">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/81cb5003-8fa0-4e58-8b06-e6db05b190cc">
+      <origin publicID="smi:local/6a447bfd-88e5-432a-801e-4e49a0e7648f">
+        <time>
+          <value>2018-01-01T02:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.344</value>
+        </latitude>
+        <longitude>
+          <value>-122.875</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/40b529bc-ba0c-4af8-971f-30525529c120">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/931bc394-20d4-4de7-8803-30faf366daad">
+      <origin publicID="smi:local/27be50c0-4766-4902-ae4f-3efd8b614f0a">
+        <time>
+          <value>2018-01-01T02:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.393</value>
+        </latitude>
+        <longitude>
+          <value>-122.848</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/4cb1885c-a932-402b-984d-294ecc9cb69b">
+        <mag>
+          <value>1.4</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/30ce83a7-c658-4f0a-87ca-915a1c5cf48d">
+      <origin publicID="smi:local/957fcc8b-2c55-4d5c-9e83-e9869d86ca7e">
+        <time>
+          <value>2018-01-01T02:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.405</value>
+        </latitude>
+        <longitude>
+          <value>-122.85</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/7bc8c870-9d77-44fd-bcbf-4f5086e376cf">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/734cfbdc-24d4-4b44-b3c5-042b5f900ac8">
+      <origin publicID="smi:local/ec3e9fa9-521c-4dd1-b716-666758fb5f8c">
+        <time>
+          <value>2018-01-01T03:00:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.375</value>
+        </latitude>
+        <longitude>
+          <value>-122.815</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/435dc9ee-1709-4c67-8a33-07c8e360d6e7">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/62bb5c70-c3ce-44ea-8309-c2132f67c606">
+      <origin publicID="smi:local/d6f35b31-a821-4a5f-8bb7-e29bce69766f">
+        <time>
+          <value>2018-01-01T03:02:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.346</value>
+        </latitude>
+        <longitude>
+          <value>-122.881</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/afe4908b-b99a-47c1-b85a-af43a75812d5">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/713119cb-e56d-41f3-9147-4de035e8ab8c">
+      <origin publicID="smi:local/634b84a9-3799-412f-a098-d1bce545299b">
+        <time>
+          <value>2018-01-01T03:05:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.398</value>
+        </latitude>
+        <longitude>
+          <value>-122.85</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/04f38678-bf59-4ab8-80e4-6caee5074289">
+        <mag>
+          <value>1.5</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f0f594d8-65e0-4c17-aec4-29659aba2ec0">
+      <origin publicID="smi:local/f52d1118-a581-46c8-b8ba-b424e0ccc92f">
+        <time>
+          <value>2018-01-01T03:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.393</value>
+        </latitude>
+        <longitude>
+          <value>-122.836</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/21edade1-7bff-424e-9feb-1622764f7120">
+        <mag>
+          <value>1.5</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/94f14bbe-c1aa-4e40-b7c2-23ea498e0272">
+      <origin publicID="smi:local/d05e686a-3d94-4f4a-862d-bea3bee727f0">
+        <time>
+          <value>2018-01-01T03:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.365</value>
+        </latitude>
+        <longitude>
+          <value>-122.834</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5bf810c5-1209-452b-9180-bf06f2e403b7">
+        <mag>
+          <value>1.5</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3ee7a8b0-6b89-4882-8e4f-3a1573dd433d">
+      <origin publicID="smi:local/20e784dc-e2f4-4457-8638-de9ca0a03135">
+        <time>
+          <value>2018-01-01T03:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.402</value>
+        </latitude>
+        <longitude>
+          <value>-122.834</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f24c6433-8904-4c8f-a98b-3d9aea781e4b">
+        <mag>
+          <value>1.5</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/7350cc73-377c-4fd4-930a-05f147c46c02">
+      <origin publicID="smi:local/4bb8212b-33d3-4621-8eb9-cca11e01aa0a">
+        <time>
+          <value>2018-01-01T03:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.422</value>
+        </latitude>
+        <longitude>
+          <value>-122.812</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/b61a04b1-ec9b-4452-9299-98c2313cfb90">
+        <mag>
+          <value>1.4</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/bbcd12ca-f516-42a5-8f4d-da5804c022e4">
+      <origin publicID="smi:local/aa181637-3169-4fcb-953a-10005fe78832">
+        <time>
+          <value>2018-01-01T03:20:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.403</value>
+        </latitude>
+        <longitude>
+          <value>-122.847</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5b4ee940-4f3f-40e2-a67c-ac5065c75a0d">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/0d2e22d6-aeaf-41f9-9818-f39c532010de">
+      <origin publicID="smi:local/9f97ee4b-4da5-4322-9d97-e29c7565d7b4">
+        <time>
+          <value>2018-01-01T03:22:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.365</value>
+        </latitude>
+        <longitude>
+          <value>-122.82</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/01d3731a-d0e4-4332-b29c-b2db2a0b36d1">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/4bea0341-e980-4ab5-b5b6-37ab01685f3e">
+      <origin publicID="smi:local/37527790-d021-4e73-8621-751fcc4003f4">
+        <time>
+          <value>2018-01-01T03:25:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.377</value>
+        </latitude>
+        <longitude>
+          <value>-122.823</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/b4614e68-7ca3-4781-aadf-1db139d8868a">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/de37ff78-98a4-4f69-8690-5e4c9ab23ec5">
+      <origin publicID="smi:local/3d961477-f43a-474d-af93-10494ad32f89">
+        <time>
+          <value>2018-01-01T03:35:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.385</value>
+        </latitude>
+        <longitude>
+          <value>-122.917</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3931f216-866c-4548-8e38-ec7c8ab6b967">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/69a66c4f-b421-4cfb-8028-9ee8119cfe02">
+      <origin publicID="smi:local/52c3e58c-f7d2-4cae-847d-6b94b85921e1">
+        <time>
+          <value>2018-01-01T03:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.322</value>
+        </latitude>
+        <longitude>
+          <value>-123.072</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/b580cb7b-1b41-499f-9ff1-df9c45bf10bf">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/67e38e67-d1e7-4f93-994f-87edef59b6fe">
+      <origin publicID="smi:local/69a8af32-b225-4739-928e-986b19845271">
+        <time>
+          <value>2018-01-01T03:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.311</value>
+        </latitude>
+        <longitude>
+          <value>-123.132</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/b32a4631-90e2-49e9-b513-cb60249e6390">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/ddda8135-847e-48f7-b913-30c21d128385">
+      <origin publicID="smi:local/acae3b01-2e6a-4e97-ab46-c1f797c1ebd1">
+        <time>
+          <value>2018-01-01T03:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.217</value>
+        </latitude>
+        <longitude>
+          <value>-123.077</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/4290213c-a272-4783-bf07-fd442af85999">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/7cc13a76-f1ba-46fe-8ac3-25ac8e06059f">
+      <origin publicID="smi:local/3f3f7a52-66e4-4f19-b739-4dba5c248a13">
+        <time>
+          <value>2018-01-01T03:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.348</value>
+        </latitude>
+        <longitude>
+          <value>-123.146</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c20a58dc-5c81-48ae-afb9-92b274b06992">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e9bb6ebb-1bec-4396-9c42-5783d239df4c">
+      <origin publicID="smi:local/82564103-3bf5-49d0-ab16-3d9fb2f12a6d">
+        <time>
+          <value>2018-01-01T04:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.312</value>
+        </latitude>
+        <longitude>
+          <value>-123.156</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/e2aeb62e-8195-465e-878f-a1cc2e3e894c">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5bd19f02-4cf1-436d-b5e2-0ef36fc69141">
+      <origin publicID="smi:local/d2ec734e-c6c1-4ff9-8fa4-a0a7a0e1f704">
+        <time>
+          <value>2018-01-01T04:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.343</value>
+        </latitude>
+        <longitude>
+          <value>-123.03</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/2a83a6bf-9bb4-4bc2-8409-e97debbe239c">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e4a0ad03-9d39-4b18-8c4a-a6bd3143d87c">
+      <origin publicID="smi:local/6dd5236d-049d-41aa-b83c-a6e172300fbd">
+        <time>
+          <value>2018-01-01T04:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.322</value>
+        </latitude>
+        <longitude>
+          <value>-122.995</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/955e82ea-849c-4217-87f1-dc4a9dd6f00f">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e1a3f0f6-1bf6-4b6b-a476-e291f7dfa0b9">
+      <origin publicID="smi:local/723bde66-32ac-4737-99ce-fa799580a3cb">
+        <time>
+          <value>2018-01-01T04:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.37</value>
+        </latitude>
+        <longitude>
+          <value>-123.274</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/20fd0d2d-4a9b-484e-acdd-d7f9e6cf60d9">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/2cdcb555-c326-4531-974e-07cb3a897222">
+      <origin publicID="smi:local/7c182c68-28cb-4c59-83d4-56a42c75c1ad">
+        <time>
+          <value>2018-01-01T04:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.534</value>
+        </latitude>
+        <longitude>
+          <value>-123.273</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0d9289fe-e9ab-43f5-bc0f-8b74ca5309da">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f936ee5b-981c-4132-8a8e-78ddb64c49aa">
+      <origin publicID="smi:local/8f60865e-a51e-4079-8dbc-303f762a4835">
+        <time>
+          <value>2018-01-01T04:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.241</value>
+        </latitude>
+        <longitude>
+          <value>-123.194</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/9c99b861-1bb4-48b2-8479-fd5165fd2edf">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/cd7e861c-fb3b-4864-880f-1e83263a5a2f">
+      <origin publicID="smi:local/964e3f94-d4fc-45a5-a67b-0ec693aa14f0">
+        <time>
+          <value>2018-01-01T04:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.311</value>
+        </latitude>
+        <longitude>
+          <value>-123.149</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/a761619a-64da-4fb6-b966-fc05c31abe2a">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8e93bd11-7b58-4075-bec6-24b0e5b749b1">
+      <origin publicID="smi:local/74028c9a-095a-46dd-81f5-206228702f85">
+        <time>
+          <value>2018-01-01T04:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.315</value>
+        </latitude>
+        <longitude>
+          <value>-122.847</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/80aba592-d32a-4b65-9d40-564130b05f7b">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/c3428fb3-d6df-4c14-8658-afc0ca3e76ee">
+      <origin publicID="smi:local/0c493e4e-9d50-47cb-a4c0-09b55a1d557b">
+        <time>
+          <value>2018-01-01T05:05:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.368</value>
+        </latitude>
+        <longitude>
+          <value>-123.123</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/1d808038-53e9-4902-bae2-5653901697b8">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/71dcfb7b-142d-42f8-833b-ebe0f20ce95d">
+      <origin publicID="smi:local/4ee6a3ca-3a15-4e73-b5b1-ebc235d247a6">
+        <time>
+          <value>2018-01-01T05:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.294</value>
+        </latitude>
+        <longitude>
+          <value>-123.056</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/65fa40db-6de4-40b0-94da-7a63b74832a0">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/2b9231ae-994d-429c-9b11-63c2da9edff5">
+      <origin publicID="smi:local/5913f342-54df-447a-ac2f-3e6e7a1f00af">
+        <time>
+          <value>2018-01-01T05:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.33</value>
+        </latitude>
+        <longitude>
+          <value>-123.084</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/fb8ab474-01fe-4623-8766-b1903a217415">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/37f125c4-1fa4-42c0-8449-5800f5da14a6">
+      <origin publicID="smi:local/54ec7ba8-9215-4203-88e8-317e3164a3c5">
+        <time>
+          <value>2018-01-01T05:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.317</value>
+        </latitude>
+        <longitude>
+          <value>-123.036</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/6f51a2ac-d04d-4ade-82bb-0eb62a3b99f5">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/475205ee-d0c2-413c-ba2e-329a96b34991">
+      <origin publicID="smi:local/bc3d9daa-b8b3-40cc-b06c-ec586162acf6">
+        <time>
+          <value>2018-01-01T05:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.356</value>
+        </latitude>
+        <longitude>
+          <value>-123.032</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/1485d7d7-cfe5-427d-9456-151bb32c90d5">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/9fef0198-44bc-4b98-8603-a3f9ffbd861a">
+      <origin publicID="smi:local/75ea9453-ae0a-43e1-82bc-b5f851a282fe">
+        <time>
+          <value>2018-01-01T05:17:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.352</value>
+        </latitude>
+        <longitude>
+          <value>-123.03</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5527a509-a5ba-4235-9d22-968ac55083d3">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3e24d28f-f97b-4fd1-859c-5f3e91db42e1">
+      <origin publicID="smi:local/9e6b07c5-66e9-4c03-8220-fd6cd348eda1">
+        <time>
+          <value>2018-01-01T05:20:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.293</value>
+        </latitude>
+        <longitude>
+          <value>-123.069</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/7b3be435-8d92-4810-a273-e0109aa5d6f3">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/56873e37-df2d-4da1-bac9-c2299f7eb99d">
+      <origin publicID="smi:local/bd75c3cd-bdca-4408-a317-3fd0b0cbc27b">
+        <time>
+          <value>2018-01-01T05:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.327</value>
+        </latitude>
+        <longitude>
+          <value>-123.069</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0a49e0cb-688d-408a-a7a3-20af3a9a483b">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/d7aa4b62-9650-4e73-af32-9bae69128c2c">
+      <origin publicID="smi:local/ac43e5f3-c912-4184-8f51-a98a6b62bd40">
+        <time>
+          <value>2018-01-01T08:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.271</value>
+        </latitude>
+        <longitude>
+          <value>-122.985</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f6e0fbba-ba95-4a66-a669-af0cdf3cb451">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/757a11bd-8cfb-4f39-8704-1c5a67216f7d">
+      <origin publicID="smi:local/72489d28-b34d-4c4f-a222-9e07a318ec6f">
+        <time>
+          <value>2018-01-01T08:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.241</value>
+        </latitude>
+        <longitude>
+          <value>-123.018</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/e4f6aaf4-f585-43d8-be42-5653369810ea">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/332c4285-cc1b-413c-88c0-4935763c8205">
+      <origin publicID="smi:local/363c932f-b8d5-4c4e-9b74-21dccf144b15">
+        <time>
+          <value>2018-01-01T08:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.303</value>
+        </latitude>
+        <longitude>
+          <value>-123.018</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5e01b086-15af-401c-bb71-487222e8b4cf">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/997b18e2-3262-4f34-a036-7127cca26439">
+      <origin publicID="smi:local/490bcb3d-172c-40de-be05-547460638236">
+        <time>
+          <value>2018-01-01T08:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.277</value>
+        </latitude>
+        <longitude>
+          <value>-123.07</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/81026244-cde6-41ab-896f-01d86c5a2077">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/fcb479cc-e7fa-4a75-8da6-03d53710fd2f">
+      <origin publicID="smi:local/ee9d268c-01fd-44a9-8a02-83475b16e9fd">
+        <time>
+          <value>2018-01-01T09:00:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.143</value>
+        </latitude>
+        <longitude>
+          <value>-123.254</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/bd2214e4-0ae6-43f9-aaa2-434b382e701f">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/b50a83a7-920f-447a-bac3-74310b718a5c">
+      <origin publicID="smi:local/68107331-9e72-4eec-9662-08352d5b3fb7">
+        <time>
+          <value>2018-01-01T09:20:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.283</value>
+        </latitude>
+        <longitude>
+          <value>-123.218</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/1b9bda1e-22ee-424d-9e8d-f423b7cb8595">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/56bc332b-fcdd-4ff6-8807-d2b63401a46f">
+      <origin publicID="smi:local/edc77ad5-2b9c-40ff-bf38-6950e8f9e6ad">
+        <time>
+          <value>2018-01-01T09:22:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.278</value>
+        </latitude>
+        <longitude>
+          <value>-123.133</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d2b31171-bcc3-40cb-b1c8-173cd44351c1">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/847faacf-699a-40c2-871b-24a20ae23eb2">
+      <origin publicID="smi:local/25febe29-a94c-4175-b6f8-a1f2f0c60776">
+        <time>
+          <value>2018-01-01T09:25:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.281</value>
+        </latitude>
+        <longitude>
+          <value>-123.135</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c2d20bff-007a-4bf0-b551-0033dfa4a298">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/b60ca16e-4e6e-4cba-8c46-323718d6bda2">
+      <origin publicID="smi:local/2f729068-8d59-4d90-bf85-1a1e722571ae">
+        <time>
+          <value>2018-01-01T09:27:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.291</value>
+        </latitude>
+        <longitude>
+          <value>-123.068</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/440d627f-a628-4372-ae50-293bcba53073">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5a23ab3e-dfa1-4780-a190-19aec58d75d0">
+      <origin publicID="smi:local/ab02b098-d998-4648-96a3-d8c096fee630">
+        <time>
+          <value>2018-01-01T09:30:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.368</value>
+        </latitude>
+        <longitude>
+          <value>-123.097</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/aa9c58d7-f66a-42dd-8a2a-294ca794d6bd">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/4d2b4f9f-c4b2-4c56-8f50-e4292417d0cc">
+      <origin publicID="smi:local/19254b0f-0f90-4f0b-aca2-e4dd6c7bee2b">
+        <time>
+          <value>2018-01-01T09:32:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.374</value>
+        </latitude>
+        <longitude>
+          <value>-123.12</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/e70ffb20-3d81-423e-849a-07b6243a1ca7">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/924a6a94-dbe6-4db2-bab3-ab3e848bf1c8">
+      <origin publicID="smi:local/6b71faef-1ef5-4159-a0ad-4c69a7f5da4a">
+        <time>
+          <value>2018-01-01T09:35:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.38</value>
+        </latitude>
+        <longitude>
+          <value>-123.126</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5cb09d75-fae7-4ee6-9c4b-a3b00c2812e3">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/150b04b1-f380-47ff-8998-eef8b23000ad">
+      <origin publicID="smi:local/a0b87ea0-5f0c-42a3-afd2-6634768c4f26">
+        <time>
+          <value>2018-01-01T09:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.294</value>
+        </latitude>
+        <longitude>
+          <value>-123.07</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/1e8dd798-55c9-43c2-9919-1ab2a981592f">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/a3ccd08d-aafe-43d8-93ea-a27180722ff1">
+      <origin publicID="smi:local/e03f8b7c-6f3b-4a91-bf92-499dccfa87b0">
+        <time>
+          <value>2018-01-01T09:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.251</value>
+        </latitude>
+        <longitude>
+          <value>-123.049</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/561283d7-ee12-455b-85f8-4689bbf8b14d">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/160a9711-cce5-43e1-a96c-6e0a82257f59">
+      <origin publicID="smi:local/a76787c2-e93a-431e-bd0a-1e6d9f7fd402">
+        <time>
+          <value>2018-01-01T09:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.296</value>
+        </latitude>
+        <longitude>
+          <value>-123.077</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/284b2b4f-ae99-4eeb-a3f6-842958d290e4">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/486b1056-6a75-4c01-abe0-03cb16ac4236">
+      <origin publicID="smi:local/101be346-58d9-467e-9af7-865346302712">
+        <time>
+          <value>2018-01-01T09:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.329</value>
+        </latitude>
+        <longitude>
+          <value>-123.105</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/490163b8-c88d-4f80-9c03-06b3f0e1b6b9">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5d348c32-b79c-42e6-ac9e-7133d5d95224">
+      <origin publicID="smi:local/850bb0f0-04d2-4103-825e-b5a7cd5df09d">
+        <time>
+          <value>2018-01-01T09:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.358</value>
+        </latitude>
+        <longitude>
+          <value>-123.116</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/b8cab22c-3caf-4084-8055-5595e1b361ca">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/72595564-eed6-4274-bde5-6db42d69615b">
+      <origin publicID="smi:local/82de1399-5cbf-4015-8f4c-716e8676cd0c">
+        <time>
+          <value>2018-01-01T09:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.368</value>
+        </latitude>
+        <longitude>
+          <value>-123.109</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/9aaf3701-35c2-466f-b0a5-e6e15a77630d">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/60a94b10-1673-4b04-9bda-b5c5e6580f38">
+      <origin publicID="smi:local/1b53411a-8ec6-47ae-a05d-ea0347127511">
+        <time>
+          <value>2018-01-01T09:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.416</value>
+        </latitude>
+        <longitude>
+          <value>-122.844</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/044fb017-49c3-44fb-a60d-c08a2e345501">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/9d04fc38-3432-4896-b125-b3dc82e033f4">
+      <origin publicID="smi:local/2635d5dc-9529-4556-bead-98eea17eb828">
+        <time>
+          <value>2018-01-01T09:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.284</value>
+        </latitude>
+        <longitude>
+          <value>-123.075</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/9409ed70-183e-4465-8706-4a2b565d8b70">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/11ae3060-b3dd-4a70-84ab-5591702ecf69">
+      <origin publicID="smi:local/92d2db9f-8b73-425d-b62c-b1c88bee249f">
+        <time>
+          <value>2018-01-01T10:00:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.353</value>
+        </latitude>
+        <longitude>
+          <value>-122.999</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3093b155-5b4b-4208-8f5f-2005b5a4e546">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8ef7a49a-519f-4128-abce-2ba52f5e5a8a">
+      <origin publicID="smi:local/2e74d5bf-ca1e-4466-8158-cfb7b87fb7a8">
+        <time>
+          <value>2018-01-01T10:05:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.299</value>
+        </latitude>
+        <longitude>
+          <value>-123.017</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f8fd725d-3771-47ec-bf1b-c315de9b0964">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f6967b98-7f31-4b2c-a66c-c82f39fa9ea8">
+      <origin publicID="smi:local/4ee6a638-72a5-403c-acbf-72bc1b49ff04">
+        <time>
+          <value>2018-01-01T10:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.305</value>
+        </latitude>
+        <longitude>
+          <value>-123.076</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f673b62c-8d4d-4eb7-945d-6b394ec4afb0">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/d76c79e3-7c61-4b05-bf5c-2ce049b3c11b">
+      <origin publicID="smi:local/179a72a7-96ee-4170-93f9-6459eb4fa3e2">
+        <time>
+          <value>2018-01-01T10:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.294</value>
+        </latitude>
+        <longitude>
+          <value>-123.056</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/fde19d62-19b2-4d4b-91aa-9210b1a6b706">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/45df948e-08f8-4a7b-be82-573ea58ed654">
+      <origin publicID="smi:local/7b9f0f08-294d-4f94-bdd9-96310ca8c5a1">
+        <time>
+          <value>2018-01-01T10:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.236</value>
+        </latitude>
+        <longitude>
+          <value>-123.108</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/aa602ebf-ad12-4c90-8d65-79d5c022ee85">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/d4e554c9-3c18-4675-9b68-c75a612aef06">
+      <origin publicID="smi:local/fb16899c-f248-41d2-ad19-87b9a7f67a9b">
+        <time>
+          <value>2018-01-01T10:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.296</value>
+        </latitude>
+        <longitude>
+          <value>-122.997</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/515880a8-8b99-42db-b602-6a0d531eb964">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f909be25-c073-48d8-bb5c-d11f9234e214">
+      <origin publicID="smi:local/30462c6c-fe0a-402e-9ea1-4184c13748c8">
+        <time>
+          <value>2018-01-01T10:30:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.392</value>
+        </latitude>
+        <longitude>
+          <value>-122.983</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/29f467c2-eabc-468a-9911-296e1f27df10">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/eac739b0-de49-42d2-a3b9-571af4e1393e">
+      <origin publicID="smi:local/8e04d75d-7391-4774-be00-9e0207ebe7a4">
+        <time>
+          <value>2018-01-01T10:32:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.366</value>
+        </latitude>
+        <longitude>
+          <value>-123.132</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d7a0f28c-08a6-47d4-80ee-791a8ef7f994">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/0857c9ca-2c71-4150-92fa-092d207fc192">
+      <origin publicID="smi:local/9b9263db-5931-4eee-991c-b840bb20e099">
+        <time>
+          <value>2018-01-01T10:35:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.366</value>
+        </latitude>
+        <longitude>
+          <value>-123.128</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c422fdee-722a-414f-b252-06da3e61c5bb">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/ef645d61-fedc-4b49-b6b9-e2a1715e82b1">
+      <origin publicID="smi:local/ec5aa4d1-145f-4701-90c4-7297f07edb14">
+        <time>
+          <value>2018-01-01T10:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.384</value>
+        </latitude>
+        <longitude>
+          <value>-123.072</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/e8f7ca9b-3b96-4cae-99dc-082d1381e799">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/d201f700-9f78-4265-8958-ee40921c93c1">
+      <origin publicID="smi:local/9b028dfe-6470-4df0-9cbb-22be5c20199a">
+        <time>
+          <value>2018-01-01T10:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.281</value>
+        </latitude>
+        <longitude>
+          <value>-123.071</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/ed64b9ca-3d32-4755-89c6-ea4c1e578d25">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/212cd722-5ebc-4fa3-8b61-b0c24f3de42d">
+      <origin publicID="smi:local/63e7710b-337e-457b-a42f-cf83510e1bca">
+        <time>
+          <value>2018-01-01T10:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.309</value>
+        </latitude>
+        <longitude>
+          <value>-122.994</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/600ee527-e74e-4a20-9764-f4a0d681abce">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/a2bfac5e-8449-4cfb-9d71-64d1ad16e665">
+      <origin publicID="smi:local/ce65d3f5-3690-4856-9ad6-9040bd59f7d6">
+        <time>
+          <value>2018-01-01T10:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.308</value>
+        </latitude>
+        <longitude>
+          <value>-123.142</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/79d4c903-6817-425a-856a-4f9ca02925fb">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/392adfdc-7435-414c-93bc-992779a11566">
+      <origin publicID="smi:local/75726223-06fe-4ec0-9e1e-4e58f80a6f71">
+        <time>
+          <value>2018-01-01T10:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.293</value>
+        </latitude>
+        <longitude>
+          <value>-123.188</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/21763c55-5858-4c2c-afcb-5edc98eb9a21">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/868c9c59-db2c-4d73-a879-673129cf188a">
+      <origin publicID="smi:local/cf6a2cb2-8d59-4c6e-bd57-10bdd36e8436">
+        <time>
+          <value>2018-01-01T11:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.257</value>
+        </latitude>
+        <longitude>
+          <value>-123.068</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d779feaf-737e-4195-9711-581c6a8a8dd8">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/a715095a-45f4-4dd6-835a-934e65e51538">
+      <origin publicID="smi:local/f032821b-b1e6-49f3-9d30-cccc68035935">
+        <time>
+          <value>2018-01-01T11:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.27</value>
+        </latitude>
+        <longitude>
+          <value>-123.109</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/48287798-ec51-425c-9771-3b6fe2c176bf">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3e800c00-8048-4743-ae7b-5488da77a717">
+      <origin publicID="smi:local/5b1beb77-b9da-4b5b-aec6-4de52ec66632">
+        <time>
+          <value>2018-01-01T11:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.295</value>
+        </latitude>
+        <longitude>
+          <value>-123.145</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/03cd233c-b913-4139-9b19-67d96a97e3a7">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/deef1248-b46c-4911-a115-7f506d34f72f">
+      <origin publicID="smi:local/74390e8d-edf3-4407-987e-c8610af71ef2">
+        <time>
+          <value>2018-01-01T11:22:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.322</value>
+        </latitude>
+        <longitude>
+          <value>-122.878</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/8ac146c3-7900-4579-857c-992e0bacf5aa">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/17b7864e-96b4-4440-9586-9eebb925503c">
+      <origin publicID="smi:local/aeabefe5-3a51-4c26-9480-ed194a5c1024">
+        <time>
+          <value>2018-01-01T11:25:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.202</value>
+        </latitude>
+        <longitude>
+          <value>-123.176</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/16699aab-d5b4-4737-b62f-3d3478e3a06c">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f6e1b541-5744-4016-ba1b-b50737178453">
+      <origin publicID="smi:local/147fa4be-bf04-4097-b1c9-801d74c5cb28">
+        <time>
+          <value>2018-01-01T11:27:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.307</value>
+        </latitude>
+        <longitude>
+          <value>-123.079</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/58baa595-77ab-49c4-a63c-3450e262dde0">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3376b6e9-49df-4351-847e-9a40ef83211e">
+      <origin publicID="smi:local/1cf7707b-8343-47c9-bf64-cc0ad7aeb613">
+        <time>
+          <value>2018-01-01T11:30:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.326</value>
+        </latitude>
+        <longitude>
+          <value>-123.087</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/7a5d8ccc-261c-4c91-9cac-32fbd1bc2d0b">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/9d90cbc1-d18e-4c58-b2cf-685c14cb837f">
+      <origin publicID="smi:local/7be480b0-9dea-4c63-8f4a-a8f76fcb0b4b">
+        <time>
+          <value>2018-01-01T11:32:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.326</value>
+        </latitude>
+        <longitude>
+          <value>-123.087</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/a5b0fd84-3c29-4154-a031-5130ae5738f0">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/eb63d89b-ea81-4846-960a-28c7ac92f1f5">
+      <origin publicID="smi:local/ed0a6773-a74a-4fcd-bb83-58972776dc56">
+        <time>
+          <value>2018-01-01T11:35:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.326</value>
+        </latitude>
+        <longitude>
+          <value>-123.085</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/88c9bbef-c484-424b-bc6d-0d0d8973f7f2">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/57093da4-a274-442f-acf0-fa4e7f750ca9">
+      <origin publicID="smi:local/2b2b9710-b976-444b-9c36-f301a932fe6e">
+        <time>
+          <value>2018-01-01T11:37:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.312</value>
+        </latitude>
+        <longitude>
+          <value>-122.921</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/422a42cd-37a1-4521-bdd1-a847ee6f56f0">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/37e5ad34-bbe1-4cc3-97e0-c6719d5fa5b2">
+      <origin publicID="smi:local/790980a7-27a1-4750-a376-4cf685ca42e9">
+        <time>
+          <value>2018-01-01T11:40:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.33</value>
+        </latitude>
+        <longitude>
+          <value>-122.864</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/02b9f22d-836f-42ac-acfb-611f1b6e4628">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/68680211-610d-43b5-a0aa-eb4a4562a53f">
+      <origin publicID="smi:local/9fa6e7e9-50d4-4e12-a1b9-987d9ec2687d">
+        <time>
+          <value>2018-01-01T11:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.293</value>
+        </latitude>
+        <longitude>
+          <value>-122.914</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d0fb4a28-d25f-4cd0-9915-4dcadf63051b">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/c91f145c-3b2c-437e-b0f6-e350fabb6631">
+      <origin publicID="smi:local/042faeda-a9b2-4d77-afb8-6f466ec59b2d">
+        <time>
+          <value>2018-01-01T11:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.234</value>
+        </latitude>
+        <longitude>
+          <value>-123.243</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/fa50fcaf-6b21-41a9-b34d-c4922dbdce2c">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e8e6f901-46de-4a0f-9426-83d8249cd2b7">
+      <origin publicID="smi:local/2af93d43-28d1-4b84-976b-085702995f7b">
+        <time>
+          <value>2018-01-01T11:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.295</value>
+        </latitude>
+        <longitude>
+          <value>-123.069</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f92599f0-c5dd-4813-962c-0110301820c0">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3728bdf8-921e-46d2-81cc-17ee56221969">
+      <origin publicID="smi:local/b38a5bd8-9371-464b-9621-ad182132a58b">
+        <time>
+          <value>2018-01-01T11:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.318</value>
+        </latitude>
+        <longitude>
+          <value>-123.085</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c6dd87db-2c7a-4290-bb90-dc22115b04c7">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/00ab6225-e2d8-49a0-9aac-573dfcfc0b3b">
+      <origin publicID="smi:local/a550750a-fcd2-4b34-9ea7-95ae1b88f30e">
+        <time>
+          <value>2018-01-01T11:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.288</value>
+        </latitude>
+        <longitude>
+          <value>-122.89</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/645ca63f-120d-4a97-ae80-13577dbedb57">
+        <mag>
+          <value>0.7</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3a19d938-20bb-48da-b21f-fe0160c8ccfb">
+      <origin publicID="smi:local/a7e096da-e531-44ae-a227-deedead6c32d">
+        <time>
+          <value>2018-01-01T12:00:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.124</value>
+        </latitude>
+        <longitude>
+          <value>-122.936</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/dbb05928-5eba-49d4-a87e-c0bc39f67ea1">
+        <mag>
+          <value>0.7</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/805bc3a8-dc02-4c9a-84df-839c7ad400e9">
+      <origin publicID="smi:local/1bafdd79-2c23-456e-b3b9-15890141dab9">
+        <time>
+          <value>2018-01-01T12:02:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.397</value>
+        </latitude>
+        <longitude>
+          <value>-123.162</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/580271c7-abcd-4c46-ba9b-db47d0092de9">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/0fa872f9-c499-4425-a1c5-00c1ff10aadf">
+      <origin publicID="smi:local/0b8f7d5d-27fc-43a8-b7b1-98f600743057">
+        <time>
+          <value>2018-01-01T12:05:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.373</value>
+        </latitude>
+        <longitude>
+          <value>-123.226</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/682f63f1-99c5-499f-9155-a242d1246100">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/f6e7b9f1-b8bd-4e72-833f-e7d0ef29903b">
+      <origin publicID="smi:local/d3d501a3-75f7-48b3-b04f-ca39f278e76a">
+        <time>
+          <value>2018-01-01T12:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.31</value>
+        </latitude>
+        <longitude>
+          <value>-123.449</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/118a2126-0047-4d5a-9e4f-8bb446565e2c">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5cf01f5f-5799-4b40-9d45-213024d9559b">
+      <origin publicID="smi:local/4b349057-dfc0-4edc-b446-dbd76e3940f2">
+        <time>
+          <value>2018-01-01T12:42:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.323</value>
+        </latitude>
+        <longitude>
+          <value>-123.07</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/2b855855-1756-4db8-838c-f0689c9a0259">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/7e51d6ec-6639-45ec-bff1-6f340b9af2c1">
+      <origin publicID="smi:local/116a9538-5c68-4772-8553-7b40a961d709">
+        <time>
+          <value>2018-01-01T12:45:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.325</value>
+        </latitude>
+        <longitude>
+          <value>-123.036</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/1a67e509-02ba-4709-9426-11cf92e68b4e">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/e2d62605-0f78-49ed-8f6f-abafc976eafb">
+      <origin publicID="smi:local/c3dea716-a32d-4aa4-a1ae-8a7098b8333f">
+        <time>
+          <value>2018-01-01T12:47:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.34</value>
+        </latitude>
+        <longitude>
+          <value>-123.04</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/45aa6fde-e9ff-4a6c-887d-a85a3f75891f">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5ae4eaf2-d4d1-4982-8389-fd97f8939714">
+      <origin publicID="smi:local/e57399e4-d578-4fe3-98f3-f596c4b71459">
+        <time>
+          <value>2018-01-01T12:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.288</value>
+        </latitude>
+        <longitude>
+          <value>-123.065</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/9fe96b0f-15bd-4579-951d-c51c4851a8c7">
+        <mag>
+          <value>1.2</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/98443979-8654-439b-ba3d-82d8358fc0d0">
+      <origin publicID="smi:local/6525f353-1a9d-492c-9327-0fd196aa4d05">
+        <time>
+          <value>2018-01-01T12:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.269</value>
+        </latitude>
+        <longitude>
+          <value>-123.107</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/fed9b25a-7654-49be-a4a2-aec00b48aebc">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/685de8cf-b9fe-482e-8911-5b971cf9142e">
+      <origin publicID="smi:local/cdf6089d-9321-429d-934d-de9aaf234aff">
+        <time>
+          <value>2018-01-01T12:57:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.275</value>
+        </latitude>
+        <longitude>
+          <value>-123.117</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/54b33d4d-877a-41aa-af62-8c4f679143d8">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/51a6ce17-f210-4382-b397-7562ab5dc0c7">
+      <origin publicID="smi:local/3d12e92d-8214-4645-8130-c932ecb8ed7e">
+        <time>
+          <value>2018-01-01T13:02:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.417</value>
+        </latitude>
+        <longitude>
+          <value>-122.997</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3cae85b2-640c-4bc7-80ef-e48961b8d502">
+        <mag>
+          <value>1.7</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/5735c20a-12e4-48f1-ad62-241a3f45666f">
+      <origin publicID="smi:local/3b111dda-d646-46a8-aac4-07e23afe6df0">
+        <time>
+          <value>2018-01-01T13:05:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.314</value>
+        </latitude>
+        <longitude>
+          <value>-123.096</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/62b516a0-f5ce-434d-96ca-0e2e9c143a78">
+        <mag>
+          <value>1.3</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/c8e7d7d2-df6f-4c72-81c1-d273f686aaa5">
+      <origin publicID="smi:local/3d57473e-3194-48f1-8ece-9ab4ae4d12b1">
+        <time>
+          <value>2018-01-01T13:07:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.313</value>
+        </latitude>
+        <longitude>
+          <value>-123.007</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/f3476661-90f8-4c2b-a4a5-bb27988b4771">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/4cf11d58-41f5-4c39-b62b-c82038c58eb9">
+      <origin publicID="smi:local/d3f834d6-fa6d-4016-8013-ccdbb6cc71a4">
+        <time>
+          <value>2018-01-01T13:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.175</value>
+        </latitude>
+        <longitude>
+          <value>-123.144</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/a7722f43-76ec-4f47-8ab4-a38981d2f2b5">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/44792090-1d95-44fb-bc17-17295b4aecc0">
+      <origin publicID="smi:local/c66c08fc-5c41-4bad-a1c7-d61903093087">
+        <time>
+          <value>2018-01-01T13:12:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.312</value>
+        </latitude>
+        <longitude>
+          <value>-123.081</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d50f9f9f-7c18-4430-a5ca-c2a229f66b88">
+        <mag>
+          <value>0.8</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8e0ab2ac-4ae8-418a-b749-3f0bcd8697b8">
+      <origin publicID="smi:local/c2b92132-f213-4628-8b32-eb4c3f985a1a">
+        <time>
+          <value>2018-01-01T13:15:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.231</value>
+        </latitude>
+        <longitude>
+          <value>-123.111</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c81893aa-4a6b-4175-a6c0-bdf3e9ca1b15">
+        <mag>
+          <value>0.7</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/11cc7c02-f9c4-4260-9f41-deda7a5a86b3">
+      <origin publicID="smi:local/a1439a3d-9ea2-40eb-a6c8-f65a962f0e4b">
+        <time>
+          <value>2018-01-01T13:22:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.216</value>
+        </latitude>
+        <longitude>
+          <value>-123.17</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c2edf2f9-d6c5-4c15-b6ca-0c1450a82844">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3c535fba-e35b-4ca1-923d-0cd417a7affb">
+      <origin publicID="smi:local/69d23c69-30e9-46c1-a04e-21c67402b3d4">
+        <time>
+          <value>2018-01-01T13:25:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.291</value>
+        </latitude>
+        <longitude>
+          <value>-123.08</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/0c64d559-30f7-4497-9919-d5fa2ddd3ede">
+        <mag>
+          <value>1.0</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/33bf2382-4278-4749-83d1-878dc2532517">
+      <origin publicID="smi:local/aba79071-2409-47c0-9710-a1a43cd93291">
+        <time>
+          <value>2018-01-01T13:27:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.327</value>
+        </latitude>
+        <longitude>
+          <value>-123.094</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/db5a13e2-5a22-4846-8174-bd40087497ea">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/17d0c1c8-d006-462c-a294-b11ef20fbb48">
+      <origin publicID="smi:local/e12e1970-5333-4338-b618-46dd5f066aa4">
+        <time>
+          <value>2018-01-01T13:30:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.403</value>
+        </latitude>
+        <longitude>
+          <value>-123.067</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/29579dc3-0426-4155-b859-5151d33481af">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/6c4a4e87-3491-4f53-a7e0-3482f3f4f36e">
+      <origin publicID="smi:local/990061f4-ba3a-4be2-b193-cdc09f9ee51d">
+        <time>
+          <value>2018-01-01T13:32:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.398</value>
+        </latitude>
+        <longitude>
+          <value>-123.056</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/18db1c6a-14c3-46e3-ae4f-71ff420a261b">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/0463bb66-3706-4ea6-a770-56d007d08cf5">
+      <origin publicID="smi:local/dc368f56-3259-4e69-a88c-79822cb5d965">
+        <time>
+          <value>2018-01-01T13:50:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.311</value>
+        </latitude>
+        <longitude>
+          <value>-123.149</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/5e9c8b2c-f307-4382-82fc-752dc4d830de">
+        <mag>
+          <value>1.4</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/11bdd4e4-4a2c-4d31-93ce-d0c141d0f492">
+      <origin publicID="smi:local/9cf79f21-9cb8-4076-b655-a8772f2747bb">
+        <time>
+          <value>2018-01-01T13:52:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.335</value>
+        </latitude>
+        <longitude>
+          <value>-123.162</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/cac67873-4424-496e-98ab-6fad9ec925d2">
+        <mag>
+          <value>1.1</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/3ed328d1-cde5-47bb-9ce1-e8d09f70d778">
+      <origin publicID="smi:local/1007ae25-cce9-405e-8ce9-65a93cb62490">
+        <time>
+          <value>2018-01-01T13:55:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.255</value>
+        </latitude>
+        <longitude>
+          <value>-123.191</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c325d7a1-ceab-4599-aa35-ea21412f225b">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/d07a6d68-a44e-4a3b-8873-d80904d30f70">
+      <origin publicID="smi:local/98edb635-2f36-4e6d-aefb-19e12a268fa2">
+        <time>
+          <value>2018-01-01T14:10:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.465</value>
+        </latitude>
+        <longitude>
+          <value>-123.122</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/d59608d3-120c-460f-84af-f5c23a72808c">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/8bc0dd3b-e751-467e-8101-341008104060">
+      <origin publicID="smi:local/0f6592cd-8c9d-4605-891f-16150e264a14">
+        <time>
+          <value>2018-01-01T14:17:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.251</value>
+        </latitude>
+        <longitude>
+          <value>-123.193</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/14bf7a41-1153-4be5-9147-03e1bdde6f6b">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/ec8396c1-22d7-423a-9cfd-753790d00e9a">
+      <origin publicID="smi:local/201a83cf-72e5-4f76-8f6b-ede4feec8548">
+        <time>
+          <value>2018-01-01T14:20:00.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.272</value>
+        </latitude>
+        <longitude>
+          <value>-123.177</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/3b22cf1a-a919-40ac-940e-e86f8afd2429">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+    <event publicID="smi:local/c71e1697-4ac8-478a-acdf-9e456c2fa7fd">
+      <origin publicID="smi:local/6a74e305-2257-4469-9aa1-b5237aedc0fa">
+        <time>
+          <value>2018-01-01T14:22:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>48.259</value>
+        </latitude>
+        <longitude>
+          <value>-123.268</value>
+        </longitude>
+      </origin>
+      <magnitude publicID="smi:local/c972334b-7d82-4c4d-840a-a01f4d738536">
+        <mag>
+          <value>0.9</value>
+        </mag>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>
