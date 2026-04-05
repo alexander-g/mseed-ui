@@ -14,7 +14,8 @@ import type { InferenceEvent } from '../ui/mseed-heatmap.tsx'
 export type WorkerProcessFileCommand = {
     command: 'process-file'
     /** The file to process, can be uint8 instead of File, bc doesnt work in deno */
-    filedata: Uint8Array<ArrayBuffer>|File
+    filedata: Uint8Array<ArrayBuffer>
+    filename: string
 }
 
 
@@ -22,9 +23,9 @@ export type WorkerCommand =
     WorkerProcessFileCommand
 
 export type FileResult = {
-        type: 'mseed'
-        file: File
-        meta: MSEED_Meta
+        type:    'mseed'
+        meta:     MSEED_Meta
+        filename: string
     } 
     | {
         type:    'station'
@@ -39,8 +40,8 @@ export type FileResult = {
         quakeevents: QuakeEvent[]
     }
     | {
-        type: 'unknown'
-        file: File
+        type:    'unknown'
+        filename: string
     }
 
 export type WorkerReadyResult = {
@@ -99,8 +100,8 @@ async function process_file(file: File): Promise<FileResult | Error> {
     if(!(meta instanceof Error))
         return {
             type: 'mseed',
-            file: file,
             meta: meta,
+            filename: file.name,
         }
 
     // Try CSV inference
@@ -114,7 +115,7 @@ async function process_file(file: File): Promise<FileResult | Error> {
     // Unknown file
     return {
         type: 'unknown',
-        file: file,
+        filename: file.name,
     }
 }
 
@@ -131,7 +132,7 @@ self.onmessage = async (e: MessageEvent) => {
             const file_to_process = 
                 (data.filedata instanceof File)
                 ? data.filedata
-                : new File([data.filedata], `${data.filedata.length}.bytes`)
+                : new File([data.filedata], data.filename)
             const file_result:FileResult|Error = await process_file(file_to_process)
             if(file_result instanceof Error) {
                 result = file_result as Error

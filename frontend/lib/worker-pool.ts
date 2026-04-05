@@ -65,11 +65,8 @@ export class WorkerPool {
 
         // NOTE: passing a file to a worker does not work in deno
         // whereas passing many Uint8Arrays causes issues in the browser
-        const filedata:File|Uint8Array<ArrayBuffer>|Error = 
-            is_deno()
-            ? await file.bytes()
-              .catch( _ => new Error(`Could not read file ${file.name}`) )
-            : file;
+        const filedata:Uint8Array<ArrayBuffer>|Error = 
+            await file.bytes().catch( _ => new Error(`Could not read file ${file.name}`) )
         if(filedata instanceof Error)
             return filedata as Error;
         
@@ -106,8 +103,9 @@ export class WorkerPool {
             worker.addEventListener('message', handler, { once: true })
             worker.addEventListener('error', error_handler, { once: true })
 
-            const command:WorkerCommand = {command:'process-file', filedata}
-            worker.postMessage(command)
+            const command:WorkerCommand = 
+                {command:'process-file', filedata, filename:file.name}
+            worker.postMessage(command, [filedata.buffer])
         })
     }
 

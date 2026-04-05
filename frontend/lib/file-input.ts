@@ -48,6 +48,8 @@ export async function process_dropped_files(
         files.length, 
         pool_size ?? Math.max(2, navigator.hardwareConcurrency ?? 4)
     )
+    // getting crashes with full 20 cpu workers on my machine, 10 should be enough?
+    pool_size = Math.min(pool_size, 10)
     const pool = new WorkerPool(pool_size)
 
     try {
@@ -59,13 +61,18 @@ export async function process_dropped_files(
         const batch_size:number = pool_size * 1;
         let processed_count = 0
 
+        const filemap:Record<string, File> = 
+            Object.fromEntries(files.map( f => [f.name, f] ))
+        const filenames:string[] = Object.keys(filemap)
+
         for (let i:number = 0; i < files.length; i += batch_size) {
-            const batch:File[] = files.slice(i, Math.min(i + batch_size, files.length))
+            const batch_of_filenames:string[] = 
+                filenames.slice(i, Math.min(i + batch_size, files.length))
 
             const all_promises: Promise<FileResult|Error>[] = []
-            for(const file of batch) {
+            for(const filename of batch_of_filenames) {
                 const worker_idx = all_promises.length % pool_size
-                all_promises.push(pool.process_file(file, worker_idx))
+                all_promises.push(pool.process_file(filemap[filename]!, worker_idx))
             }
 
             // wait for all results and aggregate
@@ -78,7 +85,7 @@ export async function process_dropped_files(
                     const file_result: FileResult = result
                     if (file_result.type === 'mseed')
                         all_meta.push({
-                            file: file_result.file, 
+                            file: filemap[file_result.filename]!, 
                             meta: file_result.meta 
                         })
                     else if (file_result.type === 'station')
@@ -88,21 +95,19 @@ export async function process_dropped_files(
                     else if (file_result.type === 'quakeevent')
                         all_events.push(...file_result.quakeevents)
                     else if (file_result.type === 'unknown')
-                        all_unknown.push(file_result.file)
+                        all_unknown.push(filemap[file_result.filename]!)
                 }
 
                 // Report progress every batch_size files
                 processed_count++
-                if (processed_count % batch_size === 0 && on_progress) {
+                if (processed_count % batch_size === 0 && on_progress)
                     on_progress(processed_count, files.length)
-                }
             }
         }
 
         // Final progress update
-        if (on_progress) {
+        if (on_progress)
             on_progress(files.length, files.length)
-        }
     } finally {
         pool.terminate()
     }
