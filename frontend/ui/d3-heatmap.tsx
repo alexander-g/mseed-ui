@@ -21,6 +21,9 @@ export class D3Heatamp extends preact.Component<{
 
     on_click: (selected:number) => void,
 }> {
+    private static next_clip_id:number = 0
+    private clip_path_id:string = `heatmap-clip-${D3Heatamp.next_clip_id++}`
+
 
     container_ref: preact.RefObject<HTMLDivElement> = preact.createRef();
     svg_ref:     preact.RefObject<SVGSVGElement> = preact.createRef();
@@ -52,27 +55,41 @@ export class D3Heatamp extends preact.Component<{
                 viewBox = {`0 0 ${svg_width} ${svg_height}`}
                 ref     = {this.svg_ref} 
             >
+                <defs>
+                    {/* mask to make sure the image stays withing plot boundaries */}
+                    <clipPath id={this.clip_path_id}>
+                        <rect
+                            x = "0"
+                            y = "0"
+                            width = {`${plot_width}`}
+                            height = {`${plot_height}`}
+                        />
+                    </clipPath>
+                </defs>
+
                 <g 
                     ref = {this.root_ref}
                     transform = {`translate(${this.margin.left},${this.margin.top})`} 
                 >
                     
-                    <g 
-                        ref = {this.heatmap_ref}
-                        transform = {this.$transform_str}
-                    >
-                        <image 
-                            x      = "0" 
-                            y      = "0" 
-                            width  = {`${plot_width}`} 
-                            height = {`${plot_height}`} 
-                            image-rendering = 'pixelated'
-                            preserveAspectRatio = "none"
-                            onClick = {this.#svgimage_onclick}
-                            onMouseMove = {this.#svgimage_onmousemove}
-                            onMouseLeave = {this.#svgimage_onmouseleave}
-                            ref = {this.svgimage_ref} 
-                        />
+                    <g clip-path={`url(#${this.clip_path_id})`}>
+                        <g 
+                            ref = {this.heatmap_ref}
+                            transform = {this.$transform_str}
+                        >
+                            <image 
+                                x      = "0" 
+                                y      = "0" 
+                                width  = {`${plot_width}`} 
+                                height = {`${plot_height}`} 
+                                image-rendering = 'pixelated'
+                                preserveAspectRatio = "none"
+                                onClick = {this.#svgimage_onclick}
+                                onMouseMove = {this.#svgimage_onmousemove}
+                                onMouseLeave = {this.#svgimage_onmouseleave}
+                                ref = {this.svgimage_ref} 
+                            />
+                        </g>
                     </g>
 
 
@@ -410,49 +427,6 @@ export class D3Heatamp extends preact.Component<{
             data_label,
         }
     }
-
-
-
-
-    // #id = self.crypto.randomUUID();
-
-    // #outer_dimmer(): JSX.Element|null {
-    //     const mask_id = `mask-${this.#id}`
-
-    //     const { width = 800, height = 500 } = this.props;
-    //     const w:number = width - this.margin.left - this.margin.right;
-    //     const h:number = height - this.margin.top - this.margin.bottom;
-
-    //     return <>
-    //         <mask id = {mask_id} mask-type="luminance">
-    //             <rect 
-    //                 x      = "0" 
-    //                 y      = "0" 
-    //                 width  = {`${width}`} 
-    //                 height = {`${height}`} 
-    //                 fill   = "white" 
-    //             />
-
-    //             <rect 
-    //                 x      = {`${this.margin.left}`} 
-    //                 y      = {`${this.margin.top}`} 
-    //                 width  = {`${w}`} 
-    //                 height = {`${h}`} 
-    //                 fill   = "black" 
-    //             />
-    //         </mask>
-
-    //         <rect 
-    //             x       = "0" 
-    //             y       = "0" 
-    //             width   = {`${width}`} 
-    //             height  = {`${height}`} 
-    //             fill    = "white" 
-    //             opacity = "1.0" 
-    //             mask    = {`url(#${mask_id})`}
-    //         />
-    //     </>
-    // }
 }
 
 type SVGPlotDimensions = {
