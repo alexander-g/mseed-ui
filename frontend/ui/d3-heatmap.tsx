@@ -12,6 +12,11 @@ export type DataItem = {
     value: number,
 }
 
+type Size = {
+    width:  number,
+    height: number,
+}
+
 
 
 export class D3Heatamp extends preact.Component<{
@@ -19,38 +24,36 @@ export class D3Heatamp extends preact.Component<{
     $x_axis:Readonly<Signal<number[]>>,
     $y_axis:Readonly<Signal<string[]>>,
 
-    width:  number,
-    height: number,
-
     on_click: (selected:number) => void,
 }> {
-    static override defaultProps = { width: 1400, height: 500 };
 
+    container_ref: preact.RefObject<HTMLDivElement> = preact.createRef();
     svg_ref:     preact.RefObject<SVGSVGElement> = preact.createRef();
     root_ref:    preact.RefObject<SVGGElement> = preact.createRef();
     heatmap_ref: preact.RefObject<SVGGElement> = preact.createRef();
     xaxis_ref:   preact.RefObject<SVGGElement> = preact.createRef();
     yaxis_ref:   preact.RefObject<SVGGElement> = preact.createRef();
     svgimage_ref:  preact.RefObject<SVGImageElement> = preact.createRef();
+    resize_observer: ResizeObserver|null = null
 
     private margin = { top: 20, right: 5, bottom: 30, left: 60 };
-
+    private $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
 
 
     render(): JSX.Element {
-        const { width, height } = this.props;
-        const w:number = width - this.margin.left - this.margin.right;
-        const h:number = height - this.margin.top - this.margin.bottom;
-        
-        const svg_width:number  = width + this.margin.left + this.margin.right
-        const svg_height:number = height + this.margin.top + this.margin.bottom
+        const {svg_width, svg_height, plot_width, plot_height} = 
+            this.#get_dimensions()
 
-        return <div class="d3-container">
+        return <div
+            class = "d3-container"
+            style = {{ width: '100%', height: '50%' }}
+            ref   = {this.container_ref}
+        >
             <svg 
-                ref    = {this.svg_ref} 
-                // dont understand why by .toFixed() is needed
-                width  = {svg_width.toFixed(0)}
-                height = {svg_height.toFixed(0)}
+                width   = "100%"
+                height  = "100%"
+                viewBox = {`0 0 ${svg_width} ${svg_height}`}
+                ref     = {this.svg_ref} 
             >
                 <g 
                     ref = {this.root_ref}
@@ -63,34 +66,36 @@ export class D3Heatamp extends preact.Component<{
                     >
                         
                         <image 
-                            x="0" 
-                            y="0" 
-                            width={`${w}`} 
-                            height={`${h}`} 
-                            ref={this.svgimage_ref} 
-                            image-rendering='pixelated'
-                            onClick = {this.svgimage_onclick}
+                            x      = "0" 
+                            y      = "0" 
+                            width  = {`${plot_width}`} 
+                            height = {`${plot_height}`} 
+                            image-rendering = 'pixelated'
                             preserveAspectRatio = "none"
+                            onClick = {this.svgimage_onclick}
+                            ref = {this.svgimage_ref} 
                         />
                     </g>
 
 
                     
-                    <g ref={this.xaxis_ref} class="axis" transform={`translate(0,${h})`} />
+                    <g 
+                        class = "axis" 
+                        transform = {`translate(0,${plot_height})`} 
+                        ref = {this.xaxis_ref} 
+                    />
                     <g ref={this.yaxis_ref} class="axis" />
                 </g>
             </svg>
         </div>
     }
 
-    #rowscols:{cols:number, rows:number}|null = null
 
     /** The current number of rows and columns. Cached here to avoid recomputation */
     private $rowscols:Signal<{cols:number, rows:number}|null> = new Signal(null)
 
     #_ = this.props.$data.subscribe( () => {
-        this.#rowscols = this.#get_rows_cols()
-        this.$rowscols.value = this.#rowscols
+        this.$rowscols.value = this.#get_rows_cols()
     } )
 
 
@@ -105,6 +110,18 @@ export class D3Heatamp extends preact.Component<{
             .scaleExtent([1, 25])
             .on("zoom", (event) => this.$zoom_transform.value = event.transform);
         d3.select(this.svg_ref.current!).call(zoom);
+
+        const container:HTMLDivElement|null = this.container_ref.current
+        if(container != null) {
+            this.#update_container_size(container.clientWidth, container.clientHeight)
+            this.resize_observer = new ResizeObserver(this.#on_container_resize)
+            this.resize_observer.observe(container)
+        }
+    }
+
+    override componentWillUnmount(): void {
+        this.resize_observer?.disconnect()
+        this.resize_observer = null
     }
 
 
@@ -124,14 +141,14 @@ export class D3Heatamp extends preact.Component<{
         // NOTE: accessing $signals up here to make sure they are subscribed to
         const t:d3.ZoomTransform = this.$zoom_transform.value
         const x_axis:number[]    = this.props.$x_axis.value
-        const { width, height }  = this.props;
         const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
         if(colsrows == null)
             return;
         const { cols, rows } = colsrows;
 
-        const w:number = width  - this.margin.left - this.margin.right;
-        const h:number = height - this.margin.top  - this.margin.bottom;
+        const dimensions:SVGPlotDimensions = this.#get_dimensions()
+        const w:number = dimensions.plot_width
+        const h:number = dimensions.plot_height
 
         const zx:d3.ScaleLinear<number,number> = t.rescaleX(
             d3.scaleLinear()
@@ -238,10 +255,10 @@ export class D3Heatamp extends preact.Component<{
 
     svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current);
-        const { width, height } = this.props;
-        const w:number = width - this.margin.left - this.margin.right;
-        const h:number = height - this.margin.top - this.margin.bottom;
-        const { cols, rows } = this.#rowscols!;
+        const dimensions:SVGPlotDimensions = this.#get_dimensions()
+        const w:number = dimensions.plot_width
+        const h:number = dimensions.plot_height
+        const { cols, rows } = this.$rowscols.value!;
 
         const imx:number = Math.floor((mx / w) * cols);
         const imy:number = Math.floor((my / h) * rows);
@@ -251,7 +268,6 @@ export class D3Heatamp extends preact.Component<{
         for(const itemindex in items) {
             const item:DataItem = items[itemindex]!;
             if(item.y == imy && item.x == imx) {
-                //console.log(item, this.props.$y_axis.value[item.y], new Date( this.props.$x_axis.value[item.x]! * 1000 ));
                 console.log(`Clicked on data item ${itemindex} at ${[imx, imy]}`)
                 this.props.on_click( Number(itemindex) );
                 return;
@@ -259,6 +275,49 @@ export class D3Heatamp extends preact.Component<{
         }
         console.log(`No data item at ${[imx, imy]}`)
     }
+
+
+    /** Compute svg and plot dimensions from container size */
+    #get_dimensions(): SVGPlotDimensions {
+        const measured:Size = this.$container_size.value
+
+        const svg_width:number   = measured.width
+        const svg_height:number  = measured.height
+        const plot_width:number  = 
+            Math.max(svg_width - this.margin.left - this.margin.right, 1)
+        const plot_height:number = 
+            Math.max(svg_height - this.margin.top - this.margin.bottom, 1)
+
+        return {svg_width, svg_height, plot_width, plot_height}
+    }
+
+    /** Update container dimensions when parent size changes */
+    #update_container_size(width:number, height:number): void {
+        const next_width:number = Math.max(Math.floor(width), 0)
+        const next_height:number = Math.max(Math.floor(height), 0)
+        const current:Size = this.$container_size.value
+        if(current.width == next_width && current.height == next_height)
+            return
+
+        this.$container_size.value = {
+            width: next_width,
+            height: next_height,
+        }
+    }
+
+    /** Called when the top <div> changes size */
+    #on_container_resize = (entries:ResizeObserverEntry[]) => {
+        const first:ResizeObserverEntry|undefined = entries[0]
+        if(first == undefined)
+            return
+
+        this.#update_container_size(
+            first.contentRect.width, 
+            first.contentRect.height
+        )
+    }
+
+
 
 
     // #id = self.crypto.randomUUID();
@@ -300,6 +359,13 @@ export class D3Heatamp extends preact.Component<{
     //         />
     //     </>
     // }
+}
+
+type SVGPlotDimensions = {
+    svg_width:  number, 
+    svg_height:  number, 
+    plot_width:  number, 
+    plot_height: number 
 }
 
 
