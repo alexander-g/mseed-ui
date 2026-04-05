@@ -249,8 +249,8 @@ export class D3Heatamp extends preact.Component<{
         const all_y:number[]  = data.map( item => item.y ).sort((a,b)=>a-b)
 
 
-        const ncols:number = all_x[all_x.length-1]! - all_x[0]!
-        const nrows:number = all_y[all_y.length-1]! - all_y[0]!
+        const ncols:number = all_x[all_x.length-1]! - all_x[0]! +1
+        const nrows:number = all_y[all_y.length-1]! - all_y[0]! +1
 
         return {
             cols: ncols,
