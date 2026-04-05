@@ -41,35 +41,44 @@ export class D3Heatamp extends preact.Component<{
     private $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
     private $hover_position: Signal<HoverPosition|null> = new Signal(null)
 
+    private $dimensions:Readonly<Signal<SVGPlotDimensions>> = signals.computed(() =>
+        this.#get_dimensions()
+    )
+    private $svg_viewbox:Readonly<Signal<string>> = signals.computed(() => {
+        const dimensions:SVGPlotDimensions = this.$dimensions.value
+        return `0 0 ${dimensions.svg_width} ${dimensions.svg_height}`
+    })
+    private $plot_width:Readonly<Signal<number>> = signals.computed(() =>
+        this.$dimensions.value.plot_width
+    )
+    private $plot_height:Readonly<Signal<number>> = signals.computed(() =>
+        this.$dimensions.value.plot_height
+    )
+    private $x_axis_transform:Readonly<Signal<string>> = signals.computed(() =>
+        `translate(0,${this.$plot_height.value})`
+    )
+
 
     render(): JSX.Element {
-        const {svg_width, svg_height, plot_width, plot_height} = 
-            this.#get_dimensions()
-        const hover:HoverPosition|null = this.$hover_position.value
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
-        const marker_positions:number[] = colsrows == null
-            ? []
-            : this.#marker_positions(plot_width, colsrows.cols)
-
         return <div
             class = "d3-container"
             style = {{ width: '100%', height: '50%' }}
             ref   = {this.container_ref}
         >
-            <svg 
-                width   = "100%"
-                height  = "100%"
-                viewBox = {`0 0 ${svg_width} ${svg_height}`}
-                ref     = {this.svg_ref} 
-            >
+                <svg 
+                    width   = "100%"
+                    height  = "100%"
+                    viewBox = {this.$svg_viewbox}
+                    ref     = {this.svg_ref} 
+                >
                 <defs>
                     {/* mask to make sure the image stays withing plot boundaries */}
                     <clipPath id={this.clip_path_id}>
                         <rect
                             x = "0"
                             y = "0"
-                            width = {`${plot_width}`}
-                            height = {`${plot_height}`}
+                            width = {this.$plot_width}
+                            height = {this.$plot_height}
                         />
                     </clipPath>
                 </defs>
@@ -87,8 +96,8 @@ export class D3Heatamp extends preact.Component<{
                             <image 
                                 x      = "0" 
                                 y      = "0" 
-                                width  = {`${plot_width}`} 
-                                height = {`${plot_height}`} 
+                                width  = {this.$plot_width} 
+                                height = {this.$plot_height} 
                                 image-rendering = 'pixelated'
                                 preserveAspectRatio = "none"
                                 onClick = {this.#svgimage_onclick}
@@ -101,20 +110,7 @@ export class D3Heatamp extends preact.Component<{
                             transform = {this.$transform_str}
                             style = {{ pointerEvents: 'none' }}
                         >
-                            {
-                                marker_positions.map((x:number, marker_index:number) => (
-                                    <line
-                                        key = {`${marker_index}-${x}`}
-                                        x1 = {`${x}`}
-                                        y1 = "0"
-                                        x2 = {`${x}`}
-                                        y2 = {`${plot_height}`}
-                                        stroke = "#4cc9f0"
-                                        stroke-width = "0.2"
-                                        stroke-opacity = "0.95"
-                                    />
-                                ))
-                            }
+                            {this.$marker_lines}
                         </g>
                     </g>
 
@@ -122,38 +118,11 @@ export class D3Heatamp extends preact.Component<{
                     
                     <g 
                         class = "axis" 
-                        transform = {`translate(0,${plot_height})`} 
+                        transform = {this.$x_axis_transform} 
                         ref = {this.xaxis_ref} 
                     />
                     <g ref={this.yaxis_ref} class="axis" />
-                    {
-                        hover != null
-                        ? <g
-                            transform = {`translate(${hover.overlay_x},${hover.overlay_y})`}
-                            style = {{ pointerEvents: 'none', fontFamily:'sans' }}
-                        >
-                            <rect
-                                x = "0"
-                                y = "0"
-                                width = "200"
-                                height = "56"
-                                fill = "#000000"
-                                fill-opacity = "0.75"
-                                stroke = "#ffffff"
-                                stroke-opacity = "0.4"
-                            />
-                            <text x = "8" y = "17" fill = "#ffffff" font-size = "11">
-                                {`${hover.x_label}`}
-                            </text>
-                            <text x = "8" y = "33" fill = "#ffffff" font-size = "11">
-                                {`${hover.y_label}`}
-                            </text>
-                            <text x = "8" y = "49" fill = "#ffffff" font-size = "11">
-                                {hover.data_label}
-                            </text>
-                        </g>
-                        : null
-                    }
+                    {this.$hover_overlay}
                 </g>
             </svg>
         </div>
@@ -203,6 +172,61 @@ export class D3Heatamp extends preact.Component<{
         const ty:number = t.y ?? 0;
         const transform_str = `translate(${tx},${ty}) scale(${k})`;
         return transform_str;
+    })
+
+    private $marker_positions:Readonly<Signal<number[]>> = signals.computed(() => {
+        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        if(colsrows == null)
+            return []
+        return this.#marker_positions(this.$plot_width.value, colsrows.cols)
+    })
+
+    private $marker_lines:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
+        const marker_positions:number[] = this.$marker_positions.value
+        const plot_height:number = this.$plot_height.value
+        return marker_positions.map((x:number, marker_index:number) => (
+            <line
+                key = {`${marker_index}-${x}`}
+                x1 = {`${x}`}
+                y1 = "0"
+                x2 = {`${x}`}
+                y2 = {`${plot_height}`}
+                stroke = "#4cc9f0"
+                stroke-width = "0.2"
+                stroke-opacity = "0.95"
+            />
+        ))
+    })
+
+    private $hover_overlay:Readonly<Signal<JSX.Element|null>> = signals.computed(() => {
+        const hover:HoverPosition|null = this.$hover_position.value
+        if(hover == null)
+            return null
+
+        return <g
+            transform = {`translate(${hover.overlay_x},${hover.overlay_y})`}
+            style = {{ pointerEvents: 'none', fontFamily:'sans' }}
+        >
+            <rect
+                x = "0"
+                y = "0"
+                width = "200"
+                height = "56"
+                fill = "#000000"
+                fill-opacity = "0.75"
+                stroke = "#ffffff"
+                stroke-opacity = "0.4"
+            />
+            <text x = "8" y = "17" fill = "#ffffff" font-size = "11">
+                {`${hover.x_label}`}
+            </text>
+            <text x = "8" y = "33" fill = "#ffffff" font-size = "11">
+                {`${hover.y_label}`}
+            </text>
+            <text x = "8" y = "49" fill = "#ffffff" font-size = "11">
+                {hover.data_label}
+            </text>
+        </g>
     })
 
 
