@@ -1,6 +1,7 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
 
 import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
+import type { QuakeEvent } from "../lib/quakeml.ts";
 import { D3Heatamp, type DataItem } from "../ui/d3-heatmap.tsx"
 
 import { range } from 'd3';
@@ -26,6 +27,7 @@ export type InferenceEvent = {
 export class MSEED_Heatmap extends preact.Component<{
     $files: Readonly< Signal<MSEED_Meta[]> >,
     $inference: Readonly<Signal<InferenceEvent[]> >,
+    $events:    Readonly<Signal<QuakeEvent[]> >,
     on_click: (selected_file_index:number, i0:number, i1:number) => void,
 }> {
     render(): JSX.Element {
@@ -33,9 +35,15 @@ export class MSEED_Heatmap extends preact.Component<{
             $data    = {this.$transformed_files}
             $x_axis  = {this.$x_axis}
             $y_axis  = {this.$y_axis}
+            $x_axis_markers = {this.$transformed_events}
             on_click = {this.on_heatmap_select}
         />
     }
+
+    /** Get the time of each event */
+    $transformed_events:Readonly<Signal<number[]>> = signals.computed(() => {
+        return this.props.$events.value.map( e => e.time.getTime()/1000 )
+    })
 
 
     $transformed_files:Signal<DataItemWithFile[]> = new Signal([])
@@ -86,7 +94,6 @@ export class MSEED_Heatmap extends preact.Component<{
             
             const index0:number = (t0 - tstart) / HARDCODED_BIN_LENGTH_SECONDS;
             const index1:number = (t1 - tstart) / HARDCODED_BIN_LENGTH_SECONDS;
-            const n:number = index1 - index0 + 1
             const yindex:number = all_codes.indexOf(meta.code)
 
 

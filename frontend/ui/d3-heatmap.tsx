@@ -19,6 +19,9 @@ export class D3Heatamp extends preact.Component<{
     $x_axis:Readonly<Signal<number[]>>,
     $y_axis:Readonly<Signal<string[]>>,
 
+    /** Optional positions along the x axis to mark with a vertical line */
+    $x_axis_markers?: Readonly<Signal<number[]>>
+
     on_click: (selected:number) => void,
 }> {
     private static next_clip_id:number = 0
@@ -43,6 +46,10 @@ export class D3Heatamp extends preact.Component<{
         const {svg_width, svg_height, plot_width, plot_height} = 
             this.#get_dimensions()
         const hover:HoverPosition|null = this.$hover_position.value
+        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const marker_positions:number[] = colsrows == null
+            ? []
+            : this.#marker_positions(plot_width, colsrows.cols)
 
         return <div
             class = "d3-container"
@@ -89,6 +96,25 @@ export class D3Heatamp extends preact.Component<{
                                 onMouseLeave = {this.#svgimage_onmouseleave}
                                 ref = {this.svgimage_ref} 
                             />
+                        </g>
+                        <g 
+                            transform = {this.$transform_str}
+                            style = {{ pointerEvents: 'none' }}
+                        >
+                            {
+                                marker_positions.map((x:number, marker_index:number) => (
+                                    <line
+                                        key = {`${marker_index}-${x}`}
+                                        x1 = {`${x}`}
+                                        y1 = "0"
+                                        x2 = {`${x}`}
+                                        y2 = {`${plot_height}`}
+                                        stroke = "#4cc9f0"
+                                        stroke-width = "0.2"
+                                        stroke-opacity = "0.95"
+                                    />
+                                ))
+                            }
                         </g>
                     </g>
 
@@ -328,6 +354,74 @@ export class D3Heatamp extends preact.Component<{
 
     #svgimage_onmouseleave:preact.MouseEventHandler<SVGImageElement> = () => {
         this.$hover_position.value = null
+    }
+
+
+    /** Map marker values from x axis space to x plot coordinates */
+    #marker_positions(plot_width:number, cols:number): number[] {
+        const markers:number[]|undefined = this.props.$x_axis_markers?.value
+        if(markers == undefined || markers.length == 0)
+            return []
+        if(cols <= 0)
+            return []
+
+        const x_axis:number[] = this.props.$x_axis.value
+        const positions:number[] = []
+
+        for(const marker of markers) {
+            const col_position:number|null = this.#marker_column_position(marker, x_axis, cols)
+            if(col_position == null)
+                continue
+
+            const x_position:number = (col_position / cols) * plot_width
+            positions.push(x_position)
+        }
+
+        return positions
+    }
+
+    /** Convert marker value to a column index using x axis interpolation */
+    #marker_column_position(marker:number, x_axis:number[], cols:number): number|null {
+        if(!Number.isFinite(marker))
+            return null
+        if(x_axis.length < 2) {
+            if(marker >= 0 && marker <= cols)
+                return marker
+            return null
+        }
+
+        const first_x:number = x_axis[0]!
+        const last_x:number = x_axis[x_axis.length - 1]!
+        if(marker < first_x || marker > last_x) {
+            if(marker >= 0 && marker <= cols)
+                return marker
+            return null
+        }
+
+        let left:number = 0
+        let right:number = x_axis.length - 1
+        while(left < right) {
+            const mid:number = Math.floor((left + right) / 2)
+            const mid_value:number = x_axis[mid]!
+            if(mid_value < marker)
+                left = mid + 1
+            else
+                right = mid
+        }
+
+        const upper:number = left
+        if(upper <= 0)
+            return 0
+
+        const lower:number = upper - 1
+        const lower_value:number = x_axis[lower]!
+        const upper_value:number = x_axis[upper]!
+        const delta:number = upper_value - lower_value
+        if(delta == 0)
+            return lower
+
+        const ratio:number = (marker - lower_value) / delta
+        return lower + ratio
     }
 
 
