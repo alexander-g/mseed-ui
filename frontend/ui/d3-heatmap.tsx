@@ -12,11 +12,6 @@ export type DataItem = {
     value: number,
 }
 
-type Size = {
-    width:  number,
-    height: number,
-}
-
 
 
 export class D3Heatamp extends preact.Component<{
@@ -38,11 +33,13 @@ export class D3Heatamp extends preact.Component<{
 
     private margin = { top: 20, right: 5, bottom: 30, left: 60 };
     private $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
+    private $hover_position: Signal<HoverPosition|null> = new Signal(null)
 
 
     render(): JSX.Element {
         const {svg_width, svg_height, plot_width, plot_height} = 
             this.#get_dimensions()
+        const hover:HoverPosition|null = this.$hover_position.value
 
         return <div
             class = "d3-container"
@@ -64,7 +61,6 @@ export class D3Heatamp extends preact.Component<{
                         ref = {this.heatmap_ref}
                         transform = {this.$transform_str}
                     >
-                        
                         <image 
                             x      = "0" 
                             y      = "0" 
@@ -72,7 +68,9 @@ export class D3Heatamp extends preact.Component<{
                             height = {`${plot_height}`} 
                             image-rendering = 'pixelated'
                             preserveAspectRatio = "none"
-                            onClick = {this.svgimage_onclick}
+                            onClick = {this.#svgimage_onclick}
+                            onMouseMove = {this.#svgimage_onmousemove}
+                            onMouseLeave = {this.#svgimage_onmouseleave}
                             ref = {this.svgimage_ref} 
                         />
                     </g>
@@ -85,6 +83,34 @@ export class D3Heatamp extends preact.Component<{
                         ref = {this.xaxis_ref} 
                     />
                     <g ref={this.yaxis_ref} class="axis" />
+                    {
+                        hover != null
+                        ? <g
+                            transform = {`translate(${hover.overlay_x},${hover.overlay_y})`}
+                            style = {{ pointerEvents: 'none', fontFamily:'sans' }}
+                        >
+                            <rect
+                                x = "0"
+                                y = "0"
+                                width = "200"
+                                height = "56"
+                                fill = "#000000"
+                                fill-opacity = "0.75"
+                                stroke = "#ffffff"
+                                stroke-opacity = "0.4"
+                            />
+                            <text x = "8" y = "17" fill = "#ffffff" font-size = "11">
+                                {`${hover.x_label}`}
+                            </text>
+                            <text x = "8" y = "33" fill = "#ffffff" font-size = "11">
+                                {`${hover.y_label}`}
+                            </text>
+                            <text x = "8" y = "49" fill = "#ffffff" font-size = "11">
+                                {hover.data_label}
+                            </text>
+                        </g>
+                        : null
+                    }
                 </g>
             </svg>
         </div>
@@ -253,7 +279,7 @@ export class D3Heatamp extends preact.Component<{
     #_1 = signals.effect( () => { this.update_heatmap() } )
 
 
-    svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
+    #svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current);
         const dimensions:SVGPlotDimensions = this.#get_dimensions()
         const w:number = dimensions.plot_width
@@ -274,6 +300,17 @@ export class D3Heatamp extends preact.Component<{
             }
         }
         console.log(`No data item at ${[imx, imy]}`)
+    }
+
+    #svgimage_onmousemove:preact.MouseEventHandler<SVGImageElement> = (event) => {
+        const [mx, my] = d3.pointer(event, this.svgimage_ref.current)
+        const [root_x, root_y] = d3.pointer(event, this.root_ref.current)
+        this.$hover_position.value = 
+            this.#hover_position_from_mouse(mx, my, root_x, root_y)
+    }
+
+    #svgimage_onmouseleave:preact.MouseEventHandler<SVGImageElement> = () => {
+        this.$hover_position.value = null
     }
 
 
@@ -315,6 +352,63 @@ export class D3Heatamp extends preact.Component<{
             first.contentRect.width, 
             first.contentRect.height
         )
+    }
+
+    /** Map current mouse position to overlay values */
+    #hover_position_from_mouse(
+        mx:number, 
+        my:number, 
+        root_x:number, 
+        root_y:number
+    ): HoverPosition|null {
+        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        if(colsrows == null)
+            return null
+        if(colsrows.cols <= 0 || colsrows.rows <= 0)
+            return null
+
+        const dimensions:SVGPlotDimensions = this.#get_dimensions()
+        const w:number = dimensions.plot_width
+        const h:number = dimensions.plot_height
+
+        const clamped_x:number = Math.max(0, Math.min(mx, w))
+        const clamped_y:number = Math.max(0, Math.min(my, h))
+
+        const col:number = Math.min(
+            Math.floor((clamped_x / w) * colsrows.cols),
+            colsrows.cols - 1,
+        )
+        const row:number = Math.min(
+            Math.floor((clamped_y / h) * colsrows.rows),
+            colsrows.rows - 1,
+        )
+        if(col < 0 || row < 0)
+            return null
+
+        const x_axis:number[] = this.props.$x_axis.value
+        const y_axis:string[] = this.props.$y_axis.value
+        const x_seconds:number|undefined = x_axis[col]
+        const y_value:string|undefined = y_axis[row]
+        if(x_seconds == undefined || y_value == undefined)
+            return null
+
+        const hover_item:DataItem|undefined = this.props.$data.value.find(
+            (item:DataItem) => item.x == col && item.y == row
+        )
+        const data_label:string = hover_item == undefined
+            ? 'no data'
+            : ``
+
+        const overlay_x:number = Math.max(0, Math.floor(root_x) + 12)
+        const overlay_y:number = Math.max(0, Math.floor(root_y) + 12)
+
+        return {
+            overlay_x,
+            overlay_y,
+            x_label: strftime('%Y-%m-%dT%H:%M:%S', new Date(x_seconds * 1000)),
+            y_label: y_value,
+            data_label,
+        }
     }
 
 
@@ -367,6 +461,21 @@ type SVGPlotDimensions = {
     plot_width:  number, 
     plot_height: number 
 }
+
+
+type Size = {
+    width:  number,
+    height: number,
+}
+
+type HoverPosition = {
+    overlay_x: number,
+    overlay_y: number,
+    x_label: string,
+    y_label: string,
+    data_label: string,
+}
+
 
 
 function strftime(fmt:string, d:Date){
