@@ -7,13 +7,21 @@
 		</script>
 	</head>
 	<body>
-		<div class="d3-container">
-			<svg width="1465" height="550">
+		<div class="d3-container" style="width:100%;height:50%;">
+			<svg width="100%" height="100%" viewBox="0 0 0 0">
+				<defs>
+					<clipPath id="heatmap-clip-0">
+						<rect x="0" y="0" width="1" height="1"></rect>
+					</clipPath>
+				</defs>
 				<g transform="translate(60,20)">
-					<g transform>
-						<image x="0" y="0" width="1335" height="450" image-rendering="pixelated" preserveAspectRatio="none"></image>
+					<g clip-path="url(#heatmap-clip-0)">
+						<g transform="translate(0,0) scale(1)">
+							<image x="0" y="0" width="1" height="1" image-rendering="pixelated" preserveAspectRatio="none"></image>
+						</g>
+						<g transform="translate(0,0) scale(1)" style="pointer-events:none;"></g>
 					</g>
-					<g class="axis" transform="translate(0,450)"></g>
+					<g class="axis" transform="translate(0,1)"></g>
 					<g class="axis"></g>
 				</g>
 			</svg>
