@@ -1,5 +1,5 @@
-import type { Station }        from "./station-xml.ts"
-import type { QuakeEvent }     from "./quakeml.ts"
+import { parse_stationxml_file, type Station } from './station-xml.ts'
+import { parse_quakeml_file, type QuakeEvent } from './quakeml.ts'
 import type { InferenceEvent } from "../ui/mseed-heatmap.tsx"
 import { WorkerPool }          from "./worker-pool.ts"
 import type { FileResult }     from "./mseed-worker.ts"
@@ -30,6 +30,51 @@ export type ProcessedFiles = {
 export type ProgressCallback = (processed: number, total: number) => void
 
 
+
+/** Try to parse a single file, as stationxml, quakeml, mseed or a custom format */
+export 
+async function parse_file(file: File, wasm:TremorWasm): Promise<FileResult|Error> {
+    // Try StationXML
+    const station: Station[] | Error = await parse_stationxml_file(file)
+    if(!(station instanceof Error))
+        return {
+            type: 'station',
+            stations: station,
+        }
+
+    // try quakeml
+    const events:QuakeEvent[]|Error = await parse_quakeml_file(file)
+    if(!(events instanceof Error))
+        return {
+            type: 'quakeevent',
+            quakeevents: events
+        }
+
+    // Try MSEED
+    const meta: MSEED_Meta | Error = await wasm.read_metadata(file)
+    if(!(meta instanceof Error))
+        return {
+            type: 'mseed',
+            meta: meta,
+            filename: file.name,
+        }
+
+    // Try CSV inference
+    const inference: InferenceEvent[] | Error = await read_csv_inference_file(file)
+    if(!(inference instanceof Error))
+        return {
+            type:     'inference',
+            inference: inference,
+        }
+
+    // Unknown file
+    return {
+        type: 'unknown',
+        filename: file.name,
+    }
+}
+
+
 /** Process dropped files using worker pool for parallelization.
  *  Optionally call progress callback as batches complete. */
 export async function process_dropped_files(
@@ -50,6 +95,44 @@ export async function process_dropped_files(
     )
     // getting crashes with full 20 cpu workers on my machine, 10 should be enough?
     pool_size = Math.min(pool_size, 10)
+
+    if (pool_size === 0) {
+        let processed_count = 0
+
+        for (const file of files) {
+            const result:FileResult|Error = await parse_file(file, tremorwasm)
+            if (result instanceof Error)
+                console.warn('File processing error:', result)
+            else {
+                if (result.type === 'mseed')
+                    all_meta.push({
+                        file: file,
+                        meta: result.meta,
+                    })
+                else if (result.type === 'station')
+                    all_stations.push(...result.stations)
+                else if (result.type === 'inference')
+                    all_inference.push(...result.inference)
+                else if (result.type === 'quakeevent')
+                    all_events.push(...result.quakeevents)
+                else if (result.type === 'unknown')
+                    all_unknown.push(file)
+            }
+
+            processed_count++
+            if (on_progress)
+                on_progress(processed_count, files.length)
+        }
+
+        return {
+            mseeds:           all_meta,
+            stations:         all_stations,
+            inference_events: all_inference,
+            events:           all_events,
+            unknown_files:    all_unknown,
+        }
+    }
+
     const pool = new WorkerPool(pool_size)
 
     try {
