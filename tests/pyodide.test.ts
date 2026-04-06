@@ -31,8 +31,10 @@ Deno.test( "pyodide-main-thread", async (t:Deno.TestContext) => {
     })
 
     await t.step("run_maplotlib_plot", async () => {
-        const pngfile:File = await pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
+        const pngfile:File|Error = 
+            await pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
         
+        assert(!(pngfile instanceof Error))
         assert( (await pngfile.arrayBuffer()).byteLength > 0 )
     })
     

@@ -73,10 +73,20 @@ self.onmessage = async (e:MessageEvent) => {
         if(pyodide == null)
             return new Error('Pyodide in worker not initialized');
 
-        const output:File = await pyodide.plot_data(data.data)
-        const message:WorkerPlotDataResult = 
-            {message:'plot-data-result', outputdata_png:await output.bytes()};
-        result = message;
+        const output:File|Error = await pyodide.plot_data(data.data)
+        if(output instanceof Error)
+            result = output as Error;
+        else {
+            const outputdata_png:Uint8Array<ArrayBuffer>|Error = 
+                await output.bytes().catch(_ => new Error())
+            if(outputdata_png instanceof Error)
+                result = outputdata_png as Error;
+            else {
+                const message:WorkerPlotDataResult = 
+                    {message:'plot-data-result', outputdata_png};
+                result = message;
+            }
+        }
     }
     else
         result = new Error(
