@@ -5,7 +5,7 @@ import {
     MSEED_Heatmap, 
     type InferenceEvent 
 } from "./ui/mseed-heatmap.tsx"
-import { D3Map } from "./ui/d3-map.tsx"
+import { D3Map, type Marker } from "./ui/d3-map.tsx"
 import { 
     initialize_in_worker as pyo_initialize, 
     type IPyodide 
@@ -94,6 +94,8 @@ class App extends preact.Component {
                 $inference = {this.app_state.$inference}
                 $events    = {this.app_state.$events}
                 on_click   = {this.on_heatmap_item_select}
+
+                $highlighted_station = {this.$highlighted_station}
             />
             <div
                 style = {{
@@ -101,7 +103,7 @@ class App extends preact.Component {
                 }}
             >
                 <PlotImage ref={this.plotimg_ref} />
-                <D3Map $markers={this.app_state.$stations} />
+                <D3Map $markers={this.$map_markers} on_marker_hover={this.on_marker_hover} />
             </div>
             
             <DropZone 
@@ -131,9 +133,29 @@ class App extends preact.Component {
         
         this.app_state.$inference.value = processed.inference_events;
         this.app_state.$mseeds.value    = processed.mseeds;
-        this.app_state.$stations.value  = processed.stations
         this.app_state.$events.value    = processed.events;
+        this.app_state.$stations.value  = processed.stations
     }
+
+    private $map_markers:Readonly<Signal<Marker[]>> = signals.computed( () => {
+        return this.app_state.$stations.value.map(
+            s => ({latitude:s.latitude, longitude:s.longitude, label:s.code}) 
+        )
+    })
+
+
+    /** The currently highlighted station, either in the map or heatmap */
+    private $highlighted_station:Signal<Station|null> = new Signal(null)
+
+    /** Called when the user hovers on a station marker in the map */
+    private on_marker_hover = (index:number|null) => {
+        const stations:Station[] = this.app_state.$stations.value
+        if(index == null || !(index in stations))
+            this.$highlighted_station.value = null;
+        else
+            this.$highlighted_station.value = stations[index]!
+    }
+
 
     override async componentDidMount(): Promise<void> {
         // for debugging

@@ -15,6 +15,7 @@ globalThis.d3tile = d3tile;
 export type Marker = {
     latitude:  number;
     longitude: number;
+    label?: string;
 }
 
 
@@ -23,6 +24,9 @@ type D3MapProps = {
 
     width:  number,
     height: number,
+
+    /** Called when mouse hovers above a marker. Argument: index or null if none */
+    on_marker_hover?: (index:number|null) => void,
 }
 
 export class D3Map extends preact.Component<D3MapProps> {
@@ -42,6 +46,9 @@ export class D3Map extends preact.Component<D3MapProps> {
     /** SVG bubbles */
     $svg_annotations:Signal<JSX.Element[]> = new Signal([])
 
+    /** HTML tooltip shown on marker hover */
+    $marker_tooltip:Signal<JSX.Element|null> = new Signal(null)
+
     $markers_empty:Readonly<Signal<boolean>> = signals.computed(
         () => (this.props.$markers.value.length == 0)
     )
@@ -49,6 +56,7 @@ export class D3Map extends preact.Component<D3MapProps> {
 
     render(): JSX.Element {
         const { width, height } = this.props;
+
 
         return <div class="d3-container d3-map" style={{position:"relative"}}>
             <svg
@@ -67,6 +75,8 @@ export class D3Map extends preact.Component<D3MapProps> {
                     { this.$svg_annotations }
                 </g>
             </svg>
+
+            { this.$marker_tooltip }
 
             <OverlayDiv $visible={this.$markers_empty} >
                 No stations loaded.
@@ -176,6 +186,55 @@ export class D3Map extends preact.Component<D3MapProps> {
     #_1 = signals.effect(() => this.center_on_markers())
 
 
+    on_marker_hover(
+        index:  number|null, 
+        event:  preact.TargetedMouseEvent<SVGCircleElement>
+    ): void {
+        this.props.on_marker_hover?.(index)
+        if(index == null) {
+            this.$marker_tooltip.value = null
+            return;
+        }
+
+        const markers:Marker[] = this.props.$markers.value;
+        const label:string = markers[index]?.label ?? ''
+        if(label.trim().length == 0){
+            this.$marker_tooltip.value = null
+            return;
+        }
+
+        if(this.svg_ref.current == null){
+            this.$marker_tooltip.value = null
+            return;
+        }
+
+        const svg_rect:DOMRect = this.svg_ref.current.getBoundingClientRect()
+        const tooltip_left:number = event.clientX - svg_rect.left + 12
+        const tooltip_top:number = event.clientY - svg_rect.top + 12
+
+        this.$marker_tooltip.value = 
+            <div
+                class = 'map-marker-tooltip'
+                style = {{
+                    position:      'absolute',
+                    left:          `${tooltip_left}px`,
+                    top:           `${tooltip_top}px`,
+                    pointerEvents: 'none',
+                    color:         '#fff',
+                    padding:       '2px 6px',
+                    fontSize:      '12px',
+                    fontFamily:    'sans',
+                    lineHeight:    "1.2",
+                    whiteSpace:    'nowrap',
+                    zIndex:         1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.82)',
+                }}
+            >
+                {label}
+            </div>
+    }
+
+
     on_zoom(transform:d3.ZoomTransform): void {
         this.current_transform = transform
 
@@ -222,12 +281,15 @@ export class D3Map extends preact.Component<D3MapProps> {
             .translate([transform.x, transform.y])
 
         const svg_markers:JSX.Element[] = []
-        for(const marker of this.props.$markers.value) {
+        for(const markerindex in this.props.$markers.value) {
+            
+            const marker:Marker = this.props.$markers.value[markerindex]!
             const projected:[number,number]|null = 
                 projection([marker.longitude, marker.latitude]);
             if(projected == null)
                 continue;
 
+            const index:number = Number(markerindex)
             svg_markers.push(
                 <circle
                     cx = {projected[0]}
@@ -236,6 +298,8 @@ export class D3Map extends preact.Component<D3MapProps> {
                     fill   = "red"
                     stroke = "#fff"
                     stroke-width = {1}
+                    onMouseEnter = {(event) => this.on_marker_hover(index, event)}
+                    onMouseLeave = {(event) => this.on_marker_hover(null, event)}
                 />
             )
         }

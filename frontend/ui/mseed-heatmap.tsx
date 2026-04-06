@@ -3,6 +3,7 @@ import { preact, Signal, signals, JSX } from "../dep.ts"
 import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
 import type { QuakeEvent } from "../lib/quakeml.ts";
 import { D3Heatamp, type DataItem } from "../ui/d3-heatmap.tsx"
+import { type Station } from "../lib/station-xml.ts";
 
 import { range } from 'd3';
 
@@ -29,6 +30,9 @@ export class MSEED_Heatmap extends preact.Component<{
     $inference: Readonly<Signal<InferenceEvent[]> >,
     $events:    Readonly<Signal<QuakeEvent[]> >,
     on_click: (selected_file_index:number, i0:number, i1:number) => void,
+
+    /** The currently highlighted station. Can be both input and output. */
+    $highlighted_station?: Signal<Station|null>
 }> {
     render(): JSX.Element {
         return <D3Heatamp
@@ -36,6 +40,7 @@ export class MSEED_Heatmap extends preact.Component<{
             $x_axis  = {this.$x_axis}
             $y_axis  = {this.$y_axis}
             $x_axis_markers = {this.$transformed_events}
+            $y_axis_markers = { this.$highlighted_rows }
             on_click = {this.on_heatmap_select}
         />
     }
@@ -142,6 +147,19 @@ export class MSEED_Heatmap extends preact.Component<{
         this.props.on_click(item.fileindex, i0, i1);
     }
 
+    /** Transforming the input $highlighted_station to the y-axis */
+    private $highlighted_rows:Readonly<Signal<number[]>> = signals.computed( () => {
+        const y_axis:string[] = this.$transformed.value.y_axis
+        const station:Station|null = this.props.$highlighted_station?.value ?? null;
+        if(station == null)
+            return []
+
+        const output:number[] = []
+        for(const index in y_axis)
+            if(y_axis[index]!.includes(`.${station.code}.`))
+                output.push(Number(index))
+        return output;
+    } )
 }
 
 
