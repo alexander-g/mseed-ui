@@ -86,29 +86,9 @@ self.onmessage = async (e:MessageEvent) => {
         }
     } else if(data.command == 'plot-data') {
         if(pyodide == null)
-            return new Error('Pyodide in worker not initialized');
-
-        const output:File|Error = await pyodide.plot_data(
-            data.data,
-            data.i0,
-            data.i1,
-            data.start_time,
-            data.sample_rate_hz,
-            data.title,
-        )
-        if(output instanceof Error)
-            result = output as Error;
-        else {
-            const outputdata_png:Uint8Array<ArrayBuffer>|Error = 
-                await output.bytes().catch(_ => new Error())
-            if(outputdata_png instanceof Error)
-                result = outputdata_png as Error;
-            else {
-                const message:WorkerPlotDataResult = 
-                    {message:'plot-data-result', outputdata_png};
-                result = message;
-            }
-        }
+            result = new Error('Pyodide in worker not initialized');
+        else
+            result = await handle_plot_data(data, pyodide)
     }
     else
         result = new Error(
@@ -117,6 +97,34 @@ self.onmessage = async (e:MessageEvent) => {
     
     self.postMessage(result)
 }
+
+
+async function handle_plot_data(
+    data:    WorkerPlotDataCommand, 
+    pyodide: Pyodide
+): Promise<WorkerPlotDataResult|Error> {
+    const output:File|Error = await pyodide.plot_data(
+        data.data,
+        data.i0,
+        data.i1,
+        data.start_time,
+        data.sample_rate_hz,
+        data.title,
+    )
+    if(output instanceof Error)
+        return output as Error;
+    
+    const outputdata_png:Uint8Array<ArrayBuffer>|Error = 
+        await output.bytes().catch(_ => new Error())
+    if(outputdata_png instanceof Error)
+        return outputdata_png as Error;
+
+    const message:WorkerPlotDataResult = 
+        {message:'plot-data-result', outputdata_png};
+    
+    return message;
+}
+
 
 
 self.addEventListener('error', (e:ErrorEvent) => {

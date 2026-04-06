@@ -136,7 +136,6 @@ export class MSEED_Heatmap extends preact.Component<{
         const t0 = item.timestamp;
 
         const start_seconds_within_file = t0 - meta_start_s;
-        console.log('DEBUG:', meta_start_s, t0, start_seconds_within_file)
         
         const i0 = (start_seconds_within_file) * meta.samplerate;
         const i1 = (start_seconds_within_file + HARDCODED_BIN_LENGTH_SECONDS) * meta.samplerate;

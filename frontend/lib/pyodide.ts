@@ -64,13 +64,8 @@ export class Pyodide implements IPyodide {
         title:string,
     ): Promise<File|Error> {
 
-        const pyo_plot_code:string|Error = await load_plot_code()
-        if(pyo_plot_code instanceof Error)
-            return pyo_plot_code as Error;
-
-        await this.pyodide.runPythonAsync(pyo_plot_code)
         const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_data");
-        plot_fn(
+        await plot_fn(
             this.pyodide.toPy(data), 
             i0, 
             i1, 
@@ -212,7 +207,11 @@ async function initialize(vendored:boolean = is_deno()): Promise<Pyodide|Error> 
             packages: ['numpy', 'matplotlib']
         });
 
-        pyodide.runPythonAsync("import numpy as np; import matplotlib.pylab as plt;");
+        const pyo_plot_code:string|Error = await load_plot_code()
+        if(pyo_plot_code instanceof Error)
+            return pyo_plot_code as Error;
+        await pyodide.runPythonAsync(pyo_plot_code)
+
 
         return new Pyodide(pyodide);
     } catch(e) {

@@ -37,11 +37,10 @@ def plot_data(
     stop: int
     start, stop = _slice_bounds(i0, i1, values.size)
 
+    # NOTE: data is a memoryview when called from JS, making sure its numpy
     data = np.asarray(data)
 
-    start_time = dt.datetime.fromtimestamp(start_timestamp_s)
-    if start_time.tzinfo is None:
-        start_time = start_time.replace(tzinfo=dt.timezone.utc)
+    start_time = dt.datetime.fromtimestamp(start_timestamp_s, tz=dt.timezone.utc)
 
     sliced_data: npt.NDArray[np.int32] = values[start:stop]
     time_axis: list[dt.datetime] = [
@@ -75,6 +74,6 @@ def plot_data(
 
     if output_path is not None:
         fig.savefig(output_path)
-
-    return fig
+    
+    plt.close(fig)
 
