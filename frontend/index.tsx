@@ -90,7 +90,7 @@ class App extends preact.Component {
         return <body>
             {/* <OSDImage /> */}
             <MSEED_Heatmap 
-                $files     = {this.$mseed_meta} 
+                $mseed_meta     = {this.$mseed_meta} 
                 $inference = {this.app_state.$inference}
                 $events    = {this.app_state.$events}
                 on_click   = {this.on_heatmap_item_select}
