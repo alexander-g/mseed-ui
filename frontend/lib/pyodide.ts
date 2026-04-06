@@ -17,7 +17,14 @@ export const PYODIDE_SCRIPTS:string[] = [PLOT_DATA_PY_SCRIPT]
 
 export interface IPyodide {
     /** Plot a 1D time series via matplotlib and return a PNG file. */
-    plot_data(data:Int32Array): Promise<File|Error>;
+    plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error>;
 }
 
 
@@ -27,12 +34,19 @@ export interface IPyodide {
 export class PyodideInWorker implements IPyodide {
     constructor(private readypromise:Promise<PyodideToWorkerInterface|Error>){}
 
-    async plot_data(data:Int32Array): Promise<File|Error> {
+    async plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
         const internal:IPyodide|Error = await this.readypromise;
         if(internal instanceof Error)
             return internal as Error;
 
-        return internal.plot_data(data)
+        return internal.plot_data(data, i0, i1, start_time, sample_rate_hz, title)
     }
 }
 
@@ -41,15 +55,30 @@ export class PyodideInWorker implements IPyodide {
 export class Pyodide implements IPyodide {
     constructor(private pyodide:pyo.PyodideAPI){}
 
-    async plot_data(data:Int32Array): Promise<File|Error> {
-        const buffer:Uint8Array= new Uint8Array(data.buffer)
-        this.pyodide.FS.writeFile('/data_i32.bin', buffer, {encoding: 'binary'})
+    async plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
 
         const pyo_plot_code:string|Error = await load_plot_code()
         if(pyo_plot_code instanceof Error)
             return pyo_plot_code as Error;
 
         await this.pyodide.runPythonAsync(pyo_plot_code)
+        const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_data");
+        plot_fn(
+            this.pyodide.toPy(data), 
+            i0, 
+            i1, 
+            start_time.getTime()/1000, 
+            sample_rate_hz, 
+            title, 
+            '/plt.png'
+        )
 
         const pngdata:Uint8Array<ArrayBuffer> = 
             this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
@@ -116,10 +145,22 @@ async function load_plot_code(): Promise<string|Error> {
 class PyodideToWorkerInterface implements IPyodide {
     constructor(private worker:Worker){}
 
-    plot_data(data: Int32Array): Promise<File|Error> {
+    plot_data(
+        data: Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
         const command:WorkerPlotDataCommand = {
             command: 'plot-data',
             data:    data,
+            i0,
+            i1,
+            start_time,
+            sample_rate_hz,
+            title,
         }
         const promise:Promise<File|Error> = 
             new Promise( (resolve: (x:File|Error) => void) => {

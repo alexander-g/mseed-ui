@@ -31,8 +31,9 @@ Deno.test( "pyodide-main-thread", async (t:Deno.TestContext) => {
     })
 
     await t.step("run_maplotlib_plot", async () => {
+        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
         const pngfile:File|Error = 
-            await pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
+            await pyo.plot_data( data, 2, 6, new Date(Date.now()), 2.5, 'TESTDATA' );
         
         assert(!(pngfile instanceof Error))
         assert( (await pngfile.arrayBuffer()).byteLength > 0 )
@@ -61,9 +62,9 @@ Deno.test("pyodide-in-worker", async (t:Deno.TestContext) => {
     assert(!(pyo instanceof Error))
 
     await t.step("run_maplotlib_plot", async () => {
-        
+        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
         const promise:Promise<File|Error> = 
-            pyo.plot_data( new Int32Array([0,10,30,10,20,30]) );
+            pyo.plot_data( data, 2, 6, new Date(Date.now()), 2.5, 'TESTDATA' );
         const pngfile:Error|File = await with_timeout(promise, 20000); 
         console.log(pngfile)
 

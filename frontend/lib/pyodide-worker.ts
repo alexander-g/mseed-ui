@@ -19,6 +19,21 @@ export type WorkerPlotDataCommand = {
     /** Data to plot */
     data: Int32Array;
 
+    /** Slice start index in data. */
+    i0: number;
+
+    /** Slice end index in data (exclusive). */
+    i1: number;
+
+    /** UTC start time of full trace. */
+    start_time: Date;
+
+    /** Sampling rate in Hz. */
+    sample_rate_hz: number;
+
+    /** Plot title. */
+    title: string;
+
 }
 
 export type WorkerCommand = 
@@ -73,7 +88,14 @@ self.onmessage = async (e:MessageEvent) => {
         if(pyodide == null)
             return new Error('Pyodide in worker not initialized');
 
-        const output:File|Error = await pyodide.plot_data(data.data)
+        const output:File|Error = await pyodide.plot_data(
+            data.data,
+            data.i0,
+            data.i1,
+            data.start_time,
+            data.sample_rate_hz,
+            data.title,
+        )
         if(output instanceof Error)
             result = output as Error;
         else {
@@ -114,4 +136,3 @@ self.onunhandledrejection = (e:PromiseRejectionEvent) => {
     self.postMessage(new Error(msg))
     self.close()
 }
-
