@@ -6,7 +6,7 @@ import * as path from "@std/path"
 // NOTE: adding /jsr for pretty rendering
 import * as preact_ssr from "preact-render-to-string/jsx";
 
-import { initialize, type Pyodide } from "./frontend/lib/pyodide.ts"
+import { initialize, PYODIDE_SCRIPTS, type Pyodide } from "./frontend/lib/pyodide.ts"
 import type { AppConfig, Index } from "./frontend/index.tsx";
 
 
@@ -22,6 +22,8 @@ const HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS:string = 'pyodide-worker.ts.js'
 
 const HARDCODED_MSEED_WORKER_JS:string = './frontend/lib/mseed-worker.ts'
 const HARDCODED_OUTPUTFILE_MSEED_WORKER_JS:string = 'mseed-worker.ts.js'
+
+const HARDCODED_PYODIDE_DIR:string = './frontend/lib'
 
 
 
@@ -106,6 +108,17 @@ async function bundle_mseed_worker(minify:boolean) {
     return await bundle_js_file(HARDCODED_MSEED_WORKER_JS, outputpath, minify)
 }
 
+function copy_pyodide_scripts() {
+    for(const py_script of PYODIDE_SCRIPTS) {
+        const py_path:string = path.join(HARDCODED_PYODIDE_DIR, py_script)
+        if( !fs.existsSync(py_path) )
+            throw new Error(`Pyodide script ${py_path} missing`)
+
+        const outputpath:string = path.join(HARDCODED_OUTPUTDIR, py_script)
+        Deno.copyFileSync(py_path, outputpath)
+    }
+}
+
 
 
 async function compile_index_html(app_config:AppConfig) {
@@ -161,6 +174,7 @@ if(import.meta.main) {
     await compile_index_html({pyodide_vendored});
     await bundle_index_js(minify);
     await bundle_pyodide_worker(minify);
+    await copy_pyodide_scripts();
     await bundle_mseed_worker(minify);
     
     if(pyodide_vendored)

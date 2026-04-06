@@ -152,8 +152,14 @@ class App extends preact.Component {
     
     
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        const mseedfiles:File[] = this.app_state.$mseeds.value.map( m => m.file)
-        const file:File|undefined = mseedfiles[selected_file_index];
+        const mseed:MSEED_FileAndMeta|undefined = 
+            this.app_state.$mseeds.value[selected_file_index]
+        if(mseed == undefined) {
+            console.error(`No mseed file at index ${selected_file_index}`)
+            return;
+        }
+        
+        const file:File|undefined = mseed.file;
         if(file == undefined)
             return;
         
@@ -165,7 +171,14 @@ class App extends preact.Component {
         }
         console.log('data size:', data.length, i0, i1)
 
-        const pngfile:File|Error = await this.pyodide!.plot_data( data.slice(i0, i1) )
+        const pngfile:File|Error = await this.pyodide!.plot_data(
+            data,
+            i0,
+            i1,
+            mseed.meta.start,
+            mseed.meta.samplerate,
+            mseed.meta.code,
+        )
         if(pngfile instanceof Error) {
             console.error(`Error plotting data: ${pngfile.message}`)
             return;
@@ -216,5 +229,4 @@ export function hydrate_body(body_jsx:JSX.Element): void {
 if(!globalThis.Deno){
     hydrate_body(<App />)
 }
-
 

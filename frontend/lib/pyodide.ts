@@ -1,6 +1,6 @@
 import * as pyo from 'pyodide'
 
-import { is_deno } from "./util.ts";
+import { is_deno, fetch_no_throw } from "./util.ts";
 import type { 
     WorkerInitCommand,
     WorkerPlotDataCommand,
@@ -8,9 +8,23 @@ import type {
 } from "./pyodide-worker.ts";
 
 
+const PLOT_DATA_PY_SCRIPT:string = 'pyodide-plot.py'
+
+// NOTE: used by the build script
+export const PYODIDE_SCRIPTS:string[] = [PLOT_DATA_PY_SCRIPT]
+
+
+
 export interface IPyodide {
     /** Plot a 1D time series via matplotlib and return a PNG file. */
-    plot_data(data:Int32Array): Promise<File|Error>;
+    plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error>;
 }
 
 
@@ -20,12 +34,19 @@ export interface IPyodide {
 export class PyodideInWorker implements IPyodide {
     constructor(private readypromise:Promise<PyodideToWorkerInterface|Error>){}
 
-    async plot_data(data:Int32Array): Promise<File|Error> {
+    async plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
         const internal:IPyodide|Error = await this.readypromise;
         if(internal instanceof Error)
             return internal as Error;
 
-        return internal.plot_data(data)
+        return internal.plot_data(data, i0, i1, start_time, sample_rate_hz, title)
     }
 }
 
@@ -34,17 +55,32 @@ export class PyodideInWorker implements IPyodide {
 export class Pyodide implements IPyodide {
     constructor(private pyodide:pyo.PyodideAPI){}
 
-    async plot_data(data:Int32Array): Promise<File> {
-        const buffer = new Uint8Array(data.buffer);
-        this.pyodide.FS.writeFile("/data_i32.bin", buffer, {encoding: "binary"});
+    async plot_data(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
 
-        await this.pyodide.runPythonAsync(pyo_plot_code);
+        const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_data");
+        await plot_fn(
+            this.pyodide.toPy(data), 
+            i0, 
+            i1, 
+            start_time.getTime()/1000, 
+            sample_rate_hz, 
+            title, 
+            '/plt.png'
+        )
 
         const pngdata:Uint8Array<ArrayBuffer> = 
-            this.pyodide.FS.readFile("/plt.png", {encoding: "binary"});
-        return new File([pngdata], 'plot.png');
+            this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
+        return new File([pngdata], 'plot.png')
     }
 
+    /** Find all required to be copied during build */
     get_files_for_vendoring(): string[]|Error {
         if(!is_deno())
             return new Error('Only available for Deno');
@@ -72,27 +108,54 @@ export class Pyodide implements IPyodide {
 }
 
 
-const pyo_plot_code = `
-import numpy as np; 
-import matplotlib.pylab as plt; 
-import matplotlib
-matplotlib.use("AGG")
 
-x = np.frombuffer(open('/data_i32.bin', 'rb').read(), dtype='int32')
-fig = plt.figure();
-plt.plot(x);
-plt.savefig('/plt.png')
-plt.close(fig)
-`
+/** Load python script for plotting data. */
+async function load_plot_code(): Promise<string|Error> {
+    const py_path:URL = new URL(PLOT_DATA_PY_SCRIPT, import.meta.url)
+
+    if(is_deno()) {
+        try {
+            return await Deno.readTextFile(py_path)
+        } catch(e) {
+            const error:Error = e instanceof Error
+                ? e as Error
+                : new Error(`Failed to load ${py_path.toString()}`)
+            return error;
+        }
+    }
+    // else: fetch()
+
+    const response:Response|Error = await fetch_no_throw(py_path)
+    if(response instanceof Error)
+        return response as Error;
 
 
+    const script:string|Error = 
+        await response.text().catch(_ => new Error('Reading fetch response failed'))
+    return script;
+}
+
+
+/** Private interface to communicate with a pyodide worker */
 class PyodideToWorkerInterface implements IPyodide {
     constructor(private worker:Worker){}
 
-    plot_data(data: Int32Array): Promise<File|Error> {
+    plot_data(
+        data: Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
         const command:WorkerPlotDataCommand = {
             command: 'plot-data',
             data:    data,
+            i0,
+            i1,
+            start_time,
+            sample_rate_hz,
+            title,
         }
         const promise:Promise<File|Error> = 
             new Promise( (resolve: (x:File|Error) => void) => {
@@ -144,7 +207,11 @@ async function initialize(vendored:boolean = is_deno()): Promise<Pyodide|Error> 
             packages: ['numpy', 'matplotlib']
         });
 
-        pyodide.runPythonAsync("import numpy as np; import matplotlib.pylab as plt;");
+        const pyo_plot_code:string|Error = await load_plot_code()
+        if(pyo_plot_code instanceof Error)
+            return pyo_plot_code as Error;
+        await pyodide.runPythonAsync(pyo_plot_code)
+
 
         return new Pyodide(pyodide);
     } catch(e) {
@@ -188,7 +255,7 @@ export async function initialize_in_worker(
     
     const combinedpromise:Promise<PyodideToWorkerInterface|Error> = 
         Promise.race([errorpromise, resultfilepromise])
-    return new PyodideInWorker(combinedpromise);
+    return await new PyodideInWorker(combinedpromise);
 }
 
 
