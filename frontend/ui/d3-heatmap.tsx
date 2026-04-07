@@ -22,7 +22,14 @@ export class D3Heatamp extends preact.Component<{
     /** Optional positions along the x axis to mark with a vertical line */
     $x_axis_markers?: Readonly<Signal<number[]>>
 
+    /** Optional row indices to mark with a horizontal marker */
+    $y_axis_markers?: Readonly<Signal<number[]>>
+
+    /** Called when user clicks on a valid item */
     on_click: (selected:number) => void,
+
+    /** Called when user hovers on a valid item, null otherwise */
+    on_hover?: (selected:number|null) => void,
 }> {
     private static next_clip_id:number = 0
     private clip_path_id:string = `heatmap-clip-${D3Heatamp.next_clip_id++}`
@@ -62,7 +69,7 @@ export class D3Heatamp extends preact.Component<{
     render(): JSX.Element {
         return <div
             class = "d3-container"
-            style = {{ width: '100%', height: '50%' }}
+            style = {{ width: '100%', height: '100%' }}
             ref   = {this.container_ref}
         >
                 <svg 
@@ -110,7 +117,8 @@ export class D3Heatamp extends preact.Component<{
                             transform = {this.$transform_str}
                             style = {{ pointerEvents: 'none' }}
                         >
-                            {this.$marker_lines}
+                            {this.$x_marker_lines}
+                            {this.$y_marker_rects}
                         </g>
                     </g>
 
@@ -174,26 +182,61 @@ export class D3Heatamp extends preact.Component<{
         return transform_str;
     })
 
-    private $marker_positions:Readonly<Signal<number[]>> = signals.computed(() => {
+    private $x_marker_positions:Readonly<Signal<number[]>> = signals.computed(() => {
         const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
         if(colsrows == null)
             return []
-        return this.#marker_positions(this.$plot_width.value, colsrows.cols)
+        return this.#x_marker_positions(this.$plot_width.value, colsrows.cols)
     })
 
-    private $marker_lines:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
-        const marker_positions:number[] = this.$marker_positions.value
+    private $x_marker_lines:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
+        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        if(colsrows == null)
+            return []
+        if(colsrows.rows <= 0)
+            return []
+
+        const marker_positions:number[] = this.$x_marker_positions.value
+        const plot_width:number  = this.$plot_width.value
         const plot_height:number = this.$plot_height.value
+        const marker_width:number = plot_width / colsrows.cols
+
         return marker_positions.map((x:number, marker_index:number) => (
-            <line
-                key = {`${marker_index}-${x}`}
-                x1 = {`${x}`}
-                y1 = "0"
-                x2 = {`${x}`}
-                y2 = {`${plot_height}`}
-                stroke = "#4cc9f0"
-                stroke-width = "0.2"
-                stroke-opacity = "0.95"
+            <rect
+                key          = {`${marker_index}-${x}`}
+                x            = {`${x}`}
+                y            = "0"
+                width        = {`${marker_width}`}
+                height       = {`${plot_height}`}
+                fill         = "#4cc9f0"
+                fill-opacity = "0.5"
+                stroke       = "none"
+            />
+        ))
+    })
+
+    private $y_marker_rects:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
+        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        if(colsrows == null)
+            return []
+        if(colsrows.rows <= 0)
+            return []
+
+        const plot_width:number  = this.$plot_width.value
+        const plot_height:number = this.$plot_height.value
+        const marker_positions:number[] = this.#y_marker_positions(plot_height, colsrows.rows)
+        const marker_height:number = plot_height / colsrows.rows
+
+        return marker_positions.map((y:number, marker_index:number) => (
+            <rect
+                key          = {`${marker_index}-${y}`}
+                x            = "0"
+                y            = {`${y}`}
+                width        = {`${plot_width}`}
+                height       = {`${marker_height}`}
+                fill         = "#4cc9f0"
+                fill-opacity = "0.5"
+                stroke       = "none"
             />
         ))
     })
@@ -372,17 +415,22 @@ export class D3Heatamp extends preact.Component<{
     #svgimage_onmousemove:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current)
         const [root_x, root_y] = d3.pointer(event, this.root_ref.current)
-        this.$hover_position.value = 
+        const position:HoverPosition|null = 
             this.#hover_position_from_mouse(mx, my, root_x, root_y)
+        this.$hover_position.value = position
+        if(this.props.on_hover)
+            this.props.on_hover(position?.item_index ?? null)
     }
 
     #svgimage_onmouseleave:preact.MouseEventHandler<SVGImageElement> = () => {
         this.$hover_position.value = null
+        if(this.props.on_hover)
+            this.props.on_hover(null)
     }
 
 
     /** Map marker values from x axis space to x plot coordinates */
-    #marker_positions(plot_width:number, cols:number): number[] {
+    #x_marker_positions(plot_width:number, cols:number): number[] {
         const markers:number[]|undefined = this.props.$x_axis_markers?.value
         if(markers == undefined || markers.length == 0)
             return []
@@ -399,6 +447,27 @@ export class D3Heatamp extends preact.Component<{
 
             const x_position:number = (col_position / cols) * plot_width
             positions.push(x_position)
+        }
+
+        return positions
+    }
+
+    /** Map y marker row indices to plot coordinates */
+    #y_marker_positions(plot_height:number, rows:number): number[] {
+        const markers:number[]|undefined = this.props.$y_axis_markers?.value
+        if(markers == undefined || markers.length == 0)
+            return []
+        if(rows <= 0)
+            return []
+
+        const positions:number[] = []
+        for(const marker of markers) {
+            if(!Number.isFinite(marker))
+                continue
+            if(marker < 0 || marker >= rows)
+                continue
+
+            positions.push((marker / rows) * plot_height)
         }
 
         return positions
@@ -527,10 +596,17 @@ export class D3Heatamp extends preact.Component<{
         if(x_seconds == undefined || y_value == undefined)
             return null
 
-        const hover_item:DataItem|undefined = this.props.$data.value.find(
+        let hover_item_index:number|null = this.props.$data.value.findIndex(
             (item:DataItem) => item.x == col && item.y == row
         )
-        const data_label:string = hover_item == undefined
+        if(hover_item_index < 0)
+            hover_item_index = null;
+        const hover_item:DataItem|undefined = 
+            (hover_item_index != null)
+            ? this.props.$data.value[hover_item_index] 
+            : undefined;
+        const data_label:string = 
+            (hover_item == undefined)
             ? 'no data'
             : ``
 
@@ -543,6 +619,7 @@ export class D3Heatamp extends preact.Component<{
             x_label: strftime('%Y-%m-%dT%H:%M:%S', new Date(x_seconds * 1000)),
             y_label: y_value,
             data_label,
+            item_index: hover_item_index,
         }
     }
 }
@@ -566,6 +643,7 @@ type HoverPosition = {
     x_label: string,
     y_label: string,
     data_label: string,
+    item_index: number|null
 }
 
 

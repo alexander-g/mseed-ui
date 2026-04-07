@@ -1,30 +1,16 @@
 import { preact, Signal, signals, JSX } from "./dep.ts"
 
 import { DropZone }  from "./ui/file-input.tsx"
-import { 
-    MSEED_Heatmap, 
-    type InferenceEvent 
-} from "./ui/mseed-heatmap.tsx"
-import { D3Map } from "./ui/d3-map.tsx"
-import { 
-    initialize_in_worker as pyo_initialize, 
-    type IPyodide 
-} from "./lib/pyodide.ts"
-import { PlotImage } from "./ui/plot-image.tsx"
+import { MainContent } from "./ui/main-content.tsx"
+import { type InferenceEvent } from "./ui/mseed-heatmap.tsx"
 
 import { 
     process_dropped_files, 
-    tremorwasm,  
     type ProcessedFiles,
     type MSEED_FileAndMeta,
 }                       from "./lib/file-input.ts"
 import type { Station } from "./lib/station-xml.ts"
 import type { QuakeEvent } from "./lib/quakeml.ts"
-import { is_deno }         from "./lib/util.ts";
-import { type MSEED_Meta } from "../wasm-cpp/mseed-wasm.ts"
-
-
-//const tremorwasm:TremorWasm = await tremorwasm_initialize()
 
 
 
@@ -66,8 +52,6 @@ declare global {
 
 /** Main application class */
 class App extends preact.Component {
-    pyodide:IPyodide|undefined;
-    
     app_state:AppState = {
         $mseeds:    new Signal([]),
         $inference: new Signal([]),
@@ -76,33 +60,21 @@ class App extends preact.Component {
     }
 
 
+    /** True if MSEED files are loaded */
     $initialized: Readonly<Signal<boolean>> = signals.computed(
         () => this.app_state.$mseeds.value.length > 0
     )
 
-    $mseed_meta: Readonly<Signal<MSEED_Meta[]>> = signals.computed(
-        () => this.app_state.$mseeds.value.map( m => m.meta )
-    )
-
-    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
 
     render(): JSX.Element {
         return <body>
-            {/* <OSDImage /> */}
-            <MSEED_Heatmap 
-                $files     = {this.$mseed_meta} 
-                $inference = {this.app_state.$inference}
-                $events    = {this.app_state.$events}
-                on_click   = {this.on_heatmap_item_select}
+            <MainContent 
+                $mseeds     = {this.app_state.$mseeds}
+                $inference  = {this.app_state.$inference}
+                $events     = {this.app_state.$events}
+                $stations   = {this.app_state.$stations}
+                app_config  = {self.app_config}
             />
-            <div
-                style = {{
-                    display: 'flex'
-                }}
-            >
-                <PlotImage ref={this.plotimg_ref} />
-                <D3Map $markers={this.app_state.$stations} />
-            </div>
             
             <DropZone 
                 $initialized = {this.$initialized}
@@ -111,8 +83,8 @@ class App extends preact.Component {
         </body>
     }
 
+    /** Called when user drops new files into the browser window */
     on_files = async (files:File[]) => {
-
         const t0:number = performance.now()
         const processed:ProcessedFiles = await process_dropped_files(
             files,
@@ -131,60 +103,13 @@ class App extends preact.Component {
         
         this.app_state.$inference.value = processed.inference_events;
         this.app_state.$mseeds.value    = processed.mseeds;
-        this.app_state.$stations.value  = processed.stations
         this.app_state.$events.value    = processed.events;
+        this.app_state.$stations.value  = processed.stations
     }
 
-    override async componentDidMount(): Promise<void> {
+    override componentDidMount(): void {
         // for debugging
         self.app_state = this.app_state
-
-        const pyodide_vendored:boolean = 
-            self.app_config?.pyodide_vendored ?? is_deno();
-        const pyo:IPyodide|Error = await pyo_initialize(pyodide_vendored)
-        if(pyo instanceof Error) {
-            console.error('Could not load pyodide')
-            console.error(pyo as Error)
-            return;
-        }
-        this.pyodide = pyo;
-    }
-    
-    
-    on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        const mseed:MSEED_FileAndMeta|undefined = 
-            this.app_state.$mseeds.value[selected_file_index]
-        if(mseed == undefined) {
-            console.error(`No mseed file at index ${selected_file_index}`)
-            return;
-        }
-        
-        const file:File|undefined = mseed.file;
-        if(file == undefined)
-            return;
-        
-        console.log('reading file: ', file.name)
-        const data:Int32Array|Error = await tremorwasm.read_data(file)
-        if(data instanceof Error) {
-            console.log(`Could not read mseed data of ${file.name}`)
-            return
-        }
-        console.log('data size:', data.length, i0, i1)
-
-        const pngfile:File|Error = await this.pyodide!.plot_data(
-            data,
-            i0,
-            i1,
-            mseed.meta.start,
-            mseed.meta.samplerate,
-            mseed.meta.code,
-        )
-        if(pngfile instanceof Error) {
-            console.error(`Error plotting data: ${pngfile.message}`)
-            return;
-        }
-
-        this.plotimg_ref.current?.set_src(pngfile)
     }
 }
 
