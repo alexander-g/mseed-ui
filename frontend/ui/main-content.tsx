@@ -46,7 +46,7 @@ export class MainContent extends preact.Component<MainContentProps> {
         return (
         <div style = {{
             display: 'flex',
-            flexDirection:' column',
+            flexDirection:'column',
             height: '100%',
         }}>
             {/* Row 1 */}
@@ -118,7 +118,7 @@ export class MainContent extends preact.Component<MainContentProps> {
 
     /** Called when the user hovers on a station marker in the map */
     on_marker_hover = (index:number|null) => {
-        this.$highlighted_station_index.value = index ? [index] : []
+        this.$highlighted_station_index.value = (index != null) ? [index] : []
 
         const stations:Station[] = this.props.$stations.value
         if(index == null || !(index in stations))
@@ -142,8 +142,12 @@ export class MainContent extends preact.Component<MainContentProps> {
                 if(mseed.meta.code.includes(`.${station.code}.`)) {
                     this.$highlighted_station_index.value = [Number(station_index)];
                     this.$highlighted_station.value = station;
+                    return;
                 }
             }
+
+            this.$highlighted_station.value = null;
+            this.$highlighted_station_index.value = [];
         }
     }
 

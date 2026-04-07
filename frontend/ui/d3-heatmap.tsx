@@ -602,8 +602,11 @@ export class D3Heatamp extends preact.Component<{
         if(hover_item_index < 0)
             hover_item_index = null;
         const hover_item:DataItem|undefined = 
-            hover_item_index? this.props.$data.value[hover_item_index] : undefined;
-        const data_label:string = hover_item == undefined
+            (hover_item_index != null)
+            ? this.props.$data.value[hover_item_index] 
+            : undefined;
+        const data_label:string = 
+            (hover_item == undefined)
             ? 'no data'
             : ``
 
