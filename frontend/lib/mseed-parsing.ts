@@ -213,3 +213,17 @@ function is_mseed(view:DataView): boolean {
 
 
 
+if(import.meta.main) {
+    const data = Deno.readFileSync('./tests/assets/2018-01-27T19:27:54-CN.PFB..HHE')
+    //const data = Deno.readFileSync('/home/superuser/Desktop/tmp/set0/A05/DH2.D/9Y.A05..DH2.D.2022.081')
+    //const data = Deno.readFileSync('./deps.lock')
+    const blob = new Blob([data])
+
+    const meta_ = await read_mseed_metadata(blob) 
+
+    const t0 = performance.now()
+    const meta = await read_mseed_metadata(blob) 
+    const t1 = performance.now()
+    console.log(meta)
+    console.log(t1-t0)
+}
