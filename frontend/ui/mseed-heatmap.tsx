@@ -229,11 +229,11 @@ export class MSEED_Heatmap extends preact.Component<{
         if(position.item_index != null) {
             const item:HeatmapDataItemWithFile|undefined = 
                 this.$transformed_files.value[position.item_index];
-            if(item == undefined) {
+            if(item == undefined) 
                 console.error(`No corresponding item for index ${position}`)
-                return;
-            }
-            this.props.on_mseed_hover?.(item.mseedindex)
+                // NOTE 2 self: do not return here bc of on_events_hover()
+            else 
+                this.props.on_mseed_hover?.(item.mseedindex)
         }
 
 
