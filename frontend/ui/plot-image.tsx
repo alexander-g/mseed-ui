@@ -12,10 +12,10 @@ export class PlotImage extends preact.Component {
     )
 
     render(): JSX.Element {
-        return <div class='container' style={{position:'relative'}}>
+        return <div class='container' style={{position:'relative', width:'100%'}}>
             <img 
                 ref={this.img_ref} 
-                style={{width:600, height:500, border:"1px gray solid"}} 
+                style={{width:'100%', height:'100%', border:"1px gray solid"}} 
             />
 
             <OverlayDiv $visible={this.$overlay_on}>

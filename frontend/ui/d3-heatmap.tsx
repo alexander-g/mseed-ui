@@ -25,7 +25,11 @@ export class D3Heatamp extends preact.Component<{
     /** Optional row indices to mark with a horizontal marker */
     $y_axis_markers?: Readonly<Signal<number[]>>
 
+    /** Called when user clicks on a valid item */
     on_click: (selected:number) => void,
+
+    /** Called when user hovers on a valid item, null otherwise */
+    on_hover?: (selected:number|null) => void,
 }> {
     private static next_clip_id:number = 0
     private clip_path_id:string = `heatmap-clip-${D3Heatamp.next_clip_id++}`
@@ -65,7 +69,7 @@ export class D3Heatamp extends preact.Component<{
     render(): JSX.Element {
         return <div
             class = "d3-container"
-            style = {{ width: '100%', height: '50%' }}
+            style = {{ width: '100%', height: '100%' }}
             ref   = {this.container_ref}
         >
                 <svg 
@@ -411,12 +415,17 @@ export class D3Heatamp extends preact.Component<{
     #svgimage_onmousemove:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current)
         const [root_x, root_y] = d3.pointer(event, this.root_ref.current)
-        this.$hover_position.value = 
+        const position:HoverPosition|null = 
             this.#hover_position_from_mouse(mx, my, root_x, root_y)
+        this.$hover_position.value = position
+        if(this.props.on_hover)
+            this.props.on_hover(position?.item_index ?? null)
     }
 
     #svgimage_onmouseleave:preact.MouseEventHandler<SVGImageElement> = () => {
         this.$hover_position.value = null
+        if(this.props.on_hover)
+            this.props.on_hover(null)
     }
 
 
@@ -587,9 +596,13 @@ export class D3Heatamp extends preact.Component<{
         if(x_seconds == undefined || y_value == undefined)
             return null
 
-        const hover_item:DataItem|undefined = this.props.$data.value.find(
+        let hover_item_index:number|null = this.props.$data.value.findIndex(
             (item:DataItem) => item.x == col && item.y == row
         )
+        if(hover_item_index < 0)
+            hover_item_index = null;
+        const hover_item:DataItem|undefined = 
+            hover_item_index? this.props.$data.value[hover_item_index] : undefined;
         const data_label:string = hover_item == undefined
             ? 'no data'
             : ``
@@ -603,6 +616,7 @@ export class D3Heatamp extends preact.Component<{
             x_label: strftime('%Y-%m-%dT%H:%M:%S', new Date(x_seconds * 1000)),
             y_label: y_value,
             data_label,
+            item_index: hover_item_index,
         }
     }
 }
@@ -626,6 +640,7 @@ type HoverPosition = {
     x_label: string,
     y_label: string,
     data_label: string,
+    item_index: number|null
 }
 
 

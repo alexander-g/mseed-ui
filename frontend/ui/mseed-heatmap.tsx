@@ -14,8 +14,8 @@ const HARDCODED_BIN_LENGTH_SECONDS:number = 60*5;
 
 
 type HeatmapDataItemWithFile = HeatmapDataItem & {
-    fileindex: number,
-    timestamp: number,
+    mseedindex: number,
+    timestamp:  number,
 }
 
 export type InferenceEvent = {
@@ -36,7 +36,11 @@ export class MSEED_Heatmap extends preact.Component<{
 
     /** Called when user clicks on a pixel in the heatmap. Receives the
      *  index of the file and the from/to data indices within the file. */
-    on_click: (selected_file_index:number, i0:number, i1:number) => void,
+    on_click: (selected_mseed_index:number, i0:number, i1:number) => void,
+
+    /** Called when user hover on a pixel in the heatmap. 
+     *  Receives the index of the mseed file.  */
+    on_mseed_hover?: (mseed_index:number|null) => void,
 
     /** The currently highlighted station. Can be both input and output. */
     $highlighted_station?: Signal<Station|null>
@@ -49,6 +53,7 @@ export class MSEED_Heatmap extends preact.Component<{
             $x_axis_markers = { this.$event_timestamps }
             $y_axis_markers = { this.$highlighted_rows }
             on_click = {this.on_heatmap_select}
+            on_hover = {this.on_heatmap_hover}
         />
     }
 
@@ -126,7 +131,7 @@ export class MSEED_Heatmap extends preact.Component<{
                     x: j,
                     y: yindex,
                     value: find_inference(inferencemap, meta.code, date) * 0.9 + Math.random() * 0.1,
-                    fileindex,
+                    mseedindex: fileindex,
                     timestamp,
                 })
             }
@@ -143,10 +148,10 @@ export class MSEED_Heatmap extends preact.Component<{
     on_heatmap_select = (index:number) => {
         const item:HeatmapDataItemWithFile|undefined = this.$transformed_files.value[index];
         if(item == undefined) {
-            console.log(`No corresponding item for index ${index}`)
+            console.error(`No corresponding item for index ${index}`)
             return;
         }
-        const meta:MSEED_Meta = this.props.$mseed_meta.value[item.fileindex]!
+        const meta:MSEED_Meta = this.props.$mseed_meta.value[item.mseedindex]!
         
         // starting time in the file, but not necessarily in the first item
         const meta_start_s = meta.start.getTime() / 1000
@@ -159,7 +164,7 @@ export class MSEED_Heatmap extends preact.Component<{
         
         const i0 = (start_seconds_within_file) * meta.samplerate;
         const i1 = (start_seconds_within_file + HARDCODED_BIN_LENGTH_SECONDS) * meta.samplerate;
-        this.props.on_click(item.fileindex, i0, i1);
+        this.props.on_click(item.mseedindex, i0, i1);
     }
 
     /** Transforming the input $highlighted_station to the y-axis */
@@ -175,6 +180,22 @@ export class MSEED_Heatmap extends preact.Component<{
                 output.push(Number(index))
         return output;
     } )
+
+    on_heatmap_hover = (index:number|null) => {
+        if(!this.props.on_mseed_hover)
+            return;
+
+        if(index == null){
+            this.props.on_mseed_hover(null)
+            return;
+        }
+        const item:HeatmapDataItemWithFile|undefined = this.$transformed_files.value[index];
+        if(item == undefined) {
+            console.error(`No corresponding item for index ${index}`)
+            return;
+        }
+        this.props.on_mseed_hover(item.mseedindex)
+    }
 }
 
 
