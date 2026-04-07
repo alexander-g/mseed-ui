@@ -1,4 +1,5 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
+import { strftime_ISO8601 } from "../lib/util.ts";
 
 import * as d3 from "d3";
 
@@ -11,6 +12,10 @@ export type DataItem = {
     y:     number,
     value: number,
 }
+
+/** Values returned to the `on_hover` callback */
+export type HoverCallbackPosition = Pick<HoverPosition, 'item_index'|'x'|'y'>
+
 
 
 
@@ -29,7 +34,7 @@ export class D3Heatamp extends preact.Component<{
     on_click: (selected:number) => void,
 
     /** Called when user hovers on a valid item, null otherwise */
-    on_hover?: (selected:number|null) => void,
+    on_hover?: (selected:HoverCallbackPosition|null) => void,
 }> {
     private static next_clip_id:number = 0
     private clip_path_id:string = `heatmap-clip-${D3Heatamp.next_clip_id++}`
@@ -322,7 +327,7 @@ export class D3Heatamp extends preact.Component<{
                 )
             )
             // TODO: too many assumptions for this component
-            .tickFormat( t => strftime('%Y-%m-%dT%H:%M:%S', new Date( x_axis[Number(t)]! * 1000 ) )  )
+            .tickFormat( t => strftime_ISO8601(new Date( x_axis[Number(t)]! * 1000 ) )  )
         const d3_y_axis:d3.Axis<d3.NumberValue> = 
             d3.axisLeft(zy)
             .tickValues(d3.range(0, rows, 5))
@@ -425,14 +430,17 @@ export class D3Heatamp extends preact.Component<{
         const position:HoverPosition|null = 
             this.#hover_position_from_mouse(mx, my, root_x, root_y)
         this.$hover_position.value = position
-        if(this.props.on_hover)
-            this.props.on_hover(position?.item_index ?? null)
+        
+        this.props.on_hover?.(
+            position
+            ? {item_index: position.item_index, x:position.x, y:position.y} 
+            : null
+        )
     }
 
     #svgimage_onmouseleave:preact.MouseEventHandler<SVGImageElement> = () => {
         this.$hover_position.value = null
-        if(this.props.on_hover)
-            this.props.on_hover(null)
+        this.props.on_hover?.(null)
     }
 
 
@@ -623,10 +631,13 @@ export class D3Heatamp extends preact.Component<{
         return {
             overlay_x,
             overlay_y,
-            x_label: strftime('%Y-%m-%dT%H:%M:%S', new Date(x_seconds * 1000)),
+            x_label: strftime_ISO8601(new Date(x_seconds * 1000)),
             y_label: y_value,
             data_label,
+
             item_index: hover_item_index,
+            x: col,
+            y: row,
         }
     }
 }
@@ -645,13 +656,25 @@ type Size = {
 }
 
 type HoverPosition = {
+    /** X position of the cursor within the SVG component */
     overlay_x: number,
+    /** Y position of the cursor within the SVG component */
     overlay_y: number,
+
     x_label: string,
     y_label: string,
     data_label: string,
+    
+    /** Index of the data item of null if there is none at this position */
     item_index: number|null
+
+    /** `X` value of {@link DataItem}, or column. */
+    x: number
+    /** `Y` value of {@link DataItem}, or row */
+    y: number
 }
+
+
 
 type RowsCols = {cols:number, rows:number}
 
@@ -698,17 +721,3 @@ function HoverMarker(props:{
     />
 }
 
-
-
-function strftime(fmt:string, d:Date){
-    const z = (n:number) => String(n).padStart(2,'0');
-    const map:Record<string, string> = {
-        '%Y': String(d.getFullYear()),
-        '%m': z(d.getMonth()+1),
-        '%d': z(d.getDate()),
-        '%H': z(d.getHours()),
-        '%M': z(d.getMinutes()),
-        '%S': z(d.getSeconds()),
-    };
-    return fmt.replace(/%[YmdHMS]/g, (m:string) => map[m] ?? m);
-}

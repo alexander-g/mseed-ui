@@ -6,7 +6,7 @@ import { PlotImage }     from "./plot-image.tsx"
 import { tremorwasm }    from "../lib/file-input.ts"
 
 import { initialize_in_worker as initialize_pyodide } from "../lib/pyodide.ts"
-import { is_deno } from "../lib/util.ts"
+import { is_deno, strftime_ISO8601 } from "../lib/util.ts"
 
 import type { AppConfig }         from "../index.tsx"
 import type { InferenceEvent }    from "./mseed-heatmap.tsx"
@@ -59,7 +59,8 @@ export class MainContent extends preact.Component<MainContentProps> {
                     $inference  = {this.props.$inference}
                     $events     = {this.props.$events}
                     on_click    = {this.on_heatmap_item_select}
-                    on_mseed_hover = {this.on_mseed_hover}
+                    on_mseed_hover  = {this.on_mseed_hover}
+                    on_events_hover = {this.on_events_hover}
                     $highlighted_station = {this.$highlighted_station}
                 />
             </div>
@@ -106,9 +107,29 @@ export class MainContent extends preact.Component<MainContentProps> {
 
     /** Stations converted to D3Map Markers */
     $map_markers:Readonly<Signal<Marker[]>> = signals.computed( () => {
-        return this.props.$stations.value.map(
-            s => ({latitude:s.latitude, longitude:s.longitude, label:s.code}) 
-        )
+        return [
+            ...this.props.$stations.value.map(
+                s => ({latitude:s.latitude, longitude:s.longitude, label:s.code}) 
+            ),
+            ... this.$highlighted_events.value.map( e => ({
+                latitude:  e.latitude,
+                longitude: e.longitude,
+                label:     `Event ${strftime_ISO8601(e.time)}`,
+                visual: {
+                    shape: 'diamond',
+                    color: '#1f6fb2',
+                    highlight_color: '#ff8f00',
+                    size: 8,
+                },
+                rings: {
+                    distances_km: [50, 100],
+                    color: 'rgba(31,111,178,0.5)',
+                    stroke_width: 1.5,
+                },
+                ignore_for_centering: true,
+
+            } as Marker) )
+        ]
     })
 
 
@@ -149,6 +170,18 @@ export class MainContent extends preact.Component<MainContentProps> {
             this.$highlighted_station.value = null;
             this.$highlighted_station_index.value = [];
         }
+    }
+
+    /** The currently hightlighted events */
+    $highlighted_events: Signal<QuakeEvent[]> = new Signal([])
+
+    /** Called when user hovers on a pixel in the heatmap. 
+     *  Receives the events on this pixel. */
+    on_events_hover = (event_indices:number[]) => {
+        this.$highlighted_events.value = 
+            event_indices
+            .map( i => this.props.$events.value[i] )
+            .filter(Boolean) as QuakeEvent[]
     }
 
 

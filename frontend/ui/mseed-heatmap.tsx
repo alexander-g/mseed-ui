@@ -2,8 +2,12 @@ import { preact, Signal, signals, JSX } from "../dep.ts"
 
 import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
 import type { QuakeEvent } from "../lib/quakeml.ts";
-import { D3Heatamp, type DataItem as HeatmapDataItem } from "../ui/d3-heatmap.tsx"
+import { D3Heatamp} from "../ui/d3-heatmap.tsx"
 import { type Station } from "../lib/station-xml.ts";
+import {
+    type HoverCallbackPosition, 
+    type DataItem as HeatmapDataItem 
+} from "../ui/d3-heatmap.tsx"
 
 import { range } from 'd3';
 
@@ -11,6 +15,8 @@ import { range } from 'd3';
 
 // 5 minutes atm
 const HARDCODED_BIN_LENGTH_SECONDS:number = 60*5;
+// at least 30 seconds for an item atm
+const HARDCODED_MINIMUM_BIN_LENGTH_SECONDS:number = 30;
 
 
 type HeatmapDataItemWithFile = HeatmapDataItem & {
@@ -24,7 +30,7 @@ export type InferenceEvent = {
 }
 
 
-
+/** Wrapper around the MSEED-agnostic D3Heatmap */
 export class MSEED_Heatmap extends preact.Component<{
     /** Metadata loaded from MSEED files */
     $mseed_meta:Readonly< Signal<MSEED_Meta[]> >,
@@ -38,9 +44,12 @@ export class MSEED_Heatmap extends preact.Component<{
      *  index of the file and the from/to data indices within the file. */
     on_click: (selected_mseed_index:number, i0:number, i1:number) => void,
 
-    /** Called when user hover on a pixel in the heatmap. 
+    /** Called when user hovers on a pixel in the heatmap. 
      *  Receives the index of the mseed file.  */
     on_mseed_hover?: (mseed_index:number|null) => void,
+
+    /** Called when user hovers on  a pixel with {@link QuakeEvent} events */
+    on_events_hover?: (events_indices:number[]) => void,
 
     /** The currently highlighted station. Can be both input and output. */
     $highlighted_station?: Signal<Station|null>
@@ -50,16 +59,41 @@ export class MSEED_Heatmap extends preact.Component<{
             $data    = {this.$transformed_files}
             $x_axis  = {this.$x_axis}
             $y_axis  = {this.$y_axis}
-            $x_axis_markers = { this.$event_timestamps }
+            $x_axis_markers = { this.$itemized_event_timestamps }
             $y_axis_markers = { this.$highlighted_rows }
             on_click = {this.on_heatmap_select}
             on_hover = {this.on_heatmap_hover}
         />
     }
 
-    /** Get the time of each event */
-    $event_timestamps:Readonly<Signal<number[]>> = signals.computed(() => {
-        return this.props.$events.value.map( e => e.time.getTime()/1000 )
+    /** $events, aligned to bins/items */
+    $itemized_events: Readonly<Signal<ItemizedEvent[]>> = signals.computed(() => {
+        const aligned_time_to_original_event_indices: Record<number, number[]> = {}
+        for(const event_index in this.props.$events.value) {
+            const event:QuakeEvent = this.props.$events.value[event_index]!
+
+            const time:number = event.time.getTime() / 1000;
+            const time_aligned:number = time - (time % HARDCODED_BIN_LENGTH_SECONDS);
+
+            const event_indices_at_this_time:number[] = 
+                aligned_time_to_original_event_indices[time_aligned] ?? [];
+            event_indices_at_this_time.push(Number(event_index));
+            
+            aligned_time_to_original_event_indices[time_aligned] = 
+                event_indices_at_this_time;
+        }
+
+        return Object.entries(aligned_time_to_original_event_indices).map(
+            ([timestamp, indices]) => ({
+                time: new Date(Number(timestamp)*1000), 
+                original_event_indices: indices
+            })
+        )
+    })
+
+    /** Timestamps of $itemized_events */
+    $itemized_event_timestamps:Readonly<Signal<number[]>> = signals.computed(() => {
+        return this.$itemized_events.value.map( e => e.time.getTime() / 1000 )
     })
 
     private $transformed:Readonly<Signal<TransformedHeatmapData>> = signals.computed(() => {
@@ -126,6 +160,9 @@ export class MSEED_Heatmap extends preact.Component<{
 
             for(let j:number = index0; j < index1 + 1; j++) {
                 const timestamp:number = j * bin_length_seconds + tstart
+                if(Math.abs(t1 - timestamp) < HARDCODED_MINIMUM_BIN_LENGTH_SECONDS)
+                    continue;
+
                 const date:Date = new Date(timestamp * 1000)
                 all_items.push({
                     x: j,
@@ -181,20 +218,37 @@ export class MSEED_Heatmap extends preact.Component<{
         return output;
     } )
 
-    on_heatmap_hover = (index:number|null) => {
-        if(!this.props.on_mseed_hover)
+    /** Called when user hovers on a pixel in the heatmap */
+    on_heatmap_hover = (position:HoverCallbackPosition|null) => {
+        if(position == null) {
+            this.props.on_mseed_hover?.(null)
+            this.props.on_events_hover?.([])
             return;
+        }
 
-        if(index == null){
-            this.props.on_mseed_hover(null)
+        if(position.item_index != null) {
+            const item:HeatmapDataItemWithFile|undefined = 
+                this.$transformed_files.value[position.item_index];
+            if(item == undefined) {
+                console.error(`No corresponding item for index ${position}`)
+                return;
+            }
+            this.props.on_mseed_hover?.(item.mseedindex)
+        }
+
+
+        const timestamp:number|undefined = this.$x_axis.value[position.x]
+        if(timestamp == undefined) {
+            console.error(`No timestamp at x position ${position.x}`)
             return;
         }
-        const item:HeatmapDataItemWithFile|undefined = this.$transformed_files.value[index];
-        if(item == undefined) {
-            console.error(`No corresponding item for index ${index}`)
-            return;
-        }
-        this.props.on_mseed_hover(item.mseedindex)
+
+        const event_indices:number[] = 
+            this.$itemized_events.value
+            .filter( e => e.time.getTime() / 1000 == timestamp )
+            .map( e => e.original_event_indices )
+            .flat()
+        this.props.on_events_hover?.(event_indices)
     }
 }
 
@@ -204,6 +258,17 @@ type TransformedHeatmapData = {
     x_axis: number[],
     y_axis: string[],
 }
+
+
+/** Proxy for QuakeML events, aligned to items */
+type ItemizedEvent = {
+    /** Event time aligned to bin length */
+    time: Date;
+
+    /** Potentially multiple original events that fall into this item  */
+    original_event_indices: number[];
+}
+
 
 
 function inference2map(inferences:InferenceEvent[]): Record<string, Date[]> {
