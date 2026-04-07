@@ -119,6 +119,13 @@ export class D3Heatamp extends preact.Component<{
                         >
                             {this.$x_marker_lines}
                             {this.$y_marker_rects}
+
+                            <HoverMarker 
+                                $position   = {this.$hover_position} 
+                                $dataitems  = {this.props.$data}
+                                $dimensions = {this.$dimensions}
+                                $rowscols   = {this.$rowscols}
+                            />
                         </g>
                     </g>
 
@@ -138,7 +145,7 @@ export class D3Heatamp extends preact.Component<{
 
 
     /** The current number of rows and columns. Cached here to avoid recomputation */
-    private $rowscols:Signal<{cols:number, rows:number}|null> = new Signal(null)
+    private $rowscols:Signal<RowsCols|null> = new Signal(null)
 
     #_ = this.props.$data.subscribe( () => {
         this.$rowscols.value = this.#get_rows_cols()
@@ -183,14 +190,14 @@ export class D3Heatamp extends preact.Component<{
     })
 
     private $x_marker_positions:Readonly<Signal<number[]>> = signals.computed(() => {
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return []
         return this.#x_marker_positions(this.$plot_width.value, colsrows.cols)
     })
 
     private $x_marker_lines:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return []
         if(colsrows.rows <= 0)
@@ -216,7 +223,7 @@ export class D3Heatamp extends preact.Component<{
     })
 
     private $y_marker_rects:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return []
         if(colsrows.rows <= 0)
@@ -235,7 +242,7 @@ export class D3Heatamp extends preact.Component<{
                 width        = {`${plot_width}`}
                 height       = {`${marker_height}`}
                 fill         = "#4cc9f0"
-                fill-opacity = "0.5"
+                fill-opacity = "0.3"
                 stroke       = "none"
             />
         ))
@@ -277,7 +284,7 @@ export class D3Heatamp extends preact.Component<{
         // NOTE: accessing $signals up here to make sure they are subscribed to
         const t:d3.ZoomTransform = this.$zoom_transform.value
         const x_axis:number[]    = this.props.$x_axis.value
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return;
         const { cols, rows } = colsrows;
@@ -333,7 +340,7 @@ export class D3Heatamp extends preact.Component<{
 
 
     /** Compute the current number of rows and columns from the data input */
-    #get_rows_cols(): {cols:number, rows:number}|null {
+    #get_rows_cols(): RowsCols|null {
         const data:DataItem[] = this.props.$data.value;
         if(data.length == 0)
             return null;
@@ -355,7 +362,7 @@ export class D3Heatamp extends preact.Component<{
     update_heatmap = async () => {
         // NOTE: $data.value is up here to make sure its subscribed
         const data:DataItem[] = this.props.$data.value;
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return;
         const { cols, rows } = colsrows;
@@ -565,7 +572,7 @@ export class D3Heatamp extends preact.Component<{
         root_x:number, 
         root_y:number
     ): HoverPosition|null {
-        const colsrows:{cols:number, rows:number}|null = this.$rowscols.value
+        const colsrows:RowsCols|null = this.$rowscols.value
         if(colsrows == null)
             return null
         if(colsrows.cols <= 0 || colsrows.rows <= 0)
@@ -644,6 +651,51 @@ type HoverPosition = {
     y_label: string,
     data_label: string,
     item_index: number|null
+}
+
+type RowsCols = {cols:number, rows:number}
+
+
+
+/** Overlay of the size of one heatmap pixel at the current position of the cursor */
+function HoverMarker(props:{
+    $position:   Readonly<Signal<HoverPosition|null>>,
+    $dimensions: Readonly<Signal<SVGPlotDimensions>>,
+    $dataitems:  Readonly<Signal<DataItem[]>>,
+    $rowscols:   Readonly<Signal<RowsCols|null>>
+}): JSX.Element|null {
+
+    // NOTE: subscribing to signals here before early exit returns
+    const {plot_width, plot_height} = props.$dimensions.value;
+    const item_index:number|null = props.$position.value?.item_index ?? null
+    const data_items:DataItem[]  = props.$dataitems.value;
+    const colsrows:RowsCols|null = props.$rowscols.value
+
+    if(item_index == null || colsrows == null)
+        return null;
+
+    const item:DataItem|undefined = data_items[item_index];
+    if(item == undefined)
+        return null;
+
+    const item_width:number  = plot_width / colsrows.cols;
+    const item_height:number = plot_height / colsrows.rows;
+    
+    const x:number = item_width * item.x;
+    const y:number = item_height * item.y;
+
+
+
+    return <rect
+        x            = {`${x}`}
+        y            = {`${y}`}
+        width        = {`${item_width}`}
+        height       = {`${item_height}`}
+        fill         = "#f0f0f0"
+        fill-opacity = "0.3"
+        stroke       = "none"
+        pointer-events = "none"
+    />
 }
 
 
