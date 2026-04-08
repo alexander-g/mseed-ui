@@ -2,3 +2,4 @@ static/
 *.tar
 wasm-cpp/build*
 tests/coverage
+__pycache__

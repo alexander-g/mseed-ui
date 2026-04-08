@@ -8,7 +8,7 @@ import type {
 } from "./pyodide-worker.ts";
 
 
-const PLOT_DATA_PY_SCRIPT:string = 'pyodide-plot.py'
+const PLOT_DATA_PY_SCRIPT:string = 'pyodide_plot.py'
 
 // NOTE: used by the build script
 export const PYODIDE_SCRIPTS:string[] = [PLOT_DATA_PY_SCRIPT]
@@ -24,6 +24,16 @@ export interface IPyodide {
         start_time:Date,
         sample_rate_hz:number,
         title:string,
+    ): Promise<File|Error>;
+
+    /** Plot a 1D time series as a spectrogram and return a PNG file. */
+    plot_spectrogram(
+        data: Int32Array,
+        i0:   number,
+        i1:   number,
+        start_time:     Date,
+        sample_rate_hz: number,
+        title:          string,
     ): Promise<File|Error>;
 }
 
@@ -48,6 +58,21 @@ export class PyodideInWorker implements IPyodide {
 
         return internal.plot_data(data, i0, i1, start_time, sample_rate_hz, title)
     }
+
+    async plot_spectrogram(
+        data:Int32Array,
+        i0:number,
+        i1:number,
+        start_time:Date,
+        sample_rate_hz:number,
+        title:string,
+    ): Promise<File|Error> {
+        const internal:IPyodide|Error = await this.readypromise;
+        if(internal instanceof Error)
+            return internal as Error;
+
+        return internal.plot_spectrogram(data, i0, i1, start_time, sample_rate_hz, title)
+    }
 }
 
 
@@ -65,6 +90,31 @@ export class Pyodide implements IPyodide {
     ): Promise<File|Error> {
 
         const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_data");
+        await plot_fn(
+            this.pyodide.toPy(data), 
+            i0, 
+            i1, 
+            start_time.getTime()/1000, 
+            sample_rate_hz, 
+            title, 
+            '/plt.png'
+        )
+
+        const pngdata:Uint8Array<ArrayBuffer> = 
+            this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
+        return new File([pngdata], 'plot.png')
+    }
+
+    async plot_spectrogram(
+        data: Int32Array,
+        i0:   number,
+        i1:   number,
+        start_time:     Date,
+        sample_rate_hz: number,
+        title:          string,
+    ): Promise<File|Error> {
+
+        const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_spectrogram");
         await plot_fn(
             this.pyodide.toPy(data), 
             i0, 
@@ -140,7 +190,8 @@ async function load_plot_code(): Promise<string|Error> {
 class PyodideToWorkerInterface implements IPyodide {
     constructor(private worker:Worker){}
 
-    plot_data(
+    private _plot(
+        plotcommand: WorkerPlotDataCommand['command'],
         data: Int32Array,
         i0:number,
         i1:number,
@@ -149,13 +200,14 @@ class PyodideToWorkerInterface implements IPyodide {
         title:string,
     ): Promise<File|Error> {
         const command:WorkerPlotDataCommand = {
-            command: 'plot-data',
+            command: plotcommand,
             data:    data,
             i0,
             i1,
             start_time,
             sample_rate_hz,
             title,
+            uuid: self.crypto.randomUUID()
         }
         const promise:Promise<File|Error> = 
             new Promise( (resolve: (x:File|Error) => void) => {
@@ -170,7 +222,9 @@ class PyodideToWorkerInterface implements IPyodide {
                             new Error(`Unexpected worker message: ${message.message}`)
                         )
                         return;
-                    }
+                    } else if (message.uuid != command.uuid) 
+                        // message is for another promise
+                        return;
                     // else   
 
                     const pngfile = new File([message.outputdata_png], 'plot.png')
@@ -180,6 +234,19 @@ class PyodideToWorkerInterface implements IPyodide {
             } )
         this.worker.postMessage(command);
         return promise;
+    }
+
+
+    plot_data(
+        ...x:Parameters<IPyodide['plot_data']>
+    ): ReturnType<IPyodide['plot_data']> {
+        return this._plot('plot-data', ...x)
+    }
+
+    plot_spectrogram(
+        ...x:Parameters<IPyodide['plot_spectrogram']>
+    ): ReturnType<IPyodide['plot_spectrogram']> {
+        return this._plot('plot-spectrogram', ...x)
     }
 }
 
@@ -204,7 +271,7 @@ async function initialize(vendored:boolean = is_deno()): Promise<Pyodide|Error> 
         const pyodide:pyo.PyodideAPI = await pyo.loadPyodide({
             indexURL: vendored? '' : PYODIDE_CDN_URL,
             packageBaseUrl: (is_deno() || vendored)? undefined : PYODIDE_CDN_URL,
-            packages: ['numpy', 'matplotlib']
+            packages: ['matplotlib', 'numpy', 'scipy']
         });
 
         const pyo_plot_code:string|Error = await load_plot_code()
@@ -260,7 +327,7 @@ export async function initialize_in_worker(
 
 
 
-
+// NOTE keep this to download pyodide packages
 if(import.meta.main) {
     const pyodide:Pyodide|Error = await initialize()
     if(pyodide instanceof Error)

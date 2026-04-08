@@ -73,9 +73,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             }}>
                 <PlotImage ref={this.plotimg_ref} />
                 
-                <div style={{background:'gray', width:'100%'}}>
-                    Placeholder
-                </div>
+                <PlotImage ref={this.spectrogram_img_ref} />
                 
                 <D3Map 
                     $markers = {this.$map_markers} 
@@ -211,7 +209,7 @@ export class MainContent extends preact.Component<MainContentProps> {
         }
         console.log('data size:', data.length, i0, i1)
 
-        const pngfile:File|Error = await this.pyodide!.plot_data(
+        const promise0:Promise<File|Error> = this.pyodide!.plot_data(
             data,
             i0,
             i1,
@@ -219,16 +217,33 @@ export class MainContent extends preact.Component<MainContentProps> {
             mseed.meta.samplerate,
             mseed.meta.code,
         )
-        if(pngfile instanceof Error) {
-            console.error(`Error plotting data: ${pngfile.message}`)
+        const promise1:Promise<File|Error> = this.pyodide!.plot_spectrogram(
+            data,
+            i0,
+            i1,
+            mseed.meta.start,
+            mseed.meta.samplerate,
+            mseed.meta.code,
+        )
+
+        const pngfile0:File|Error = await promise0;
+        const pngfile1:File|Error = await promise1;
+        if(pngfile0 instanceof Error) {
+            console.error(`Error plotting data: ${pngfile0.message}`)
             return;
         }
+        this.plotimg_ref.current?.set_src(pngfile0)
 
-        this.plotimg_ref.current?.set_src(pngfile)
+        if(pngfile1 instanceof Error) {
+            console.error(`Error plotting spectrogram: ${pngfile1.message}`)
+            return;
+        }
+        this.spectrogram_img_ref.current?.set_src(pngfile1)
     }
 
 
     // references to components
     plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
+    spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
 }
 

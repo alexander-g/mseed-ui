@@ -14,7 +14,7 @@ export type WorkerInitCommand = {
 
 
 export type WorkerPlotDataCommand = {
-    command: 'plot-data';
+    command: 'plot-data'|'plot-spectrogram';
 
     /** Data to plot */
     data: Int32Array;
@@ -34,6 +34,9 @@ export type WorkerPlotDataCommand = {
     /** Plot title. */
     title: string;
 
+    /** Unique id to identify parallel messages. Will return in result */
+    uuid: string;
+
 }
 
 export type WorkerCommand = 
@@ -51,6 +54,9 @@ export type WorkerReadyResult = {
 
 export type WorkerPlotDataResult = {
     message: 'plot-data-result';
+
+    /** Unique id passed in command. */
+    uuid: string;
 
     /** RGB data of plot encoded as png.
         NOTE: uint8 instead of File, bc doesnt work (in deno) */
@@ -73,7 +79,7 @@ let pyodide:Pyodide|null = null;
 // main entry point
 self.onmessage = async (e:MessageEvent) => {
     const data:WorkerCommand = e.data;
-    console.log(`Worker ${self.name} onmessage: ${data.command}`)
+    //console.log(`Worker ${self.name} onmessage: ${data.command}`)
 
     let result:WorkerMessage;
     if(data.command == 'init') {
@@ -84,7 +90,7 @@ self.onmessage = async (e:MessageEvent) => {
             pyodide = pyo;
             result = {message:'ready'}
         }
-    } else if(data.command == 'plot-data') {
+    } else if(data.command == 'plot-data' || data.command == 'plot-spectrogram') {
         if(pyodide == null)
             result = new Error('Pyodide in worker not initialized');
         else
@@ -103,7 +109,16 @@ async function handle_plot_data(
     data:    WorkerPlotDataCommand, 
     pyodide: Pyodide
 ): Promise<WorkerPlotDataResult|Error> {
-    const output:File|Error = await pyodide.plot_data(
+    const plot_fn = 
+        data.command == 'plot-data'
+        ? pyodide.plot_data.bind(pyodide)
+        : data.command == 'plot-spectrogram'
+            ? pyodide.plot_spectrogram.bind(pyodide)
+            : new Error(`Unexpected command: ${data.command}`);
+    if(plot_fn instanceof Error)
+        return plot_fn as Error
+
+    const output:File|Error = await plot_fn(
         data.data,
         data.i0,
         data.i1,
@@ -120,7 +135,7 @@ async function handle_plot_data(
         return outputdata_png as Error;
 
     const message:WorkerPlotDataResult = 
-        {message:'plot-data-result', outputdata_png};
+        {message:'plot-data-result', outputdata_png, uuid:data.uuid};
     
     return message;
 }
@@ -131,7 +146,7 @@ self.addEventListener('error', (e:ErrorEvent) => {
     e.preventDefault();
     const msg:string = 
         `Worker ${self.name} error: ${e.message} (${e.filename}:${e.lineno})-${e.colno})`
-    console.error(msg)
+    console.error(msg, e)
     self.postMessage(new Error(msg));
     self.close();
 });
