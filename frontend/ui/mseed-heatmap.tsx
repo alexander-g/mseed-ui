@@ -281,7 +281,11 @@ function inference2map(inferences:InferenceEvent[]): Record<string, Date[]> {
 
 function find_inference(inferencemap:Record<string, Date[]>, code:string, date:Date) {
     for(const eventtime of inferencemap[code] ?? []) {
-        if(eventtime.getTime() == date.getTime())
+        const event_time_s:number = eventtime.getTime() / 1000
+        const event_time_s_aligned:number = 
+            event_time_s - (event_time_s % HARDCODED_BIN_LENGTH_SECONDS);
+        
+        if(event_time_s_aligned * 1000 == date.getTime())
             return 1;
     }
     return 0;

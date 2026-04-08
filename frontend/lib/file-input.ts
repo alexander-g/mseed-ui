@@ -126,7 +126,9 @@ export async function process_dropped_files(
 export 
 async function read_csv_inference_file(file:File): Promise<InferenceEvent[]|Error> {
     try {
-        const code:string = file.name.split('.').slice(0,4).join('.')
+        const code:string|null = parse_station_code_from_filename(file.name)
+        if(code == null)
+            return new Error(`Could not parse station code from "${file.name}"`)
         const content:string = await file.text()
         const lines:string[] = content.trim().split('\n')
 
@@ -143,4 +145,28 @@ async function read_csv_inference_file(file:File): Promise<InferenceEvent[]|Erro
     } catch {
         return new Error('Could not read inference csv file')
     }
+}
+
+export function parse_station_code_from_filename(input: string): string|null {
+    input = input.replace(/\.(txt)$/i, '')
+    input = input.replace(/\.(csv)$/i, '')
+
+    const timestring:string|null = find_iso_time(input)
+    if(timestring)
+        input = input.replace(timestring, '')
+
+    // characters only
+    //const rx = /([A-Z]{0,5})\.([A-Z]{0,5})\.([A-Z]{0,5})\.([A-Z]{0,5})/;
+
+    // characters and numbers
+    const rx = /([A-Z0-9]{0,5})\.([A-Z0-9]{0,5})\.([A-Z0-9]{0,5})\.([A-Z0-9]{0,5})/i;
+    
+    const m:RegExpMatchArray|null = input.match(rx)
+    return m ? m[0] : null;
+}
+
+export function find_iso_time(input: string): string|null {
+    const iso_time_regex = /\b\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)?\b/;
+    const m:RegExpMatchArray|null = input.match(iso_time_regex);
+    return m ? m[0] : null;
 }
