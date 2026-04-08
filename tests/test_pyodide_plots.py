@@ -37,6 +37,14 @@ def test_spectrogram():
     spec = pyodide_plot.create_spectrogram(x, frequency)
 
 
+def test_spectrogram_short_signal():
+    x  = np.random.randint(0,100, size=(8,), dtype='int32')
+    frequency = 50
+
+    spec = pyodide_plot.create_spectrogram(x, frequency)
+    assert spec.data.size > 0
+
+
 
 def test_plot_spectrogram():
     x  = np.random.randint(0,100, size=(500,), dtype='int32')
@@ -56,5 +64,4 @@ def test_plot_spectrogram():
     i1 = 80
     # dont fail
     pyodide_plot.plot_spectrogram(x, i0, i1, start_timestamp_s, sample_rate, title, output_path)
-
 

@@ -90,19 +90,22 @@ export class Pyodide implements IPyodide {
     ): Promise<File|Error> {
 
         const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_data");
-        await plot_fn(
-            this.pyodide.toPy(data), 
-            i0, 
-            i1, 
-            start_time.getTime()/1000, 
-            sample_rate_hz, 
-            title, 
-            '/plt.png'
-        )
-
-        const pngdata:Uint8Array<ArrayBuffer> = 
-            this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
-        return new File([pngdata], 'plot.png')
+        try{
+            await plot_fn(
+                this.pyodide.toPy(data), 
+                i0, 
+                i1, 
+                start_time.getTime()/1000, 
+                sample_rate_hz, 
+                title, 
+                '/plt.png'
+            )
+            const pngdata:Uint8Array<ArrayBuffer> = 
+                this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
+            return new File([pngdata], 'plot.png')
+        } catch (e) {
+            return new Error(`${e}`)
+        }
     }
 
     async plot_spectrogram(
@@ -115,19 +118,22 @@ export class Pyodide implements IPyodide {
     ): Promise<File|Error> {
 
         const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get("plot_spectrogram");
-        await plot_fn(
-            this.pyodide.toPy(data), 
-            i0, 
-            i1, 
-            start_time.getTime()/1000, 
-            sample_rate_hz, 
-            title, 
-            '/plt.png'
-        )
-
-        const pngdata:Uint8Array<ArrayBuffer> = 
-            this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
-        return new File([pngdata], 'plot.png')
+        try{
+            await plot_fn(
+                this.pyodide.toPy(data), 
+                i0, 
+                i1, 
+                start_time.getTime()/1000, 
+                sample_rate_hz, 
+                title, 
+                '/plt.png'
+            )
+            const pngdata:Uint8Array<ArrayBuffer> = 
+                this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
+            return new File([pngdata], 'plot.png')
+        } catch (e) {
+            return new Error(`${e}`)
+        }
     }
 
     /** Find all required to be copied during build */

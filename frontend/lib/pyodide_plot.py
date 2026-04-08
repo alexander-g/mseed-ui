@@ -94,12 +94,16 @@ def create_spectrogram(
 ) -> Spectrogram:
     assert signal.ndim == 1, 'Expected 1D input'
 
+    n_samples: int = int(signal.size)
 
     # sensible hardcoded resolution (0.5Hz for a 100Hz input)
-    frequency_resolution = frequency / 200
-    n_per_segment = int(frequency / frequency_resolution)
+    frequency_resolution: float = frequency / 200
+    n_per_segment: int = int(frequency / frequency_resolution)
+    n_per_segment = max(1, min(n_per_segment, n_samples))
     hop_length = n_per_segment // 4
     noverlap   = n_per_segment - hop_length
+    if noverlap >= n_per_segment:
+        noverlap = n_per_segment - 1
 
     
 
