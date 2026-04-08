@@ -15,7 +15,26 @@ globalThis.d3tile = d3tile;
 export type Marker = {
     latitude:  number;
     longitude: number;
-    label?: string;
+    label?:    string;
+    ignore_for_centering?: boolean;
+    visual?:   MarkerVisual;
+    rings?:    MarkerRings;
+}
+
+export type MarkerShape = 'circle'|'diamond'|'square'|'triangle'
+
+export type MarkerVisual = {
+    shape?: MarkerShape;
+    color?: string;
+    highlight_color?: string;
+    stroke_color?:    string;
+    size?:            number;
+}
+
+export type MarkerRings = {
+    distances_km: number[];
+    color?: string;
+    stroke_width?: number;
 }
 
 type D3MapProps = {
@@ -133,9 +152,14 @@ export class D3Map extends preact.Component<D3MapProps> {
         if(markers.length == 0)
             return;
 
+        const markers_for_centering:Marker[] = markers
+            .filter((marker:Marker) => !marker.ignore_for_centering)
+        if(markers_for_centering.length == 0)
+            return
+
         // to avoid re-computing if markers dont change
         // for some reason this function gets triggered when it should not be
-        const next_center_key:string = markers
+        const next_center_key:string = markers_for_centering
             .map((marker:Marker) => `${marker.latitude},${marker.longitude}`)
             .join('|')
         if(next_center_key == this.markers_center_key)
@@ -145,12 +169,12 @@ export class D3Map extends preact.Component<D3MapProps> {
             return;
 
 
-        let latitude_min:number = markers[0]!.latitude
-        let latitude_max:number = markers[0]!.latitude
-        let longitude_min:number = markers[0]!.longitude
-        let longitude_max:number = markers[0]!.longitude
+        let latitude_min:number = markers_for_centering[0]!.latitude
+        let latitude_max:number = markers_for_centering[0]!.latitude
+        let longitude_min:number = markers_for_centering[0]!.longitude
+        let longitude_max:number = markers_for_centering[0]!.longitude
 
-        for(const marker of markers){
+        for(const marker of markers_for_centering){
             latitude_min = Math.min(latitude_min, marker.latitude)
             latitude_max = Math.max(latitude_max, marker.latitude)
             longitude_min = Math.min(longitude_min, marker.longitude)
@@ -166,7 +190,7 @@ export class D3Map extends preact.Component<D3MapProps> {
         let y_min:number = Number.POSITIVE_INFINITY
         let y_max:number = Number.NEGATIVE_INFINITY
 
-        for(const marker of markers){
+        for(const marker of markers_for_centering){
             const projected:[number,number]|null =
                 base_projection([marker.longitude, marker.latitude])
             if(projected == null)
@@ -244,6 +268,8 @@ export class D3Map extends preact.Component<D3MapProps> {
         const highlighted_markers:number[] = this.props.$highlighted_markers?.value ?? []
         const highlighted_indices:Set<number> = new Set(highlighted_markers)
 
+        const svg_regular_rings:JSX.Element[] = []
+        const svg_highlighted_rings:JSX.Element[] = []
         const svg_markers_regular:JSX.Element[] = []
         const svg_markers_highlighted:JSX.Element[] = []
 
@@ -255,26 +281,67 @@ export class D3Map extends preact.Component<D3MapProps> {
                 continue;
 
             const index:number = Number(markerindex)
-            const marker_svg:JSX.Element =
-                <circle
-                    cx = {projected[0]}
-                    cy = {projected[1]}
-                    r  = {10}
-                    fill   = {highlighted_indices.has(index) ? '#f57c00' : 'red'}
-                    stroke = '#fff'
-                    stroke-width = {1}
-                    onMouseEnter = {() => this.on_marker_hover(index)}
-                    onMouseLeave = {() => this.on_marker_hover(null)}
-                    key = {index}
-                />
+            const marker_is_highlighted:boolean = highlighted_indices.has(index)
+            const marker_shape:MarkerShape = marker.visual?.shape ?? 'circle'
+            const marker_size:number = marker.visual?.size ?? 10
+            const marker_fill:string = marker_is_highlighted
+                ? (marker.visual?.highlight_color ?? '#f57c00')
+                : (marker.visual?.color ?? 'red')
+            const marker_stroke:string = marker.visual?.stroke_color ?? '#fff'
 
-            if(highlighted_indices.has(index))
+            const ring_distances:number[] = marker.rings?.distances_km ?? []
+            for(const ring_distance_km of ring_distances) {
+                const ring_radius:number = distance_km_to_pixel_radius(
+                    ring_distance_km,
+                    marker.latitude,
+                    transform,
+                )
+                if(!Number.isFinite(ring_radius) || ring_radius <= 0)
+                    continue
+
+                const ring_element:JSX.Element =
+                    <circle
+                        cx = {projected[0]}
+                        cy = {projected[1]}
+                        r  = {ring_radius}
+                        fill = 'none'
+                        stroke = {marker.rings?.color ?? 'rgba(30, 80, 190, 0.55)'}
+                        stroke-width = {marker.rings?.stroke_width ?? 1.5}
+                        pointer-events = 'none'
+                        key = {`${index}-ring-${ring_distance_km}`}
+                    />
+
+                if(marker_is_highlighted)
+                    svg_highlighted_rings.push(ring_element)
+                else
+                    svg_regular_rings.push(ring_element)
+            }
+
+            const marker_svg:JSX.Element =
+                render_map_marker(
+                    projected[0],
+                    projected[1],
+                    marker_shape,
+                    marker_size,
+                    marker_fill,
+                    marker_stroke,
+                    index,
+                    () => this.on_marker_hover(index),
+                    () => this.on_marker_hover(null),
+                )
+
+            if(marker_is_highlighted)
                 svg_markers_highlighted.push(marker_svg)
             else
                 svg_markers_regular.push(marker_svg)
         }
 
-        this.$svg_annotations.value = [...svg_markers_regular, ...svg_markers_highlighted]
+        this.$svg_annotations.value = [
+            ...svg_regular_rings,
+            ...svg_markers_regular,
+            ...svg_highlighted_rings,
+            ...svg_markers_highlighted,
+        ]
     }
 
     update_marker_tooltips(transform:d3.ZoomTransform): void {
@@ -406,4 +473,80 @@ type Size = {
 
 function url4tile(x:number, y:number, z:number): string {
     return `https://tile.opentopomap.org/${z}/${x}/${y}.png`;
+}
+
+function distance_km_to_pixel_radius(
+    distance_km: number,
+    latitude:    number,
+    transform:   d3.ZoomTransform,
+): number {
+    const earth_radius_m:number = 6378137
+    const latitude_radians:number = (latitude * Math.PI) / 180
+    const circumference_at_latitude_m:number =
+        2 * Math.PI * earth_radius_m * Math.max(Math.cos(latitude_radians), 1e-6)
+    const meters_per_pixel:number = circumference_at_latitude_m / transform.k
+    return (distance_km * 1000) / meters_per_pixel
+}
+
+function render_map_marker(
+    x:      number,
+    y:      number,
+    shape:  MarkerShape,
+    size:   number,
+    fill:   string,
+    stroke: string,
+    key:    number,
+    on_mouse_enter:() => void,
+    on_mouse_leave:() => void,
+): JSX.Element {
+    if(shape == 'diamond') {
+        return <polygon
+            points = {`${x},${y - size} ${x + size},${y} ${x},${y + size} ${x - size},${y}`}
+            fill = {fill}
+            stroke = {stroke}
+            stroke-width = {1}
+            onMouseEnter = {on_mouse_enter}
+            onMouseLeave = {on_mouse_leave}
+            key = {key}
+        />
+    }
+
+    if(shape == 'square') {
+        return <rect
+            x = {x - size}
+            y = {y - size}
+            width = {size * 2}
+            height = {size * 2}
+            fill = {fill}
+            stroke = {stroke}
+            stroke-width = {1}
+            onMouseEnter = {on_mouse_enter}
+            onMouseLeave = {on_mouse_leave}
+            key = {key}
+        />
+    }
+
+    if(shape == 'triangle') {
+        return <polygon
+            points = {`${x},${y - size} ${x + size},${y + size} ${x - size},${y + size}`}
+            fill = {fill}
+            stroke = {stroke}
+            stroke-width = {1}
+            onMouseEnter = {on_mouse_enter}
+            onMouseLeave = {on_mouse_leave}
+            key = {key}
+        />
+    }
+
+    return <circle
+        cx = {x}
+        cy = {y}
+        r  = {size}
+        fill = {fill}
+        stroke = {stroke}
+        stroke-width = {1}
+        onMouseEnter = {on_mouse_enter}
+        onMouseLeave = {on_mouse_leave}
+        key = {key}
+    />
 }
