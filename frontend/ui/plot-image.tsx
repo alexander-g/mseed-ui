@@ -7,8 +7,16 @@ export class PlotImage extends preact.Component {
     img_ref:preact.RefObject<HTMLImageElement> = preact.createRef()
 
     $initialized:Signal<boolean> = new Signal(false)
+    $is_loading: Signal<boolean> = new Signal(false)
+
+    $overlay_message: Readonly<Signal<string>> = signals.computed(
+        () => this.$is_loading.value
+            ? 'Plots are loading...'
+            : 'Select a MSEED channel and time to plot here.'
+    )
+
     $overlay_on:Readonly<Signal<boolean>> = signals.computed(
-        () => !this.$initialized.value
+        () => !this.$initialized.value || this.$is_loading.value
     )
 
     render(): JSX.Element {
@@ -19,9 +27,13 @@ export class PlotImage extends preact.Component {
             />
 
             <OverlayDiv $visible={this.$overlay_on}>
-                Select a MSEED channel and time to plot here.
+                { this.$overlay_message.value }
             </OverlayDiv>
         </div>
+    }
+
+    set_loading(loading:boolean): void {
+        this.$is_loading.value = loading
     }
 
     set_src(file:File) {
@@ -33,5 +45,6 @@ export class PlotImage extends preact.Component {
         )
         this.img_ref.current!.src = objurl;
         this.$initialized.value = true;
+        this.$is_loading.value = false
     }
 }

@@ -11,8 +11,16 @@ const BACKGROUNDCOLOR_UNINITIALIZED = 'honeydew'
 const BACKGROUNDCOLOR_CAN_DROP      = 'lightblue'
 
 
+export type DropProgress = {
+    processed: number,
+    total: number,
+}
+
+
+
 export class DropZone extends preact.Component<{
     $initialized: Readonly<Signal<boolean>>
+    $progress:    Readonly<Signal<DropProgress|null>>
     on_files:     (files:File[]) => void|Promise<void>;
 }> {
 
@@ -26,6 +34,16 @@ export class DropZone extends preact.Component<{
     )
 
     render(): JSX.Element {
+        const progress:{processed:number, total:number}|null = this.props.$progress.value
+        const loading_message:string =
+            progress == null
+                ? MESSAGE_LOADING
+                : `Loading ${progress.processed}/${progress.total}...`
+        const message:string =
+            this.$message.value == MESSAGE_LOADING
+                ? loading_message
+                : this.$message.value
+
         return <div
             style = {{
                 background: this.$background.value,
@@ -42,7 +60,7 @@ export class DropZone extends preact.Component<{
                 alignItems:     'center',
             }}
         >
-            { this.$message }
+            { message }
         </div>
     }
 

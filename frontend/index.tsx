@@ -1,6 +1,6 @@
 import { preact, Signal, signals, JSX } from "./dep.ts"
 
-import { DropZone }  from "./ui/file-input.tsx"
+import { DropZone, type DropProgress }  from "./ui/file-input.tsx"
 import { MainContent } from "./ui/main-content.tsx"
 import { type InferenceEvent } from "./ui/mseed-heatmap.tsx"
 
@@ -38,6 +38,7 @@ type AppState = {
 
 
 
+
 declare global {
     interface Window {
         /** App config is set during build in a <script> inside <Head> */
@@ -59,6 +60,8 @@ class App extends preact.Component {
         $events:    new Signal([]),
     }
 
+    $drop_progress: Signal<DropProgress|null> = new Signal(null)
+
 
     /** True if MSEED files are loaded */
     $initialized: Readonly<Signal<boolean>> = signals.computed(
@@ -78,6 +81,7 @@ class App extends preact.Component {
             
             <DropZone 
                 $initialized = {this.$initialized}
+                $progress    = {this.$drop_progress}
                 on_files     = {this.on_files}
             />
         </body>
@@ -86,12 +90,15 @@ class App extends preact.Component {
     /** Called when user drops new files into the browser window */
     on_files = async (files:File[]) => {
         const t0:number = performance.now()
+        this.$drop_progress.value = { processed: 0, total: files.length }
         const processed:ProcessedFiles = await process_dropped_files(
             files,
             (processed: number, total: number) => {
+                this.$drop_progress.value = { processed, total }
                 console.log(`Progress: ${processed}/${total} files processed`)
             }
         )
+        this.$drop_progress.value = null
         const t1:number = performance.now()
 
         console.log(`Files loaded in ${t1-t0} ms`)
@@ -154,4 +161,3 @@ export function hydrate_body(body_jsx:JSX.Element): void {
 if(!globalThis.Deno){
     hydrate_body(<App />)
 }
-
