@@ -109,10 +109,14 @@ class App extends preact.Component {
         console.log(`# of QUAKEML events:   ${processed.events.length}`)
         console.log(`# of unknown files:    ${processed.unknown_files.length}`)
         
-        this.app_state.$inference.value = processed.inference_events;
-        this.app_state.$mseeds.value    = processed.mseeds;
-        this.app_state.$events.value    = processed.events;
-        this.app_state.$stations.value  = processed.stations
+        if(processed.inference_events.length > 0)
+            this.app_state.$inference.value = processed.inference_events;
+        if(processed.mseeds.length > 0)
+            this.app_state.$mseeds.value = processed.mseeds;
+        if(processed.events.length > 0)
+            this.app_state.$events.value = processed.events;
+        if(processed.stations.length > 0)
+            this.app_state.$stations.value = processed.stations
     }
 
     override componentDidMount(): void {
