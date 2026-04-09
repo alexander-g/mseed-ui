@@ -1,4 +1,9 @@
-import { process_dropped_files, type ProcessedFiles } from '../frontend/lib/file-input.ts'
+import { 
+    process_dropped_files, 
+    type ProcessedFiles,
+    find_iso_time,
+    parse_station_code_from_filename,
+} from '../frontend/lib/file-input.ts'
 import * as path from '@std/path'
 import { assert } from 'asserts'
 
@@ -39,4 +44,32 @@ Deno.test('process_dropped_files() with mseed files', async () => {
     
 })
 
+
+
+Deno.test('find_iso_time', () => {
+    const invalid = 'banana'
+    const output_inv = find_iso_time(invalid)
+    assert(output_inv == null)
+
+
+    const x0 = '2018-01-01T00:00:00-CN.NLLB..HHZ'
+    const output0:string|null = find_iso_time(x0)
+    assert(output0 == '2018-01-01T00:00:00')
+
+    // assert(0)
+})
+
+
+Deno.test('parse_station_code_from_filename', () => {
+    const out0 = parse_station_code_from_filename('2018-01-01T00:00:00-CN.PGC..HHE.csv')
+    assert(out0 == 'CN.PGC..HHE')
+
+    const out1 = parse_station_code_from_filename('CN.PGC..HHE.csv')
+    assert(out1 == 'CN.PGC..HHE')
+
+
+    const out2 = parse_station_code_from_filename('2018-01-01T00:00:00-C8.PA01..HHN.csv')
+    assert(out2 == 'C8.PA01..HHN')
+
+})
 

@@ -190,55 +190,68 @@ export class MainContent extends preact.Component<MainContentProps> {
      *  Reading the corresponding segment from the MSEED file and forwarding
      *  to other components for visualization. */
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        const mseed:MSEED_FileAndMeta|undefined = 
-            this.props.$mseeds.value[selected_file_index]
-        if(mseed == undefined) {
-            console.error(`No mseed file at index ${selected_file_index}`)
-            return;
-        }
-        
-        const file:File|undefined = mseed.file;
-        if(file == undefined)
-            return;
-        
-        console.log('reading file: ', file.name)
-        const data:Int32Array|Error = await tremorwasm.read_data(file)
-        if(data instanceof Error) {
-            console.log(`Could not read mseed data of ${file.name}`)
-            return
-        }
-        console.log('data size:', data.length, i0, i1)
+        this.plotimg_ref.current?.set_loading(true)
+        this.spectrogram_img_ref.current?.set_loading(true)
 
-        const promise0:Promise<File|Error> = this.pyodide!.plot_data(
-            data,
-            i0,
-            i1,
-            mseed.meta.start,
-            mseed.meta.samplerate,
-            mseed.meta.code,
-        )
-        const promise1:Promise<File|Error> = this.pyodide!.plot_spectrogram(
-            data,
-            i0,
-            i1,
-            mseed.meta.start,
-            mseed.meta.samplerate,
-            mseed.meta.code,
-        )
+        try {
+            if(this.pyodide == undefined) {
+                console.error('Pyodide not initialized')
+                return
+            }
 
-        const pngfile0:File|Error = await promise0;
-        const pngfile1:File|Error = await promise1;
-        if(pngfile0 instanceof Error) {
-            console.error(`Error plotting data: ${pngfile0.message}`)
-            return;
-        }
-        this.plotimg_ref.current?.set_src(pngfile0)
+            const mseed:MSEED_FileAndMeta|undefined = 
+                this.props.$mseeds.value[selected_file_index]
+            if(mseed == undefined) {
+                console.error(`No mseed file at index ${selected_file_index}`)
+                return;
+            }
+            
+            const file:File|undefined = mseed.file;
+            if(file == undefined)
+                return;
+            
+            console.log('reading file: ', file.name)
+            const data:Int32Array|Error = await tremorwasm.read_data(file)
+            if(data instanceof Error) {
+                console.log(`Could not read mseed data of ${file.name}`)
+                return
+            }
+            console.log('data size:', data.length, i0, i1)
 
-        if(pngfile1 instanceof Error) {
-            console.error(`Error plotting spectrogram: ${pngfile1.message}`)
-            return;
+            const promise0:Promise<File|Error> = this.pyodide.plot_data(
+                data,
+                i0,
+                i1,
+                mseed.meta.start,
+                mseed.meta.samplerate,
+                mseed.meta.code,
+            )
+            const promise1:Promise<File|Error> = this.pyodide.plot_spectrogram(
+                data,
+                i0,
+                i1,
+                mseed.meta.start,
+                mseed.meta.samplerate,
+                mseed.meta.code,
+            )
+
+            const pngfile0:File|Error = await promise0;
+            const pngfile1:File|Error = await promise1;
+            if(pngfile0 instanceof Error) {
+                console.error(`Error plotting data: ${pngfile0.message}`)
+                return;
+            }
+            this.plotimg_ref.current?.set_src(pngfile0)
+
+            if(pngfile1 instanceof Error) {
+                console.error(`Error plotting spectrogram: ${pngfile1.message}`)
+                return;
+            }
+            this.spectrogram_img_ref.current?.set_src(pngfile1)
+        } finally {
+            this.plotimg_ref.current?.set_loading(false)
+            this.spectrogram_img_ref.current?.set_loading(false)
         }
-        this.spectrogram_img_ref.current?.set_src(pngfile1)
     }
 
 
@@ -246,4 +259,3 @@ export class MainContent extends preact.Component<MainContentProps> {
     plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
     spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
 }
-
