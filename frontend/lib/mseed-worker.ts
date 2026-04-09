@@ -3,9 +3,9 @@ import {
     type TremorWasm,
     type MSEED_Meta,
 } from '../../wasm-cpp/mseed-wasm.ts'
-import { read_csv_inference_file } from "./file-input.ts"
-import { parse_stationxml_file, type Station } from './station-xml.ts'
-import { parse_quakeml_file, type QuakeEvent } from './quakeml.ts'
+import { parse_file } from "./file-input.ts"
+import { type Station } from './station-xml.ts'
+import { type QuakeEvent } from './quakeml.ts'
 import type { InferenceEvent } from '../ui/mseed-heatmap.tsx'
 
 
@@ -74,50 +74,6 @@ if(is_worker){
 
 
 
-/** Process a single file */
-async function process_file(file: File): Promise<FileResult | Error> {
-    // Try StationXML
-    const station: Station[] | Error = await parse_stationxml_file(file)
-    if(!(station instanceof Error))
-        return {
-            type: 'station',
-            stations: station,
-        }
-
-    // try quakeml
-    const events:QuakeEvent[]|Error = await parse_quakeml_file(file)
-    if(!(events instanceof Error))
-        return {
-            type: 'quakeevent',
-            quakeevents: events
-        }
-
-    // Try MSEED
-    if (wasm === null)
-        return new Error('WASM not initialized')
-
-    const meta: MSEED_Meta | Error = await wasm.read_metadata(file)
-    if(!(meta instanceof Error))
-        return {
-            type: 'mseed',
-            meta: meta,
-            filename: file.name,
-        }
-
-    // Try CSV inference
-    const inference: InferenceEvent[] | Error = await read_csv_inference_file(file)
-    if(!(inference instanceof Error))
-        return {
-            type:     'inference',
-            inference: inference,
-        }
-
-    // Unknown file
-    return {
-        type: 'unknown',
-        filename: file.name,
-    }
-}
 
 // main entry point
 self.onmessage = async (e: MessageEvent) => {
@@ -133,7 +89,8 @@ self.onmessage = async (e: MessageEvent) => {
                 (data.filedata instanceof File)
                 ? data.filedata
                 : new File([data.filedata], data.filename)
-            const file_result:FileResult|Error = await process_file(file_to_process)
+            const file_result:FileResult|Error = 
+                await parse_file(file_to_process, wasm)
             if(file_result instanceof Error) {
                 result = file_result as Error
             } else {
