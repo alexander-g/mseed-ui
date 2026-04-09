@@ -3,7 +3,7 @@ import { parse_quakeml_file, type QuakeEvent } from './quakeml.ts'
 import type { InferenceEvent } from "../ui/mseed-heatmap.tsx"
 import { WorkerPool }          from "./worker-pool.ts"
 import type { FileResult }     from "./mseed-worker.ts"
-import { read_mseed_metadata } from "./mseed-parsing.ts"
+import { MSeedMetadata, read_mseed_metadata } from "./mseed-parsing.ts"
 
 import { 
     initialize as tremorwasm_initialize, 
@@ -34,7 +34,23 @@ export type ProgressCallback = (processed: number, total: number) => void
 
 /** Try to parse a single file, as stationxml, quakeml, mseed or a custom format */
 export 
-async function parse_file(file: File, wasm:TremorWasm): Promise<FileResult|Error> {
+async function parse_file(file: File): Promise<FileResult|Error> {
+    // Try MSEED
+    // NOTE: should be first, much faster that way
+    const meta:Error|MSeedMetadata = await read_mseed_metadata(file)
+    if(!(meta instanceof Error))
+        return {
+            type: 'mseed',
+            filename: file.name,
+            meta: {
+                code: `${meta.network}.${meta.station}.${meta.location}.${meta.channel}`,
+                start: meta.starttime,
+                end:   meta.endtime,
+                samplerate: meta.samplerate,
+                nsamples: 0,   // TODO: temporary for now
+            }
+        }
+
     // Try StationXML
     const station: Station[] | Error = await parse_stationxml_file(file)
     if(!(station instanceof Error))
@@ -51,27 +67,7 @@ async function parse_file(file: File, wasm:TremorWasm): Promise<FileResult|Error
             quakeevents: events
         }
 
-    // Try MSEED
-    //const meta: MSEED_Meta | Error = await wasm.read_metadata(file)
-    // if(!(meta instanceof Error))
-    //     return {
-    //         type: 'mseed',
-    //         meta: meta,
-    //         filename: file.name,
-    //     }
-    const meta = await read_mseed_metadata(file)
-    if(!(meta instanceof Error))
-        return {
-            type: 'mseed',
-            filename: file.name,
-            meta: {
-                code: `${meta.network}.${meta.station}.${meta.location}.${meta.channel}`,
-                start: meta.starttime,
-                end:   meta.endtime,
-                samplerate: meta.samplerate,
-                nsamples: 0,   // TODO: temporary for now
-            }
-        }
+
 
     // Try CSV inference
     const inference: InferenceEvent[] | Error = await read_csv_inference_file(file)
@@ -111,20 +107,20 @@ export async function process_dropped_files(
     pool_size = Math.min(pool_size, 10)
 
     if (pool_size === 0) {
-        let processed_count = 0
+        let processed_count:number = 0
 
         const batchsize = 20;
         for(let index:number = 0; index < files.length; index+=batchsize) {
             const promises:Promise<FileResult|Error>[] = []
             for(let file_index:number = index; file_index < Math.min(index+batchsize, files.length); file_index++) {
                 const file:File = files[file_index]!
-                promises.push( parse_file(file, tremorwasm) )
+                promises.push( parse_file(file) )
             }
 
             for(const promise_index in promises) {
-                const file_index = Number(promise_index) + index;
+                const file_index:number = Number(promise_index) + index;
                 const file = files[file_index]!
-                const result = await promises[promise_index]!
+                const result:FileResult|Error = await promises[promise_index]!
 
                 if (result instanceof Error)
                     console.warn('File processing error:', result)
@@ -150,38 +146,6 @@ export async function process_dropped_files(
             if (on_progress)
                 on_progress(processed_count, files.length)
         }
-
-        // const promises:Promise<FileResult|Error>[] = []
-        // for(const file of files)
-        //     promises.push( parse_file(file, tremorwasm) )
-
-        // // for (const file of files) {
-        // //     const result:FileResult|Error = await parse_file(file, tremorwasm)
-        // for(const index in promises) {
-        //     const file = files[index]!
-        //     const result:FileResult|Error = await promises[index]!
-        //     if (result instanceof Error)
-        //         console.warn('File processing error:', result)
-        //     else {
-        //         if (result.type === 'mseed')
-        //             all_meta.push({
-        //                 file: file,
-        //                 meta: result.meta,
-        //             })
-        //         else if (result.type === 'station')
-        //             all_stations.push(...result.stations)
-        //         else if (result.type === 'inference')
-        //             all_inference.push(...result.inference)
-        //         else if (result.type === 'quakeevent')
-        //             all_events.push(...result.quakeevents)
-        //         else if (result.type === 'unknown')
-        //             all_unknown.push(file)
-        //     }
-
-        //     processed_count++
-        //     if (on_progress)
-        //         on_progress(processed_count, files.length)
-        // }
 
         return {
             mseeds:           all_meta,

@@ -14,38 +14,43 @@ export type MSeedMetadata = {
 /** Read MiniSEED metadata from a Blob/File in the browser.
  *  Only read minimal bytes (first + last record headers). */
 export async function read_mseed_metadata(blob: Blob): Promise<MSeedMetadata|Error> {
-    const firstbuf:DataView = await read_slice(blob, 0, 256);
-    if(!is_mseed(firstbuf))
-        return new Error('File is not in MSEED format')
+    try{
+        const firstbuf:DataView = await read_slice(blob, 0, 256);
+        if(!is_mseed(firstbuf))
+            return new Error('File is not in MSEED format')
 
-    const first:MSEED_Header = parse_fixed_mseed_header(firstbuf);
+        const first:MSEED_Header = parse_fixed_mseed_header(firstbuf);
 
-    const recordlength:number = get_recordlength(firstbuf) ?? 4096;
+        const recordlength:number = get_recordlength(firstbuf) ?? 4096;
 
-    // last record header
-    const filesize:number = blob.size;
-    const last_offset:number =
-        Math.floor(filesize / recordlength - 1) * recordlength;
+        // last record header
+        const filesize:number = blob.size;
+        const last_offset:number =
+            Math.floor(filesize / recordlength - 1) * recordlength;
 
-    const lastbuf:DataView = await read_slice(blob, last_offset, 64);
-    const last:MSEED_Header = parse_fixed_mseed_header(lastbuf);
+        const lastbuf:DataView = await read_slice(blob, last_offset, 64);
+        const last:MSEED_Header = parse_fixed_mseed_header(lastbuf);
 
-    const duration_seconds:number = last.n_samples / last.samplerate;
-    const endtime = new Date(
-        last.starttime.getTime() + duration_seconds * 1000
-    );
+        const duration_seconds:number = last.n_samples / last.samplerate;
+        const endtime = new Date(
+            last.starttime.getTime() + duration_seconds * 1000
+        );
 
-    const codes:MSEED_Codes = parse_codes(firstbuf)
+        const codes:MSEED_Codes = parse_codes(firstbuf)
 
-    return {
-        starttime:  first.starttime,
-        endtime:    endtime,
-        samplerate: first.samplerate,
-        network:    codes.network,
-        station:    codes.station,
-        location:   codes.location,
-        channel:    codes.channel,
-    };
+        return {
+            starttime:  first.starttime,
+            endtime:    endtime,
+            samplerate: first.samplerate,
+            network:    codes.network,
+            station:    codes.station,
+            location:   codes.location,
+            channel:    codes.channel,
+        };
+    
+    } catch (e) {
+        return new Error(`Could not parse MSEED meta data: ${e}`)
+    }
 }
 
 
