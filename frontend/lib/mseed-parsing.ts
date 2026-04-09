@@ -20,6 +20,9 @@ export async function read_mseed_metadata(blob: Blob): Promise<MSeedMetadata|Err
             return new Error('File is not in MSEED format')
 
         const first:MSEED_Header = parse_fixed_mseed_header(firstbuf);
+        // sanity check
+        if(first.starttime.getUTCFullYear() > 2100)
+            return new Error('Parsed year is far in the future.')
 
         const recordlength:number = get_recordlength(firstbuf) ?? 4096;
 
@@ -35,6 +38,9 @@ export async function read_mseed_metadata(blob: Blob): Promise<MSeedMetadata|Err
         const endtime = new Date(
             last.starttime.getTime() + duration_seconds * 1000
         );
+        // sanity check
+        if(endtime.getUTCFullYear() > 2100)
+            return new Error('Parsed year is far in the future.')
 
         const codes:MSEED_Codes = parse_codes(firstbuf)
 

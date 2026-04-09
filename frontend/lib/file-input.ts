@@ -138,10 +138,8 @@ export async function process_dropped_files(
                         all_events.push(...result.quakeevents)
                     else if (result.type === 'unknown')
                         all_unknown.push(file)
-
-
-                    processed_count++
                 }
+                processed_count++
             }
             if (on_progress)
                 on_progress(processed_count, files.length)
