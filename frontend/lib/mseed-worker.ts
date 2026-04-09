@@ -63,11 +63,12 @@ export type WorkerMessage = WorkerResult
 
 
 
-let wasm: TremorWasm | null = null
+// let wasm: TremorWasm | null = null
 
 const is_worker:boolean = typeof window === 'undefined';
 if(is_worker){
-    wasm = await tremorwasm_initialize()
+    // NOTE not using wasm anymore
+    //wasm = await tremorwasm_initialize()
     self.postMessage({message:'ready'} as WorkerMessage)
 }
 
@@ -82,22 +83,18 @@ self.onmessage = async (e: MessageEvent) => {
 
     let result: WorkerMessage
     if(data.command === 'process-file') {
-        if (wasm === null) 
-            result = new Error('WASM not initialized')
-        else {
-            const file_to_process = 
-                (data.filedata instanceof File)
-                ? data.filedata
-                : new File([data.filedata], data.filename)
-            const file_result:FileResult|Error = 
-                await parse_file(file_to_process, wasm)
-            if(file_result instanceof Error) {
-                result = file_result as Error
-            } else {
-                result = {
-                    message: 'file-result',
-                    result: file_result,
-                }
+        const file_to_process = 
+            (data.filedata instanceof File)
+            ? data.filedata
+            : new File([data.filedata], data.filename)
+        const file_result:FileResult|Error = 
+            await parse_file(file_to_process)
+        if(file_result instanceof Error) {
+            result = file_result as Error
+        } else {
+            result = {
+                message: 'file-result',
+                result: file_result,
             }
         }
     } else {
