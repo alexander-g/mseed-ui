@@ -2,6 +2,10 @@ import { preact, Signal, signals, JSX } from "../dep.ts"
 import { strftime_ISO8601 } from "../lib/util.ts";
 
 import * as d3 from "d3";
+import {
+    HorizontalMarkerLayer,
+    VerticalMarkerLayer,
+} from './d3-heatmap-markers.tsx'
 
 
 
@@ -13,13 +17,11 @@ export type DataItem = {
     value: number,
 }
 
-/** Values returned to the `on_hover` callback */
-export type HoverCallbackPosition = Pick<HoverPosition, 'item_index'|'x'|'y'>
+/** Values returned to the external `on_hover()` callback */
+export type HoverCallbackPosition = Pick<HoverPosition, 'item_index' | 'x' | 'y'>
 
 
-
-
-export class D3Heatamp extends preact.Component<{
+export class D3Heatmap extends preact.Component<{
     $data:  Readonly<Signal<DataItem[]>>,
     $x_axis:Readonly<Signal<number[]>>,
     $y_axis:Readonly<Signal<string[]>>,
@@ -37,7 +39,7 @@ export class D3Heatamp extends preact.Component<{
     on_hover?: (selected:HoverCallbackPosition|null) => void,
 }> {
     private static next_clip_id:number = 0
-    private clip_path_id:string = `heatmap-clip-${D3Heatamp.next_clip_id++}`
+    private clip_path_id:string = `heatmap-clip-${D3Heatmap.next_clip_id++}`
 
 
     container_ref: preact.RefObject<HTMLDivElement> = preact.createRef();
@@ -49,9 +51,10 @@ export class D3Heatamp extends preact.Component<{
     svgimage_ref:  preact.RefObject<SVGImageElement> = preact.createRef();
     resize_observer: ResizeObserver|null = null
 
-    private margin = { top: 20, right: 5, bottom: 30, left: 60 };
+    private margin: PlotMargin = { top: 20, right: 5, bottom: 30, left: 60 }
     private $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
     private $hover_position: Signal<HoverPosition|null> = new Signal(null)
+    private heatmap_image_url:string|null = null
 
     private $dimensions:Readonly<Signal<SVGPlotDimensions>> = signals.computed(() =>
         this.#get_dimensions()
@@ -122,8 +125,20 @@ export class D3Heatamp extends preact.Component<{
                             transform = {this.$transform_str}
                             style = {{ pointerEvents: 'none' }}
                         >
-                            {this.$x_marker_lines}
-                            {this.$y_marker_rects}
+                            <HorizontalMarkerLayer 
+                                $y_values    = {this.props.$y_axis_markers}
+                                $plot_width  = {this.$plot_width}
+                                $plot_height = {this.$plot_height}
+                                $rows        = {this.$n_rows}
+                            />
+
+                            <VerticalMarkerLayer 
+                                $x_values    = {this.props.$x_axis_markers}
+                                $x_axis      = {this.props.$x_axis}
+                                $plot_width  = {this.$plot_width}
+                                $plot_height = {this.$plot_height}
+                                $cols        = {this.$n_cols}
+                            />
 
                             <HoverMarker 
                                 $position   = {this.$hover_position} 
@@ -142,7 +157,7 @@ export class D3Heatamp extends preact.Component<{
                         ref = {this.xaxis_ref} 
                     />
                     <g ref={this.yaxis_ref} class="axis" />
-                    {this.$hover_overlay}
+                    <HoverOverlay $position = {this.$hover_position} />
                 </g>
             </svg>
         </div>
@@ -152,9 +167,32 @@ export class D3Heatamp extends preact.Component<{
     /** The current number of rows and columns. Cached here to avoid recomputation */
     private $rowscols:Signal<RowsCols|null> = new Signal(null)
 
+    /** Update $rowscols when $ data changes. */
     #_ = this.props.$data.subscribe( () => {
         this.$rowscols.value = this.#get_rows_cols()
     } )
+
+    /** Number of rows in the current data */
+    private $n_rows:Readonly<Signal<number>> = signals.computed(() => {
+        const colsrows:RowsCols|null = this.$rowscols.value
+        if(colsrows == null)
+            return 0
+        return colsrows.rows
+    })
+
+    /** Number of columns in the current data */
+    private $n_cols:Readonly<Signal<number>> = signals.computed(() => {
+        const colsrows:RowsCols|null = this.$rowscols.value
+        if(colsrows == null)
+            return 0
+        return colsrows.cols
+    })
+
+
+    private $coordinates_to_item_index:Readonly<Signal<Map<string, number>>> = 
+        signals.computed(() =>
+            create_item_index_by_coord(this.props.$data.value)
+        )
 
 
     /** The currently active D3 zoom/translation state */
@@ -180,6 +218,9 @@ export class D3Heatamp extends preact.Component<{
     override componentWillUnmount(): void {
         this.resize_observer?.disconnect()
         this.resize_observer = null
+        if(this.heatmap_image_url != null)
+            URL.revokeObjectURL(this.heatmap_image_url)
+        this.heatmap_image_url = null
     }
 
 
@@ -192,96 +233,6 @@ export class D3Heatamp extends preact.Component<{
         const ty:number = t.y ?? 0;
         const transform_str = `translate(${tx},${ty}) scale(${k})`;
         return transform_str;
-    })
-
-    private $x_marker_positions:Readonly<Signal<number[]>> = signals.computed(() => {
-        const colsrows:RowsCols|null = this.$rowscols.value
-        if(colsrows == null)
-            return []
-        return this.#x_marker_positions(this.$plot_width.value, colsrows.cols)
-    })
-
-    private $x_marker_lines:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
-        const colsrows:RowsCols|null = this.$rowscols.value
-        if(colsrows == null)
-            return []
-        if(colsrows.rows <= 0)
-            return []
-
-        const marker_positions:number[] = this.$x_marker_positions.value
-        const plot_width:number  = this.$plot_width.value
-        const plot_height:number = this.$plot_height.value
-        const marker_width:number = plot_width / colsrows.cols
-
-        return marker_positions.map((x:number, marker_index:number) => (
-            <rect
-                key          = {`${marker_index}-${x}`}
-                x            = {`${x}`}
-                y            = "0"
-                width        = {`${marker_width}`}
-                height       = {`${plot_height}`}
-                fill         = "#4cc9f0"
-                fill-opacity = "0.5"
-                stroke       = "none"
-            />
-        ))
-    })
-
-    private $y_marker_rects:Readonly<Signal<JSX.Element[]>> = signals.computed(() => {
-        const colsrows:RowsCols|null = this.$rowscols.value
-        if(colsrows == null)
-            return []
-        if(colsrows.rows <= 0)
-            return []
-
-        const plot_width:number  = this.$plot_width.value
-        const plot_height:number = this.$plot_height.value
-        const marker_positions:number[] = this.#y_marker_positions(plot_height, colsrows.rows)
-        const marker_height:number = plot_height / colsrows.rows
-
-        return marker_positions.map((y:number, marker_index:number) => (
-            <rect
-                key          = {`${marker_index}-${y}`}
-                x            = "0"
-                y            = {`${y}`}
-                width        = {`${plot_width}`}
-                height       = {`${marker_height}`}
-                fill         = "#4cc9f0"
-                fill-opacity = "0.3"
-                stroke       = "none"
-            />
-        ))
-    })
-
-    private $hover_overlay:Readonly<Signal<JSX.Element|null>> = signals.computed(() => {
-        const hover:HoverPosition|null = this.$hover_position.value
-        if(hover == null)
-            return null
-
-        return <g
-            transform = {`translate(${hover.overlay_x},${hover.overlay_y})`}
-            style = {{ pointerEvents: 'none', fontFamily:'sans' }}
-        >
-            <rect
-                x = "0"
-                y = "0"
-                width = "200"
-                height = "56"
-                fill = "#000000"
-                fill-opacity = "0.75"
-                stroke = "#ffffff"
-                stroke-opacity = "0.4"
-            />
-            <text x = "8" y = "17" fill = "#ffffff" font-size = "11">
-                {`${hover.x_label}`}
-            </text>
-            <text x = "8" y = "33" fill = "#ffffff" font-size = "11">
-                {`${hover.y_label}`}
-            </text>
-            <text x = "8" y = "49" fill = "#ffffff" font-size = "11">
-                {hover.data_label}
-            </text>
-        </g>
     })
 
 
@@ -346,21 +297,7 @@ export class D3Heatamp extends preact.Component<{
 
     /** Compute the current number of rows and columns from the data input */
     #get_rows_cols(): RowsCols|null {
-        const data:DataItem[] = this.props.$data.value;
-        if(data.length == 0)
-            return null;
-
-        const all_x:number[]  = data.map( item => item.x ).sort((a,b)=>a-b)
-        const all_y:number[]  = data.map( item => item.y ).sort((a,b)=>a-b)
-
-
-        const ncols:number = all_x[all_x.length-1]! - all_x[0]! +1
-        const nrows:number = all_y[all_y.length-1]! - all_y[0]! +1
-
-        return {
-            cols: ncols,
-            rows: nrows,
-        }
+        return get_rows_cols(this.props.$data.value)
     }
 
     /** Render the current data input onto the <image> element. */
@@ -396,7 +333,10 @@ export class D3Heatamp extends preact.Component<{
         const f = new File([blob], "file.png", { type: blob.type });
         
         const svgimage:SVGImageElement = this.svgimage_ref.current!
-        svgimage.href.baseVal = URL.createObjectURL(f)
+        if(this.heatmap_image_url != null)
+            URL.revokeObjectURL(this.heatmap_image_url)
+        this.heatmap_image_url = URL.createObjectURL(f)
+        svgimage.href.baseVal = this.heatmap_image_url
     }
     #_1 = signals.effect( () => { this.update_heatmap() } )
 
@@ -406,20 +346,23 @@ export class D3Heatamp extends preact.Component<{
         const dimensions:SVGPlotDimensions = this.#get_dimensions()
         const w:number = dimensions.plot_width
         const h:number = dimensions.plot_height
-        const { cols, rows } = this.$rowscols.value!;
+        const rows_cols:RowsCols|null = this.$rowscols.value
+        if(rows_cols == null)
+            return
+        const { cols, rows } = rows_cols
 
-        const imx:number = Math.floor((mx / w) * cols);
-        const imy:number = Math.floor((my / h) * rows);
+        const imx:number = plot_x_to_col(mx, w, cols)
+        const imy:number = plot_y_to_row(my, h, rows)
 
-
-        const items:DataItem[] = this.props.$data.value
-        for(const itemindex in items) {
-            const item:DataItem = items[itemindex]!;
-            if(item.y == imy && item.x == imx) {
-                console.log(`Clicked on data item ${itemindex} at ${[imx, imy]}`)
-                this.props.on_click( Number(itemindex) );
-                return;
-            }
+        const item_index:number|null = get_item_index_at(
+            this.$coordinates_to_item_index.value,
+            imx,
+            imy,
+        )
+        if(item_index != null) {
+            console.log(`Clicked on data item ${item_index} at ${[imx, imy]}`)
+            this.props.on_click(item_index)
+            return
         }
         console.log(`No data item at ${[imx, imy]}`)
     }
@@ -444,107 +387,9 @@ export class D3Heatamp extends preact.Component<{
     }
 
 
-    /** Map marker values from x axis space to x plot coordinates */
-    #x_marker_positions(plot_width:number, cols:number): number[] {
-        const markers:number[]|undefined = this.props.$x_axis_markers?.value
-        if(markers == undefined || markers.length == 0)
-            return []
-        if(cols <= 0)
-            return []
-
-        const x_axis:number[] = this.props.$x_axis.value
-        const positions:number[] = []
-
-        for(const marker of markers) {
-            const col_position:number|null = this.#marker_column_position(marker, x_axis, cols)
-            if(col_position == null)
-                continue
-
-            const x_position:number = (col_position / cols) * plot_width
-            positions.push(x_position)
-        }
-
-        return positions
-    }
-
-    /** Map y marker row indices to plot coordinates */
-    #y_marker_positions(plot_height:number, rows:number): number[] {
-        const markers:number[]|undefined = this.props.$y_axis_markers?.value
-        if(markers == undefined || markers.length == 0)
-            return []
-        if(rows <= 0)
-            return []
-
-        const positions:number[] = []
-        for(const marker of markers) {
-            if(!Number.isFinite(marker))
-                continue
-            if(marker < 0 || marker >= rows)
-                continue
-
-            positions.push((marker / rows) * plot_height)
-        }
-
-        return positions
-    }
-
-    /** Convert marker value to a column index using x axis interpolation */
-    #marker_column_position(marker:number, x_axis:number[], cols:number): number|null {
-        if(!Number.isFinite(marker))
-            return null
-        if(x_axis.length < 2) {
-            if(marker >= 0 && marker <= cols)
-                return marker
-            return null
-        }
-
-        const first_x:number = x_axis[0]!
-        const last_x:number = x_axis[x_axis.length - 1]!
-        if(marker < first_x || marker > last_x) {
-            if(marker >= 0 && marker <= cols)
-                return marker
-            return null
-        }
-
-        let left:number = 0
-        let right:number = x_axis.length - 1
-        while(left < right) {
-            const mid:number = Math.floor((left + right) / 2)
-            const mid_value:number = x_axis[mid]!
-            if(mid_value < marker)
-                left = mid + 1
-            else
-                right = mid
-        }
-
-        const upper:number = left
-        if(upper <= 0)
-            return 0
-
-        const lower:number = upper - 1
-        const lower_value:number = x_axis[lower]!
-        const upper_value:number = x_axis[upper]!
-        const delta:number = upper_value - lower_value
-        if(delta == 0)
-            return lower
-
-        const ratio:number = (marker - lower_value) / delta
-        return lower + ratio
-    }
-
-
     /** Compute svg and plot dimensions from container size */
     #get_dimensions(): SVGPlotDimensions {
-        const measured:Size = this.$container_size.value
-
-        const svg_width:number   = measured.width
-        const svg_height:number  = measured.height
-        const plot_width:number  = 
-            Math.max(svg_width - this.margin.left - this.margin.right, 1)
-        const plot_height:number = 
-            Math.max(svg_height - this.margin.top - this.margin.bottom, 1)
-
-        return {svg_width, svg_height, plot_width, plot_height}
+        return get_dimensions(this.$container_size.value, this.margin)
     }
 
     /** Update container dimensions when parent size changes */
@@ -580,103 +425,54 @@ export class D3Heatamp extends preact.Component<{
         root_x:number, 
         root_y:number
     ): HoverPosition|null {
-        const colsrows:RowsCols|null = this.$rowscols.value
-        if(colsrows == null)
-            return null
-        if(colsrows.cols <= 0 || colsrows.rows <= 0)
-            return null
-
-        const dimensions:SVGPlotDimensions = this.#get_dimensions()
-        const w:number = dimensions.plot_width
-        const h:number = dimensions.plot_height
-
-        const clamped_x:number = Math.max(0, Math.min(mx, w))
-        const clamped_y:number = Math.max(0, Math.min(my, h))
-
-        const col:number = Math.min(
-            Math.floor((clamped_x / w) * colsrows.cols),
-            colsrows.cols - 1,
-        )
-        const row:number = Math.min(
-            Math.floor((clamped_y / h) * colsrows.rows),
-            colsrows.rows - 1,
-        )
-        if(col < 0 || row < 0)
-            return null
-
-        const x_axis:number[] = this.props.$x_axis.value
-        const y_axis:string[] = this.props.$y_axis.value
-        const x_seconds:number|undefined = x_axis[col]
-        const y_value:string|undefined = y_axis[row]
-        if(x_seconds == undefined || y_value == undefined)
-            return null
-
-        let hover_item_index:number|null = this.props.$data.value.findIndex(
-            (item:DataItem) => item.x == col && item.y == row
-        )
-        if(hover_item_index < 0)
-            hover_item_index = null;
-        const hover_item:DataItem|undefined = 
-            (hover_item_index != null)
-            ? this.props.$data.value[hover_item_index] 
-            : undefined;
-        const data_label:string = 
-            (hover_item == undefined)
-            ? 'no data'
-            : ``
-
-        const overlay_x:number = Math.max(0, Math.floor(root_x) + 12)
-        const overlay_y:number = Math.max(0, Math.floor(root_y) + 12)
-
-        return {
-            overlay_x,
-            overlay_y,
-            x_label: strftime_ISO8601(new Date(x_seconds * 1000)),
-            y_label: y_value,
-            data_label,
-
-            item_index: hover_item_index,
-            x: col,
-            y: row,
-        }
+        return compute_hover_position_from_mouse({
+            mx,
+            my,
+            root_x,
+            root_y,
+            x_axis: this.props.$x_axis.value,
+            y_axis: this.props.$y_axis.value,
+            rows_cols: this.$rowscols.value,
+            dimensions: this.#get_dimensions(),
+            item_index_by_coord: this.$coordinates_to_item_index.value,
+        })
     }
 }
 
-type SVGPlotDimensions = {
-    svg_width:  number, 
-    svg_height:  number, 
-    plot_width:  number, 
-    plot_height: number 
+
+/** Show hover details in a fixed-size tooltip box */
+function HoverOverlay(props: {
+    $position: Readonly<Signal<HoverPosition | null>>,
+}): JSX.Element | null {
+    const hover:HoverPosition|null = props.$position.value
+    if(hover == null)
+        return null
+
+    return <g
+        transform = {`translate(${hover.overlay_x},${hover.overlay_y})`}
+        style = {{ pointerEvents: 'none', fontFamily:'sans' }}
+    >
+        <rect
+            x = '0'
+            y = '0'
+            width = '200'
+            height = '56'
+            fill = '#000000'
+            fill-opacity = '0.75'
+            stroke = '#ffffff'
+            stroke-opacity = '0.4'
+        />
+        <text x = '8' y = '17' fill = '#ffffff' font-size = '11'>
+            {`${hover.x_label}`}
+        </text>
+        <text x = '8' y = '33' fill = '#ffffff' font-size = '11'>
+            {`${hover.y_label}`}
+        </text>
+        <text x = '8' y = '49' fill = '#ffffff' font-size = '11'>
+            {hover.data_label}
+        </text>
+    </g>
 }
-
-
-type Size = {
-    width:  number,
-    height: number,
-}
-
-type HoverPosition = {
-    /** X position of the cursor within the SVG component */
-    overlay_x: number,
-    /** Y position of the cursor within the SVG component */
-    overlay_y: number,
-
-    x_label: string,
-    y_label: string,
-    data_label: string,
-    
-    /** Index of the data item of null if there is none at this position */
-    item_index: number|null
-
-    /** `X` value of {@link DataItem}, or column. */
-    x: number
-    /** `Y` value of {@link DataItem}, or row */
-    y: number
-}
-
-
-
-type RowsCols = {cols:number, rows:number}
 
 
 
@@ -707,8 +503,6 @@ function HoverMarker(props:{
     const x:number = item_width * item.x;
     const y:number = item_height * item.y;
 
-
-
     return <rect
         x            = {`${x}`}
         y            = {`${y}`}
@@ -721,3 +515,164 @@ function HoverMarker(props:{
     />
 }
 
+
+
+type SVGPlotDimensions = {
+    svg_width: number,
+    svg_height: number,
+    plot_width: number,
+    plot_height: number,
+}
+
+type Size = {
+    width: number,
+    height: number,
+}
+
+type PlotMargin = {
+    top: number,
+    right: number,
+    bottom: number,
+    left: number,
+}
+
+type RowsCols = {
+    cols: number,
+    rows: number,
+}
+
+type HoverPosition = {
+    overlay_x: number,
+    overlay_y: number,
+    x_label: string,
+    y_label: string,
+    data_label: string,
+    item_index: number | null,
+    x: number,
+    y: number,
+}
+
+/** Compute svg and plot dimensions from measured size */
+export function get_dimensions(measured: Size, margin: PlotMargin): SVGPlotDimensions {
+    const svg_width: number = measured.width
+    const svg_height: number = measured.height
+    const plot_width: number = Math.max(svg_width - margin.left - margin.right, 1)
+    const plot_height: number = Math.max(svg_height - margin.top - margin.bottom, 1)
+
+    return { svg_width, svg_height, plot_width, plot_height }
+}
+
+/** Compute rows/cols from item coordinates */
+export function get_rows_cols(data: DataItem[]): RowsCols | null {
+    if(data.length == 0)
+        return null
+
+    const all_x: number[] = 
+        data.map((item: DataItem) => item.x).sort((a: number, b: number) => a - b)
+    const all_y: number[] = 
+        data.map((item: DataItem) => item.y).sort((a: number, b: number) => a - b)
+
+    const ncols: number = all_x[all_x.length - 1]! - all_x[0]! + 1
+    const nrows: number = all_y[all_y.length - 1]! - all_y[0]! + 1
+
+    return {
+        cols: ncols,
+        rows: nrows,
+    }
+}
+
+/** Convert mouse coordinate to column index */
+export function mouse_to_col(mx: number, plot_width: number, cols: number): number {
+    const clamped_x: number = Math.max(0, Math.min(mx, plot_width))
+    return Math.min(Math.floor((clamped_x / plot_width) * cols), cols - 1)
+}
+
+/** Convert mouse coordinate to row index */
+export function mouse_to_row(my: number, plot_height: number, rows: number): number {
+    const clamped_y: number = Math.max(0, Math.min(my, plot_height))
+    return Math.min(Math.floor((clamped_y / plot_height) * rows), rows - 1)
+}
+
+/** Convert plot coordinate to column index */
+export function plot_x_to_col(mx: number, plot_width: number, cols: number): number {
+    return Math.floor((mx / plot_width) * cols)
+}
+
+/** Convert plot coordinate to row index */
+export function plot_y_to_row(my: number, plot_height: number, rows: number): number {
+    return Math.floor((my / plot_height) * rows)
+}
+
+/** Build O(1) lookup index for heatmap items by grid coordinate */
+export function create_item_index_by_coord(data: DataItem[]): Map<string, number> {
+    const output: Map<string, number> = new Map()
+    for(let index: number = 0; index < data.length; index++) {
+        const item: DataItem = data[index]!
+        output.set(`${item.x}:${item.y}`, index)
+    }
+    return output
+}
+
+/** Resolve item index by x/y coordinate */
+export function get_item_index_at(
+    item_index_by_coord: Map<string, number>,
+    x: number,
+    y: number,
+): number | null {
+    const index: number | undefined = item_index_by_coord.get(`${x}:${y}`)
+    if(index == undefined)
+        return null
+    return index
+}
+
+/** Build hover model from mouse and plot state */
+export function compute_hover_position_from_mouse(props: {
+    mx: number,
+    my: number,
+    root_x: number,
+    root_y: number,
+    x_axis: number[],
+    y_axis: string[],
+    rows_cols: RowsCols | null,
+    dimensions: SVGPlotDimensions,
+    item_index_by_coord: Map<string, number>,
+}): HoverPosition | null {
+    const rows_cols: RowsCols | null = props.rows_cols
+    if(rows_cols == null)
+        return null
+    if(rows_cols.cols <= 0 || rows_cols.rows <= 0)
+        return null
+
+    const col: number = 
+        mouse_to_col(props.mx, props.dimensions.plot_width, rows_cols.cols)
+    const row: number = 
+        mouse_to_row(props.my, props.dimensions.plot_height, rows_cols.rows)
+    if(col < 0 || row < 0)
+        return null
+
+    const x_seconds: number | undefined = props.x_axis[col]
+    const y_value: string | undefined = props.y_axis[row]
+    if(x_seconds == undefined || y_value == undefined)
+        return null
+
+    const hover_item_index: number | null = get_item_index_at(
+        props.item_index_by_coord,
+        col,
+        row,
+    )
+    const data_label: string = (hover_item_index == null) ? 'no data' : ''
+
+    const overlay_x: number = Math.max(0, Math.floor(props.root_x) + 12)
+    const overlay_y: number = Math.max(0, Math.floor(props.root_y) + 12)
+
+    return {
+        overlay_x,
+        overlay_y,
+        x_label: strftime_ISO8601(new Date(x_seconds * 1000)),
+        y_label: y_value,
+        data_label,
+        item_index: hover_item_index,
+        x: col,
+        y: row,
+    }
+}
