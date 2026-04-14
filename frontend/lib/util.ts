@@ -21,20 +21,20 @@ export async function fetch_no_throw(...x: Parameters<typeof fetch>): Promise<Re
 
 
 
-export function strftime(fmt:string, d:Date){
+export function strftime_UTC(fmt:string, d:Date){
     const z = (n:number) => String(n).padStart(2,'0');
     const map:Record<string, string> = {
-        '%Y': String(d.getFullYear()),
-        '%m': z(d.getMonth()+1),
-        '%d': z(d.getDate()),
-        '%H': z(d.getHours()),
-        '%M': z(d.getMinutes()),
-        '%S': z(d.getSeconds()),
+        '%Y': String(d.getUTCFullYear()),
+        '%m': z(d.getUTCMonth()+1),
+        '%d': z(d.getUTCDate()),
+        '%H': z(d.getUTCHours()),
+        '%M': z(d.getUTCMinutes()),
+        '%S': z(d.getUTCSeconds()),
     };
     return fmt.replace(/%[YmdHMS]/g, (m:string) => map[m] ?? m);
 }
 
 
 export function strftime_ISO8601(d:Date) {
-    return strftime('%Y-%m-%dT%H:%M:%S', d)
+    return strftime_UTC('%Y-%m-%dT%H:%M:%S', d)
 }

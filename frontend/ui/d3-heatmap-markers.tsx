@@ -124,7 +124,7 @@ export function get_x_marker_rects(
         width: marker_width,
         height: plot_height,
         fill: '#4cc9f0',
-        fill_opacity: '0.5',
+        fill_opacity: '0.8',
     }))
 }
 

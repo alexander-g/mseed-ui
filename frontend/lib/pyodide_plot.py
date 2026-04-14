@@ -153,7 +153,7 @@ def plot_spectrogram(
     fig: matplotlib.figure.Figure
     ax: matplotlib.axes.Axes
     fig, ax = plt.subplots()
-    ax.pcolor(time_axis, spec.f_axis, speclogdata, vmin=0, vmax=+7) # type: ignore [arg-type]
+    ax.pcolor(time_axis, spec.f_axis, speclogdata, vmin=0, vmax=+4) # type: ignore [arg-type]
     ax.set_xlabel('Time (UTC)')
     ax.set_ylabel('Frequency (Hz)')
     ax.set_title(title)
