@@ -204,7 +204,7 @@ export class D3Heatmap extends preact.Component<{
         const zoom:d3.ZoomBehavior<SVGSVGElement, unknown> = 
             d3.zoom<SVGSVGElement, unknown>()
             .scaleExtent([1, 25])
-            .on("zoom", (event) => this.$zoom_transform.value = event.transform);
+            .on('zoom', this.#on_zoom)
         d3.select(this.svg_ref.current!).call(zoom);
 
         const container:HTMLDivElement|null = this.container_ref.current
@@ -226,13 +226,21 @@ export class D3Heatmap extends preact.Component<{
 
     /** D3 ZoomTransform converted to a CSS transform string */
     private $transform_str:Readonly<Signal<string>> = signals.computed( () => {
-        const t:d3.ZoomTransform = this.$zoom_transform.value;
+        const t:d3.ZoomTransform = this.$zoom_transform.value
+        const colsrows:RowsCols|null = this.$rowscols.value
+        const dimensions:SVGPlotDimensions = this.$dimensions.value
 
-        const k: number = t.k ?? 1;
-        const tx:number = t.x ?? 0;
-        const ty:number = t.y ?? 0;
-        const transform_str = `translate(${tx},${ty}) scale(${k})`;
-        return transform_str;
+        const { k_x, k_y } = compute_zoom_scales({
+            transform: t,
+            rows_cols: colsrows,
+            dimensions,
+        })
+
+        const tx:number = t.x ?? 0
+        const ty:number = t.y ?? 0
+        const transform_str:string =
+            `translate(${tx},${ty}) scale(${k_x},${k_y})`
+        return transform_str
     })
 
 
@@ -249,12 +257,20 @@ export class D3Heatmap extends preact.Component<{
         const w:number = dimensions.plot_width
         const h:number = dimensions.plot_height
 
-        const zx:d3.ScaleLinear<number,number> = t.rescaleX(
+        const { k_x, k_y } = compute_zoom_scales({
+            transform: t,
+            rows_cols: colsrows,
+            dimensions,
+        })
+
+        const zx:d3.ScaleLinear<number,number> =
+            new d3.ZoomTransform(k_x, t.x, t.y).rescaleX(
             d3.scaleLinear()
             .domain([0, cols])
             .range([0, w])
         )
-        const zy:d3.ScaleLinear<number,number> = t.rescaleY(
+        const zy:d3.ScaleLinear<number,number> =
+            new d3.ZoomTransform(k_y, t.x, t.y).rescaleY(
             d3.scaleLinear()
             .domain([0, rows])
             .range([0, h])
@@ -340,6 +356,14 @@ export class D3Heatmap extends preact.Component<{
     }
     #_1 = signals.effect( () => { this.update_heatmap() } )
 
+
+    #on_zoom = (event:d3.D3ZoomEvent<SVGElement, unknown>) => {
+        const t: d3.ZoomTransform = event.transform;
+
+        // NOTE: fixed y = 0 for now
+        this.$zoom_transform.value = 
+            new d3.ZoomTransform( /*k = */ t.k, /*x = */  t.x, /*y = */  0 );
+    }
 
     #svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current);
@@ -552,6 +576,11 @@ type HoverPosition = {
     y: number,
 }
 
+type ZoomScales = {
+    k_x: number,
+    k_y: number,
+}
+
 /** Compute svg and plot dimensions from measured size */
 export function get_dimensions(measured: Size, margin: PlotMargin): SVGPlotDimensions {
     const svg_width: number = measured.width
@@ -579,6 +608,33 @@ export function get_rows_cols(data: DataItem[]): RowsCols | null {
         cols: ncols,
         rows: nrows,
     }
+}
+
+/** Compute non-uniform zoom scales for square-ish pixels */
+export function compute_zoom_scales(props: {
+    transform: d3.ZoomTransform,
+    rows_cols: RowsCols | null,
+    dimensions: SVGPlotDimensions,
+}): ZoomScales {
+    const k_x: number = props.transform.k ?? 1
+
+    if(props.rows_cols == null)
+        return { k_x, k_y: k_x }
+
+    const cols:number = Math.max(props.rows_cols.cols, 1)
+    const rows:number = Math.max(props.rows_cols.rows, 1)
+
+    const cell_width:number = props.dimensions.plot_width / cols
+    const cell_height:number = props.dimensions.plot_height / rows
+    const base_aspect:number =
+        (cell_height <= 0) ? 1 : cell_width / cell_height
+
+    if(base_aspect >= 1)
+        return { k_x, k_y: k_x }
+
+    const threshold:number = 1 / base_aspect
+    const k_y:number = (k_x <= threshold) ? 1 : k_x * base_aspect
+    return { k_x, k_y }
 }
 
 /** Convert mouse coordinate to column index */
