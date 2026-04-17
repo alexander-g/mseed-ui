@@ -11,7 +11,7 @@ import { is_deno, strftime_ISO8601 } from "../lib/util.ts"
 import type { AppConfig }         from "../index.tsx"
 import type { InferenceEvent }    from "./mseed-heatmap.tsx"
 import type { IPyodide }          from "../lib/pyodide.ts"
-import type { Marker }            from "./d3-map.tsx"
+import type { Marker, MarkerVisual } from "./d3-map.tsx"
 import type { MSEED_Meta }        from "../../wasm-cpp/mseed-wasm.ts"
 import type { MSEED_FileAndMeta } from "../lib/file-input.ts"
 import type { Station }           from "../lib/station-xml.ts"
@@ -105,19 +105,45 @@ export class MainContent extends preact.Component<MainContentProps> {
 
     /** Stations converted to D3Map Markers */
     $map_markers:Readonly<Signal<Marker[]>> = signals.computed( () => {
-        return [
-            ...this.props.$stations.value.map(
-                s => ({latitude:s.latitude, longitude:s.longitude, label:s.code}) 
-            ),
-            ... this.$highlighted_events.value.map( e => ({
-                latitude:  e.latitude,
-                longitude: e.longitude,
-                label:     `Event ${strftime_ISO8601(e.time)}`,
+        const mseed_meta:MSEED_Meta[] = this.$mseed_meta.value
+        const stations:Station[] = this.props.$stations.value
+        const station_markers:Marker[] = stations.map((station:Station) => {
+            const has_mseed_meta:boolean = 
+                station_has_mseed_meta(station, mseed_meta);
+            const visual:MarkerVisual = has_mseed_meta
+                ? {
+                    shape:           'circle',
+                    color:           'red',
+                    highlight_color: '#f57c00',
+                    stroke_color:    '#ffffff',
+                    size:            6,
+                }
+                : {
+                    shape:           'circle',
+                    color:           '#9aa4ad',
+                    highlight_color: '#f57c00',
+                    stroke_color:    '#3f0f25',
+                    size:            5,
+                }
+
+            return {
+                latitude:  station.latitude,
+                longitude: station.longitude,
+                label:     station.code,
+                visual,
+            }
+        })
+
+        const event_markers:Marker[] = this.$highlighted_events.value.map(
+            (event:QuakeEvent) => ({
+                latitude:  event.latitude,
+                longitude: event.longitude,
+                label:     `Event ${strftime_ISO8601(event.time)}`,
                 visual: {
-                    shape: 'diamond',
-                    color: '#1f6fb2',
+                    shape:           'diamond',
+                    color:           '#1f6fb2',
                     highlight_color: '#ff8f00',
-                    size: 8,
+                    size:            8,
                 },
                 rings: {
                     distances_km: [50, 100],
@@ -126,7 +152,12 @@ export class MainContent extends preact.Component<MainContentProps> {
                 },
                 ignore_for_centering: true,
 
-            } as Marker) )
+            } as Marker)
+        )
+
+        return [
+            ...station_markers,
+            ...event_markers,
         ]
     })
 
@@ -258,4 +289,18 @@ export class MainContent extends preact.Component<MainContentProps> {
     // references to components
     plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
     spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
+}
+
+
+/** Check if a station has matching MSEED meta. */
+function station_has_mseed_meta(
+    station:Station,
+    mseed_meta:MSEED_Meta[],
+): boolean {
+    for(const meta of mseed_meta) {
+        if(meta.code.includes(`.${station.code}.`))
+            return true
+    }
+
+    return false
 }
