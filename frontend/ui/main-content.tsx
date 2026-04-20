@@ -134,7 +134,6 @@ export class MainContent extends preact.Component<MainContentProps> {
                 longitude: station.longitude,
                 label:     station.code,
                 visual,
-                ignore_for_centering: has_mseed_meta,
             }
         })
 
