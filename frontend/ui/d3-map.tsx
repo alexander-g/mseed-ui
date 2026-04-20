@@ -283,7 +283,7 @@ export class D3Map extends preact.Component<D3MapProps> {
             const index:number = Number(markerindex)
             const marker_is_highlighted:boolean = highlighted_indices.has(index)
             const marker_shape:MarkerShape = marker.visual?.shape ?? 'circle'
-            const marker_size:number = marker.visual?.size ?? 10
+            const marker_size:number = marker.visual?.size ?? 5
             const marker_fill:string = marker_is_highlighted
                 ? (marker.visual?.highlight_color ?? '#f57c00')
                 : (marker.visual?.color ?? 'red')

@@ -2,7 +2,7 @@ import { preact, Signal, signals, JSX } from "../dep.ts"
 
 import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
 import type { QuakeEvent } from "../lib/quakeml.ts";
-import { D3Heatamp} from "../ui/d3-heatmap.tsx"
+import { D3Heatmap } from "../ui/d3-heatmap.tsx"
 import { type Station } from "../lib/station-xml.ts";
 import {
     type HoverCallbackPosition, 
@@ -55,7 +55,7 @@ export class MSEED_Heatmap extends preact.Component<{
     $highlighted_station?: Signal<Station|null>
 }> {
     render(): JSX.Element {
-        return <D3Heatamp
+        return <D3Heatmap
             $data    = {this.$transformed_files}
             $x_axis  = {this.$x_axis}
             $y_axis  = {this.$y_axis}
