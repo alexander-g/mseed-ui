@@ -1,0 +1,109 @@
+import { preact, Signal, signals, JSX } from "../dep.ts"
+import { strftime_ISO8601 } from "../lib/util.ts";
+
+import { compute_zoom_scales } from './d3-heatmap.tsx'
+import type {
+    SVGPlotDimensions,
+    RowsCols,
+} from './d3-heatmap.tsx'
+
+
+
+export class Axes extends preact.Component<{
+    /** Sizes of the SVG components */
+    $dimensions: Readonly<Signal<SVGPlotDimensions>>,
+
+    /** Number of pixels along x and y axes in the data */
+    $rowscols: Readonly<Signal<RowsCols|null>>,
+
+    /** Values along the x axis */
+    $x_axis:Readonly<Signal<number[]>>,
+
+    /** Current zoom state */
+    $zoom_transform: Readonly<Signal<d3.ZoomTransform>>,
+}> {
+
+    render(): JSX.Element {
+        return <>
+            <g 
+                class     = "axis" 
+                transform = {this.$x_axis_transform} 
+                ref       = {this.xaxis_ref} 
+            />
+            <g ref={this.yaxis_ref} class="axis" />
+        </>
+    }
+
+    update_axes = () => {
+        // NOTE: accessing $signals up here to make sure they are subscribed to
+        const t:d3.ZoomTransform = this.props.$zoom_transform.value
+        const x_axis:number[]    = this.props.$x_axis.value
+        const colsrows:RowsCols|null = this.props.$rowscols.value
+        if(colsrows == null)
+            return;
+        const { cols, rows } = colsrows;
+
+        const dimensions:SVGPlotDimensions = this.props.$dimensions.value;
+        const w:number = dimensions.plot_width
+        const h:number = dimensions.plot_height
+
+        const { k_x, k_y } = compute_zoom_scales({
+            transform: t,
+            rows_cols: colsrows,
+            dimensions,
+        })
+
+        const zx:d3.ScaleLinear<number,number> =
+            new d3.ZoomTransform(k_x, t.x, t.y).rescaleX(
+            d3.scaleLinear()
+            .domain([0, cols])
+            .range([0, w])
+        )
+        const zy:d3.ScaleLinear<number,number> =
+            new d3.ZoomTransform(k_y, t.x, t.y).rescaleY(
+            d3.scaleLinear()
+            .domain([0, rows])
+            .range([0, h])
+        )
+
+
+        const step_size_x:number = Math.floor((zx.invert(w) - zx.invert(0)) / 10)
+
+        // index of first data column at plot position 0 (clipped)
+        const first_col_in_bounds:number = Math.max(zx.invert(0), 0)
+        const last_col_in_bounds:number = Math.min(zx.invert(w), cols)
+        
+
+        const d3_x_axis:d3.Axis<d3.NumberValue> = 
+            d3.axisBottom(zx)
+            .tickValues(
+                d3.range( 
+                    Math.ceil(first_col_in_bounds), 
+                    Math.floor(last_col_in_bounds), 
+                    step_size_x 
+                )
+            )
+            // TODO: too many assumptions for this component
+            .tickFormat( t => strftime_ISO8601(new Date( x_axis[Number(t)]! * 1000 ) )  )
+        const d3_y_axis:d3.Axis<d3.NumberValue> = 
+            d3.axisLeft(zy)
+            .tickValues(d3.range(0, rows, 5))
+            .tickFormat( d => Math.floor(Number(d)).toFixed(0)
+        )
+
+        d3.select(this.xaxis_ref.current)
+            // @ts-ignore this is correct 
+            .call(d3_x_axis);
+        d3.select(this.yaxis_ref.current)
+            // @ts-ignore this is correct 
+            .call(d3_y_axis);
+    }
+    #_1 = signals.effect( this.update_axes )
+
+    xaxis_ref: preact.RefObject<SVGGElement> = preact.createRef()
+    yaxis_ref: preact.RefObject<SVGGElement> = preact.createRef()
+
+    $x_axis_transform:Readonly<Signal<string>> = signals.computed(() =>
+        `translate(0,${this.props.$dimensions.value.plot_height})`
+    )
+}

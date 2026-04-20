@@ -6,7 +6,7 @@ import {
     HorizontalMarkerLayer,
     VerticalMarkerLayer,
 } from './d3-heatmap-markers.tsx'
-
+import { Axes } from "./d3-heatmap-axes.tsx";
 
 
 
@@ -68,9 +68,6 @@ export class D3Heatmap extends preact.Component<{
     )
     private $plot_height:Readonly<Signal<number>> = signals.computed(() =>
         this.$dimensions.value.plot_height
-    )
-    private $x_axis_transform:Readonly<Signal<string>> = signals.computed(() =>
-        `translate(0,${this.$plot_height.value})`
     )
 
 
@@ -150,13 +147,12 @@ export class D3Heatmap extends preact.Component<{
                     </g>
 
 
-                    
-                    <g 
-                        class = "axis" 
-                        transform = {this.$x_axis_transform} 
-                        ref = {this.xaxis_ref} 
+                    <Axes 
+                        $dimensions     = {this.$dimensions}
+                        $rowscols       = {this.$rowscols}
+                        $x_axis         = {this.props.$x_axis}
+                        $zoom_transform = {this.$zoom_transform}
                     />
-                    <g ref={this.yaxis_ref} class="axis" />
                     <HoverOverlay $position = {this.$hover_position} />
                 </g>
             </svg>
@@ -242,73 +238,6 @@ export class D3Heatmap extends preact.Component<{
             `translate(${tx},${ty}) scale(${k_x},${k_y})`
         return transform_str
     })
-
-
-    update_axes = () => {
-        // NOTE: accessing $signals up here to make sure they are subscribed to
-        const t:d3.ZoomTransform = this.$zoom_transform.value
-        const x_axis:number[]    = this.props.$x_axis.value
-        const colsrows:RowsCols|null = this.$rowscols.value
-        if(colsrows == null)
-            return;
-        const { cols, rows } = colsrows;
-
-        const dimensions:SVGPlotDimensions = this.#get_dimensions()
-        const w:number = dimensions.plot_width
-        const h:number = dimensions.plot_height
-
-        const { k_x, k_y } = compute_zoom_scales({
-            transform: t,
-            rows_cols: colsrows,
-            dimensions,
-        })
-
-        const zx:d3.ScaleLinear<number,number> =
-            new d3.ZoomTransform(k_x, t.x, t.y).rescaleX(
-            d3.scaleLinear()
-            .domain([0, cols])
-            .range([0, w])
-        )
-        const zy:d3.ScaleLinear<number,number> =
-            new d3.ZoomTransform(k_y, t.x, t.y).rescaleY(
-            d3.scaleLinear()
-            .domain([0, rows])
-            .range([0, h])
-        )
-
-
-        const step_size_x:number = Math.floor((zx.invert(w) - zx.invert(0)) / 10)
-
-        // index of first data column at plot position 0 (clipped)
-        const first_col_in_bounds:number = Math.max(zx.invert(0), 0)
-        const last_col_in_bounds:number = Math.min(zx.invert(w), cols)
-        
-
-        const d3_x_axis:d3.Axis<d3.NumberValue> = 
-            d3.axisBottom(zx)
-            .tickValues(
-                d3.range( 
-                    Math.ceil(first_col_in_bounds), 
-                    Math.floor(last_col_in_bounds), 
-                    step_size_x 
-                )
-            )
-            // TODO: too many assumptions for this component
-            .tickFormat( t => strftime_ISO8601(new Date( x_axis[Number(t)]! * 1000 ) )  )
-        const d3_y_axis:d3.Axis<d3.NumberValue> = 
-            d3.axisLeft(zy)
-            .tickValues(d3.range(0, rows, 5))
-            .tickFormat( d => Math.floor(Number(d)).toFixed(0)
-        )
-
-        d3.select(this.xaxis_ref.current)
-            // @ts-ignore this is correct 
-            .call(d3_x_axis);
-        d3.select(this.yaxis_ref.current)
-            // @ts-ignore this is correct 
-            .call(d3_y_axis);
-    }
-    #_2 = signals.effect( this.update_axes )
 
 
     /** Compute the current number of rows and columns from the data input */
@@ -541,7 +470,7 @@ function HoverMarker(props:{
 
 
 
-type SVGPlotDimensions = {
+export type SVGPlotDimensions = {
     svg_width: number,
     svg_height: number,
     plot_width: number,
@@ -560,7 +489,7 @@ type PlotMargin = {
     left: number,
 }
 
-type RowsCols = {
+export type RowsCols = {
     cols: number,
     rows: number,
 }
