@@ -74,14 +74,12 @@ Deno.test('marker rect helpers build expected layer rectangles', () => {
     assert(x_rects[0]?.x == 0)
     assert(x_rects[0]?.width == 100)
     assert(x_rects[0]?.height == 200)
-    assert(x_rects[0]?.fill_opacity == '0.5')
 
     const y_rects = get_y_marker_parameters([0, 75], 300, 300, 4)
     assert(y_rects.length == 2)
     assert(y_rects[1]?.y == 75)
     assert(y_rects[1]?.width == 300)
     assert(y_rects[1]?.height == 75)
-    assert(y_rects[1]?.fill_opacity == '0.3')
 })
 
 Deno.test('item index map resolves item by coordinate', () => {

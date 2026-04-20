@@ -1,11 +1,13 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
-import { strftime_ISO8601 } from "../lib/util.ts";
+
+import * as d3 from "d3";
 
 import { compute_zoom_scales } from './d3-heatmap.tsx'
 import type {
     SVGPlotDimensions,
     RowsCols,
 } from './d3-heatmap.tsx'
+import { strftime_ISO8601 } from "../lib/util.ts";
 
 
 
