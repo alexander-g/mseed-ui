@@ -79,6 +79,7 @@ export class MainContent extends preact.Component<MainContentProps> {
                     $markers = {this.$map_markers} 
                     on_marker_hover = {this.on_marker_hover} 
                     $highlighted_markers = {this.$highlighted_station_index}
+                    $overlay_visible = {this.$map_overlay_visible}
                 />
             </div>
         </div>
@@ -112,6 +113,7 @@ export class MainContent extends preact.Component<MainContentProps> {
                 station_has_mseed_meta(station, mseed_meta);
             const visual:MarkerVisual = has_mseed_meta
                 ? {
+                    // station with associated mseed data (red)
                     shape:           'circle',
                     color:           'red',
                     highlight_color: '#f57c00',
@@ -119,11 +121,12 @@ export class MainContent extends preact.Component<MainContentProps> {
                     size:            6,
                 }
                 : {
+                    // station without mseed data (gray)
                     shape:           'circle',
                     color:           '#9aa4ad',
                     highlight_color: '#f57c00',
                     stroke_color:    '#3f0f25',
-                    size:            5,
+                    size:            5
                 }
 
             return {
@@ -131,6 +134,7 @@ export class MainContent extends preact.Component<MainContentProps> {
                 longitude: station.longitude,
                 label:     station.code,
                 visual,
+                ignore_for_centering: has_mseed_meta,
             }
         })
 
@@ -160,6 +164,11 @@ export class MainContent extends preact.Component<MainContentProps> {
             ...event_markers,
         ]
     })
+
+    /** Show overlay only when no stations present */
+    $map_overlay_visible:Readonly<Signal<boolean>> = signals.computed(
+        () => this.props.$stations.value.length == 0
+    )
 
 
     /** The currently highlighted station, either in the map or heatmap */

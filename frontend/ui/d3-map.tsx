@@ -40,6 +40,9 @@ export type MarkerRings = {
 type D3MapProps = {
     $markers: Readonly<Signal<Marker[]>>
 
+    /** Optional override for empty-overlay visibility */
+    $overlay_visible?: Readonly<Signal<boolean>>
+
     /** Called when mouse hovers above a marker. Argument: index or null if none */
     on_marker_hover?: (index:number|null) => void,
 
@@ -73,6 +76,11 @@ export class D3Map extends preact.Component<D3MapProps> {
         () => (this.props.$markers.value.length == 0)
     )
 
+    /** Whether or not to show the "No stations loaded" overlay message */
+    $overlay_visible:Readonly<Signal<boolean>> =
+        this.props.$overlay_visible ?? this.$markers_empty
+
+    
     /** Current size of the top <div>. Updated via ResizeObserver. */
     $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
 
@@ -105,7 +113,7 @@ export class D3Map extends preact.Component<D3MapProps> {
 
             { this.$marker_tooltips }
 
-            <OverlayDiv $visible={this.$markers_empty} >
+            <OverlayDiv $visible={this.$overlay_visible} >
                 No stations loaded.
             </OverlayDiv>
         </div>
