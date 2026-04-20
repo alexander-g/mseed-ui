@@ -351,6 +351,11 @@ export class D3Map extends preact.Component<D3MapProps> {
 
         const highlighted_markers:number[] = this.props.$highlighted_markers?.value ?? []
         const tooltips:JSX.Element[] = []
+        const container_size:Size = this.$container_size.value
+        const tooltip_offset:number    = 12
+        const tooltip_padding:number   = 8
+        const tooltip_max_width:number = 240
+        const tooltip_height:number    = 24
 
         for(const index of highlighted_markers){
             const marker:Marker|undefined = this.props.$markers.value[index]
@@ -361,17 +366,40 @@ export class D3Map extends preact.Component<D3MapProps> {
             if(label.trim().length == 0)
                 continue;
 
-            const projected:[number,number]|null = projection([marker.longitude, marker.latitude])
+            const projected:[number,number]|null = 
+                projection([marker.longitude, marker.latitude])
             if(projected == null)
                 continue;
+
+            // to make sure the tooltips stay within the map bounds
+            const estimated_width:number = Math.min(
+                (label.length * 7) + (tooltip_padding * 2),
+                tooltip_max_width,
+            )
+            const base_left:number = projected[0] + tooltip_offset
+            const base_top:number = projected[1] + tooltip_offset
+            const clamped_left:number = Math.max(
+                tooltip_padding,
+                Math.min(
+                    base_left,
+                    container_size.width - estimated_width - tooltip_padding,
+                ),
+            )
+            const clamped_top:number = Math.max(
+                tooltip_padding,
+                Math.min(
+                    base_top,
+                    container_size.height - tooltip_height - tooltip_padding,
+                ),
+            )
 
             tooltips.push(
                 <div
                     class = 'map-marker-tooltip'
                     style = {{
                         position:       'absolute',
-                        left:           `${projected[0] + 12}px`,
-                        top:            `${projected[1] + 12}px`,
+                        left:           `${clamped_left}px`,
+                        top:            `${clamped_top}px`,
                         pointerEvents:  'none',
                         color:          '#fff',
                         padding:        '2px 6px',
@@ -379,6 +407,9 @@ export class D3Map extends preact.Component<D3MapProps> {
                         fontFamily:     'sans',
                         lineHeight:     '1.2',
                         whiteSpace:     'nowrap',
+                        maxWidth:       `${tooltip_max_width}px`,
+                        overflow:       'hidden',
+                        textOverflow:   'ellipsis',
                         zIndex:         1,
                         backgroundColor:'rgba(0, 0, 0, 0.82)',
                     }}
