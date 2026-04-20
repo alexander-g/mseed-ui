@@ -197,11 +197,10 @@ export class D3Heatmap extends preact.Component<{
     )
 
     override componentDidMount(): void {
-        const zoom:d3.ZoomBehavior<SVGSVGElement, unknown> = 
-            d3.zoom<SVGSVGElement, unknown>()
-            .scaleExtent([1, 25])
-            .on('zoom', this.#on_zoom)
-        d3.select(this.svg_ref.current!).call(zoom);
+        d3.select(this.svg_ref.current!)
+            .call(this.zoom)
+            // no zoom on doubleclick
+            .on('dblclick.zoom', null);
 
         const container:HTMLDivElement|null = this.container_ref.current
         if(container != null) {
@@ -286,14 +285,32 @@ export class D3Heatmap extends preact.Component<{
     #_1 = signals.effect( () => { this.update_heatmap() } )
 
 
-    #on_zoom = (event:d3.D3ZoomEvent<SVGElement, unknown>) => {
-        const t: d3.ZoomTransform = event.transform;
+    zoom: d3.ZoomBehavior<SVGSVGElement, unknown> = 
+        d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([1, 125])
+        .on('zoom', (e) => { this.$zoom_transform.value = e.transform })
+    
+    /** Update the zoom extent when number of rows and columns changes */
+    #_3 = this.$rowscols.subscribe( () => {
+        const rows_cols:RowsCols|null = this.$rowscols.value
+        if(rows_cols == null)
+            return;
+        const { cols, rows } = rows_cols
 
-        // NOTE: fixed y = 0 for now
-        this.$zoom_transform.value = 
-            new d3.ZoomTransform( /*k = */ t.k, /*x = */  t.x, /*y = */  0 );
-    }
+        const dimensions:SVGPlotDimensions = this.#get_dimensions()
 
+        const target_maximum_pixel_size = 25;
+        const maximum_zoom_x:number = 
+            cols * target_maximum_pixel_size / dimensions.plot_width
+        const maximum_zoom_y:number = 
+            rows * target_maximum_pixel_size / dimensions.plot_height
+        const maximum_zoom:number = Math.max(maximum_zoom_x, maximum_zoom_y)
+
+        console.log('setting zoom extent to: ', maximum_zoom)
+        this.zoom.scaleExtent([1, maximum_zoom])
+    } )
+
+    
     #svgimage_onclick:preact.MouseEventHandler<SVGImageElement> = (event) => {
         const [mx, my] = d3.pointer(event, this.svgimage_ref.current);
         const dimensions:SVGPlotDimensions = this.#get_dimensions()
@@ -545,25 +562,27 @@ export function compute_zoom_scales(props: {
     rows_cols: RowsCols | null,
     dimensions: SVGPlotDimensions,
 }): ZoomScales {
-    const k_x: number = props.transform.k ?? 1
+    const base_k: number = props.transform.k ?? 1
 
     if(props.rows_cols == null)
-        return { k_x, k_y: k_x }
+        return {k_x: base_k, k_y: base_k }
 
     const cols:number = Math.max(props.rows_cols.cols, 1)
     const rows:number = Math.max(props.rows_cols.rows, 1)
 
+    // NOTE: this is unaffected by zoom
     const cell_width:number = props.dimensions.plot_width / cols
     const cell_height:number = props.dimensions.plot_height / rows
     const base_aspect:number =
         (cell_height <= 0) ? 1 : cell_width / cell_height
 
     if(base_aspect >= 1)
-        return { k_x, k_y: k_x }
+        return {k_x: base_k, k_y: base_k }
 
+    // keep the y axis fixed at 1.0 until the pixels are square
     const threshold:number = 1 / base_aspect
-    const k_y:number = (k_x <= threshold) ? 1 : k_x * base_aspect
-    return { k_x, k_y }
+    const k_y:number = (base_k <= threshold) ? 1.0 : base_k * base_aspect
+    return { k_x:base_k, k_y }
 }
 
 /** Convert mouse coordinate to column index */
