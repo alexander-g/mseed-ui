@@ -245,9 +245,7 @@ export class MainContent extends preact.Component<MainContentProps> {
                 return;
             }
             
-            const file:File|undefined = mseed.file;
-            if(file == undefined)
-                return;
+            const file:File = mseed.file;
             
             console.log('reading file: ', file.name)
             const data:Int32Array|Error = await tremorwasm.read_data(file)

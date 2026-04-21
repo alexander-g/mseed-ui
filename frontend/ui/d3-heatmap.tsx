@@ -306,7 +306,6 @@ export class D3Heatmap extends preact.Component<{
             rows * target_maximum_pixel_size / dimensions.plot_height
         const maximum_zoom:number = Math.max(maximum_zoom_x, maximum_zoom_y)
 
-        console.log('setting zoom extent to: ', maximum_zoom)
         this.zoom.scaleExtent([1, maximum_zoom])
     } )
 
