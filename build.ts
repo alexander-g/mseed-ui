@@ -90,38 +90,38 @@ async function bundle_js_file(inputpath:string, outputpath:string,  minify:boole
 }
 
 
-async function bundle_index_js(minify:boolean) {
+async function bundle_index_js(outputdir:string, minify:boolean) {
     const outputpath:string = 
-        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_JS)
+        path.join(outputdir, HARDCODED_OUTPUTFILE_INDEX_JS)
     return await bundle_js_file(HARDCODED_INDEX_TSX, outputpath, minify)
 }
 
-async function bundle_pyodide_worker(minify:boolean) {
+async function bundle_pyodide_worker(outputdir:string, minify:boolean) {
     const outputpath:string = 
-        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS)
+        path.join(outputdir, HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS)
     return await bundle_js_file(HARDCODED_PYODIDE_WORKER_JS, outputpath, minify)
 }
 
-async function bundle_mseed_worker(minify:boolean) {
+async function bundle_mseed_worker(outputdir:string, minify:boolean) {
     const outputpath:string = 
-        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_MSEED_WORKER_JS)
+        path.join(outputdir, HARDCODED_OUTPUTFILE_MSEED_WORKER_JS)
     return await bundle_js_file(HARDCODED_MSEED_WORKER_JS, outputpath, minify)
 }
 
-function copy_pyodide_scripts() {
+function copy_pyodide_scripts(outputdir:string) {
     for(const py_script of PYODIDE_SCRIPTS) {
         const py_path:string = path.join(HARDCODED_PYODIDE_DIR, py_script)
         if( !fs.existsSync(py_path) )
             throw new Error(`Pyodide script ${py_path} missing`)
 
-        const outputpath:string = path.join(HARDCODED_OUTPUTDIR, py_script)
+        const outputpath:string = path.join(outputdir, py_script)
         Deno.copyFileSync(py_path, outputpath)
     }
 }
 
 
 
-async function compile_index_html(app_config:AppConfig) {
+async function compile_index_html(outputdir:string, app_config:AppConfig) {
     const module: { Index?: typeof Index } = 
         await import(HARDCODED_INDEX_TSX);
     if(!module.Index)
@@ -133,13 +133,13 @@ async function compile_index_html(app_config:AppConfig) {
     const rendered:string  = preact_ssr.render(main_element, {}, {pretty:true, jsx:false})
 
     const outputpath:string = 
-        path.join(HARDCODED_OUTPUTDIR, HARDCODED_OUTPUTFILE_INDEX_HTML)
+        path.join(outputdir, HARDCODED_OUTPUTFILE_INDEX_HTML)
     fs.ensureDirSync(path.dirname(outputpath));
     Deno.writeTextFileSync(outputpath, rendered)
 }
 
 
-async function copy_pyodide_files() {
+async function copy_pyodide_files(outputdir:string) {
     const pyo:Pyodide|Error = await initialize()
     if(pyo instanceof Error)
         throw pyo as Error;
@@ -150,35 +150,43 @@ async function copy_pyodide_files() {
 
     for(const filepath of filepaths) {
         const basename:string = path.basename(filepath)
-        const outputpath:string = path.join(HARDCODED_OUTPUTDIR, basename)
+        const outputpath:string = path.join(outputdir, basename)
         Deno.copyFileSync(filepath, outputpath)
     }
 }
 
-function clear_outputdir() {
+function clear_outputdir(outputdir:string) {
     try {
-        Deno.removeSync(HARDCODED_OUTPUTDIR, {recursive:true})
+        Deno.removeSync(outputdir, {recursive:true})
     // deno-lint-ignore no-empty
     } catch {}
-    fs.ensureDirSync(HARDCODED_OUTPUTDIR);
+    fs.ensureDirSync(outputdir);
 }
 
 
+
+export async function build_all(
+    outputdir:      string, 
+    vendor_pyodide: boolean, 
+    minify:         boolean
+) {
+    clear_outputdir(outputdir)
+    await compile_index_html(outputdir, {pyodide_vendored: vendor_pyodide});
+    await bundle_index_js(outputdir, minify);
+    await bundle_pyodide_worker(outputdir, minify);
+    await copy_pyodide_scripts(outputdir);
+    await bundle_mseed_worker(outputdir, minify);
+    
+    if(vendor_pyodide)
+        await copy_pyodide_files(outputdir, );
+}
 
 
 if(import.meta.main) {
     const pyodide_vendored:boolean = !Deno.args.includes('--no-pyodide');
     const minify:boolean = Deno.args.includes('--minify')
 
-    clear_outputdir()
-    await compile_index_html({pyodide_vendored});
-    await bundle_index_js(minify);
-    await bundle_pyodide_worker(minify);
-    await copy_pyodide_scripts();
-    await bundle_mseed_worker(minify);
-    
-    if(pyodide_vendored)
-        await copy_pyodide_files();
+    await build_all(HARDCODED_OUTPUTDIR, pyodide_vendored, minify)
 
     console.log('done')
 }

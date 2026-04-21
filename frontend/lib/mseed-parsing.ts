@@ -19,12 +19,18 @@ export async function read_mseed_metadata(blob: Blob): Promise<MSeedMetadata|Err
         if(!is_mseed(firstbuf))
             return new Error('File is not in MSEED format')
 
-        const first:MSEED_Header = parse_fixed_mseed_header(firstbuf);
+        const little_endian:boolean|Error = detect_little_endian(firstbuf);
+        if(little_endian instanceof Error)
+            return little_endian
+
+        const first:MSEED_Header = 
+            parse_fixed_mseed_header(firstbuf, little_endian);
         // sanity check
         if(first.starttime.getUTCFullYear() > 2100)
             return new Error('Parsed year is far in the future.')
 
-        const recordlength:number = get_recordlength(firstbuf) ?? 4096;
+        const recordlength:number = 
+            get_recordlength(firstbuf, little_endian) ?? 4096;
 
         // last record header
         const filesize:number = blob.size;
@@ -32,7 +38,8 @@ export async function read_mseed_metadata(blob: Blob): Promise<MSeedMetadata|Err
             Math.floor(filesize / recordlength - 1) * recordlength;
 
         const lastbuf:DataView = await read_slice(blob, last_offset, 64);
-        const last:MSEED_Header = parse_fixed_mseed_header(lastbuf);
+        const last:MSEED_Header = 
+            parse_fixed_mseed_header(lastbuf, little_endian);
 
         const duration_seconds:number = last.n_samples / last.samplerate;
         const endtime = new Date(
@@ -96,35 +103,29 @@ function parse_codes(view: DataView): MSEED_Codes {
 }
 
 
-function parse_fixed_mseed_header(view: DataView): MSEED_Header {
-    const year:number       = view.getUint16(20, false);
-    const day:number        = view.getUint16(22, false);
-    const hour:number       = view.getUint8(24);
-    const minute:number     = view.getUint8(25);
-    const second:number     = view.getUint8(26);
-    const tenth_msec:number = view.getUint16(28, false);
-
-    const n_samples:number = view.getUint16(30, false);
-    const sampleratefactor:number = view.getInt16(32, false);
-    const sampleratemultiplier:number = view.getInt16(34, false);
+function parse_fixed_mseed_header(
+    view: DataView,
+    little_endian: boolean
+): MSEED_Header {
+    const fields:FixedHeaderFields = read_fixed_header_fields(view, little_endian);
 
     const starttime:Date = doy_to_date(
-        year,
-        day,
-        hour,
-        minute,
-        second,
-        tenth_msec
+        fields.year,
+        fields.day,
+        fields.hour,
+        fields.minute,
+        fields.second,
+        fields.tenth_msec
     );
 
     const samplerate:number = compute_samplerate(
-        sampleratefactor,
-        sampleratemultiplier
+        fields.sampleratefactor,
+        fields.sampleratemultiplier
     );
 
     return {
         starttime,
-        n_samples,
+        n_samples: fields.n_samples,
         samplerate,
     };
 }
@@ -174,22 +175,28 @@ function doy_to_date(
     return date;
 }
 
-function get_recordlength(view:DataView,): number|null {
-    const first_blockette_offset:number = view.getUint16(46, false);
+function get_recordlength(
+    view:DataView,
+    little_endian: boolean
+): number|null {
+    const first_blockette_offset:number = view.getUint16(
+        46,
+        little_endian
+    );
     if(first_blockette_offset === 0) 
         return null;
 
     let ptr:number = first_blockette_offset;
 
     while (ptr < view.byteLength) {
-        const type:number = view.getUint16(ptr, false);
+        const type:number = view.getUint16(ptr, little_endian);
 
         if (type === 1000) {
             const exponent:number = view.getUint8(ptr + 6);
             return Math.pow(2, exponent);
         }
 
-        const next:number = view.getUint16(ptr + 2, false);
+        const next:number = view.getUint16(ptr + 2, little_endian);
         if(next === 0) 
             break;
         ptr = next;
@@ -197,8 +204,131 @@ function get_recordlength(view:DataView,): number|null {
     return null;
 }
 
+type FixedHeaderFields = {
+    year: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    tenth_msec: number,
+    n_samples: number,
+    sampleratefactor: number,
+    sampleratemultiplier: number,
+}
 
-function is_mseed(view:DataView): boolean {
+function read_fixed_header_fields(
+    view: DataView,
+    little_endian: boolean
+): FixedHeaderFields {
+    const year:number       = view.getUint16(20, little_endian);
+    const day:number        = view.getUint16(22, little_endian);
+    const hour:number       = view.getUint8(24);
+    const minute:number     = view.getUint8(25);
+    const second:number     = view.getUint8(26);
+    const tenth_msec:number = view.getUint16(28, little_endian);
+
+    const n_samples:number = view.getUint16(30, little_endian);
+    const sampleratefactor:number = view.getInt16(32, little_endian);
+    const sampleratemultiplier:number = view.getInt16(34, little_endian);
+
+    return {
+        year,
+        day,
+        hour,
+        minute,
+        second,
+        tenth_msec,
+        n_samples,
+        sampleratefactor,
+        sampleratemultiplier,
+    }
+}
+
+function detect_little_endian(view: DataView): boolean|Error {
+    const big:FixedHeaderFields = read_fixed_header_fields(view, false);
+    const little:FixedHeaderFields = read_fixed_header_fields(view, true);
+
+    const big_valid:boolean = is_header_sane(big);
+    const little_valid:boolean = is_header_sane(little);
+
+    if(big_valid && !little_valid)
+        return false
+    if(little_valid && !big_valid)
+        return true
+
+    if(big_valid && little_valid) {
+        const big_word_order:number|null = find_blockette_word_order(
+            view,
+            false
+        );
+        if(big_word_order === 0)
+            return true
+        if(big_word_order === 1)
+            return false
+
+        const little_word_order:number|null = find_blockette_word_order(
+            view,
+            true
+        );
+        if(little_word_order === 0)
+            return true
+        if(little_word_order === 1)
+            return false
+
+        return false
+    }
+
+    return new Error('Could not determine MSEED byte order.')
+}
+
+function is_header_sane(fields: FixedHeaderFields): boolean {
+    if(fields.year < 1900 || fields.year > 2100)
+        return false
+    if(fields.day < 1 || fields.day > 366)
+        return false
+    if(fields.hour > 23)
+        return false
+    if(fields.minute > 59)
+        return false
+    if(fields.second > 60)
+        return false
+    if(fields.tenth_msec > 9999)
+        return false
+    return true
+}
+
+function find_blockette_word_order(
+    view: DataView,
+    little_endian: boolean
+): number|null {
+    const first_blockette_offset:number = view.getUint16(
+        46,
+        little_endian
+    );
+    if(first_blockette_offset === 0)
+        return null
+    if(first_blockette_offset >= view.byteLength)
+        return null
+
+    let ptr:number = first_blockette_offset;
+    while (ptr + 7 < view.byteLength) {
+        const type:number = view.getUint16(ptr, little_endian);
+        if(type === 1000) {
+            return view.getUint8(ptr + 5);
+        }
+
+        const next:number = view.getUint16(ptr + 2, little_endian);
+        if(next === 0)
+            break
+        if(next <= ptr)
+            break
+        ptr = next
+    }
+    return null
+}
+
+
+export function is_mseed(view:DataView): boolean {
     if (view.byteLength < 48)
         return false;
 
@@ -223,18 +353,3 @@ function is_mseed(view:DataView): boolean {
 
 
 
-
-if(import.meta.main) {
-    const data = Deno.readFileSync('./tests/assets/2018-01-27T19:27:54-CN.PFB..HHE')
-    //const data = Deno.readFileSync('/home/superuser/Desktop/tmp/set0/A05/DH2.D/9Y.A05..DH2.D.2022.081')
-    //const data = Deno.readFileSync('./deps.lock')
-    const blob = new Blob([data])
-
-    const meta_ = await read_mseed_metadata(blob) 
-
-    const t0 = performance.now()
-    const meta = await read_mseed_metadata(blob) 
-    const t1 = performance.now()
-    console.log(meta)
-    console.log(t1-t0)
-}
