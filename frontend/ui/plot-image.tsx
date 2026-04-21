@@ -3,20 +3,22 @@ import { OverlayDiv } from "./overlay-div.tsx"
 
 
 
-export class PlotImage extends preact.Component {
+type PlotImageProps = {
+    $is_loading: Readonly<Signal<boolean>>
+}
+
+export class PlotImage extends preact.Component<PlotImageProps> {
     img_ref:preact.RefObject<HTMLImageElement> = preact.createRef()
 
     $initialized:Signal<boolean> = new Signal(false)
-    $is_loading: Signal<boolean> = new Signal(false)
-
     $overlay_message: Readonly<Signal<string>> = signals.computed(
-        () => this.$is_loading.value
-            ? 'Plots are loading...'
+        () => this.props.$is_loading.value
+            ? 'Loading...'
             : 'Select a MSEED channel and time to plot here.'
     )
 
     $overlay_on:Readonly<Signal<boolean>> = signals.computed(
-        () => !this.$initialized.value || this.$is_loading.value
+        () => !this.$initialized.value || this.props.$is_loading.value
     )
 
     render(): JSX.Element {
@@ -32,11 +34,7 @@ export class PlotImage extends preact.Component {
         </div>
     }
 
-    set_loading(loading:boolean): void {
-        this.$is_loading.value = loading
-    }
-
-    set_src(file:File) {
+    set_src(file:File): void {
         const objurl:string = URL.createObjectURL(file)
         this.img_ref.current?.addEventListener(
             'load',
@@ -45,6 +43,5 @@ export class PlotImage extends preact.Component {
         )
         this.img_ref.current!.src = objurl;
         this.$initialized.value = true;
-        this.$is_loading.value = false
     }
 }

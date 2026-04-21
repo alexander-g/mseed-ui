@@ -49,26 +49,35 @@ export class MainContent extends preact.Component<MainContentProps> {
             {
                 key: 'plot',
                 label: '1D Plot',
-                element: <PlotImage ref={this.plotimg_ref} />,
+                element: <PlotImage 
+                    ref = {this.plotimg_ref} 
+                    $is_loading = {this.$plots_loading} 
+                />,
             },
             {
                 key: 'spectrogram',
                 label: '2D Spectrogram',
-                element: <PlotImage ref={this.spectrogram_img_ref} />,
+                element: <PlotImage 
+                    ref = {this.spectrogram_img_ref} 
+                    $is_loading = {this.$plots_loading} 
+                />,
             },
             {
                 key: 'mps',
                 label: 'Modulation Power Spectrum',
-                element: <PlotImage ref={this.mps_img_ref} />,
+                element: <PlotImage 
+                    ref = {this.mps_img_ref} 
+                    $is_loading = {this.$plots_loading} 
+                />,
             },
             {
                 key: 'map',
                 label: 'Map',
                 element: <D3Map 
-                    $markers = {this.$map_markers} 
-                    on_marker_hover = {this.on_marker_hover} 
+                    $markers             = {this.$map_markers} 
+                    on_marker_hover      = {this.on_marker_hover} 
                     $highlighted_markers = {this.$highlighted_station_index}
-                    $overlay_visible = {this.$map_overlay_visible}
+                    $overlay_visible     = {this.$map_overlay_visible}
                 />,
             },
         ]
@@ -246,6 +255,8 @@ export class MainContent extends preact.Component<MainContentProps> {
     }
 
 
+    /** Indicates if we are reading data and rendering plots. */
+    $plots_loading: Signal<boolean> = new Signal(false)
 
     pyodide:IPyodide|undefined;
 
@@ -253,9 +264,10 @@ export class MainContent extends preact.Component<MainContentProps> {
      *  Reading the corresponding segment from the MSEED file and forwarding
      *  to other components for visualization. */
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        this.plotimg_ref.current?.set_loading(true)
-        this.spectrogram_img_ref.current?.set_loading(true)
-        this.mps_img_ref.current?.set_loading(true)
+        if(this.$plots_loading.value)
+            return
+
+        this.$plots_loading.value = true
 
         try {
             if(this.pyodide == undefined) {
@@ -311,9 +323,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             }
             this.spectrogram_img_ref.current?.set_src(pngfile1)
         } finally {
-            this.plotimg_ref.current?.set_loading(false)
-            this.spectrogram_img_ref.current?.set_loading(false)
-            this.mps_img_ref.current?.set_loading(false)
+            this.$plots_loading.value = false
         }
     }
 
