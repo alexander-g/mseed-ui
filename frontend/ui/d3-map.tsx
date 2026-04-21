@@ -91,7 +91,7 @@ export class D3Map extends preact.Component<D3MapProps> {
 
         return <div 
             class = "d3-container d3-map" 
-            style = {{position:"relative", 'width':'100%'}}
+            style = {{position:"relative", 'width':'100%', 'height':'100%'}}
             ref   = {this.container_ref}
         >
             <svg

@@ -3,6 +3,8 @@ import { preact, Signal, signals, JSX } from "../dep.ts"
 import { D3Map }         from "./d3-map.tsx"
 import { MSEED_Heatmap } from "./mseed-heatmap.tsx"
 import { PlotImage }     from "./plot-image.tsx"
+import { AudioPlaybackControls } from "./audio-playback-controls.tsx"
+import { SelectablePanelsRow } from "./selectable-panels-row.tsx"
 import { tremorwasm }    from "../lib/file-input.ts"
 
 import { initialize_in_worker as initialize_pyodide } from "../lib/pyodide.ts"
@@ -43,6 +45,34 @@ type MainContentProps = {
  *  Coordinating between them. */
 export class MainContent extends preact.Component<MainContentProps> {
     render(): JSX.Element {
+        const panels = [
+            {
+                key: 'plot',
+                label: '1D Plot',
+                element: <PlotImage ref={this.plotimg_ref} />,
+            },
+            {
+                key: 'spectrogram',
+                label: '2D Spectrogram',
+                element: <PlotImage ref={this.spectrogram_img_ref} />,
+            },
+            {
+                key: 'mps',
+                label: 'Modulation Power Spectrum',
+                element: <PlotImage ref={this.mps_img_ref} />,
+            },
+            {
+                key: 'map',
+                label: 'Map',
+                element: <D3Map 
+                    $markers = {this.$map_markers} 
+                    on_marker_hover = {this.on_marker_hover} 
+                    $highlighted_markers = {this.$highlighted_station_index}
+                    $overlay_visible = {this.$map_overlay_visible}
+                />,
+            },
+        ]
+
         return (
         <div style = {{
             display: 'flex',
@@ -67,19 +97,13 @@ export class MainContent extends preact.Component<MainContentProps> {
 
             {/* Row 2 */}
             <div style = {{
-                display: 'flex',
                 width: '100%',
                 height: '50%',
             }}>
-                <PlotImage ref={this.plotimg_ref} />
-                
-                <PlotImage ref={this.spectrogram_img_ref} />
-                
-                <D3Map 
-                    $markers = {this.$map_markers} 
-                    on_marker_hover = {this.on_marker_hover} 
-                    $highlighted_markers = {this.$highlighted_station_index}
-                    $overlay_visible = {this.$map_overlay_visible}
+                <SelectablePanelsRow
+                    items={panels}
+                    bottom_left_element={<AudioPlaybackControls />}
+                    initial_preference={['plot', 'spectrogram', 'map']}
                 />
             </div>
         </div>
@@ -231,6 +255,7 @@ export class MainContent extends preact.Component<MainContentProps> {
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
         this.plotimg_ref.current?.set_loading(true)
         this.spectrogram_img_ref.current?.set_loading(true)
+        this.mps_img_ref.current?.set_loading(true)
 
         try {
             if(this.pyodide == undefined) {
@@ -288,6 +313,7 @@ export class MainContent extends preact.Component<MainContentProps> {
         } finally {
             this.plotimg_ref.current?.set_loading(false)
             this.spectrogram_img_ref.current?.set_loading(false)
+            this.mps_img_ref.current?.set_loading(false)
         }
     }
 
@@ -295,6 +321,7 @@ export class MainContent extends preact.Component<MainContentProps> {
     // references to components
     plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
     spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
+    mps_img_ref:preact.RefObject<PlotImage> = preact.createRef()
 }
 
 
