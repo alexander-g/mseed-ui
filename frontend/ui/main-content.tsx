@@ -1,23 +1,24 @@
-import { preact, Signal, signals, JSX } from "../dep.ts"
+import { preact, Signal, signals, JSX } from '../dep.ts'
 
-import { D3Map }         from "./d3-map.tsx"
-import { MSEED_Heatmap } from "./mseed-heatmap.tsx"
-import { PlotImage }     from "./plot-image.tsx"
-import { AudioPlaybackControls } from "./audio-playback-controls.tsx"
-import { SelectablePanelsRow } from "./selectable-panels-row.tsx"
-import { tremorwasm }    from "../lib/file-input.ts"
+import { D3Map }         from './d3-map.tsx'
+import { D3SignalPlot, type SignalPlotData } from './d3-signal-plot.tsx'
+import { MSEED_Heatmap } from './mseed-heatmap.tsx'
+import { PlotImage }     from './plot-image.tsx'
+import { AudioPlaybackControls } from './audio-playback-controls.tsx'
+import { SelectablePanelsRow } from './selectable-panels-row.tsx'
+import { tremorwasm }    from '../lib/file-input.ts'
 
-import { initialize_in_worker as initialize_pyodide } from "../lib/pyodide.ts"
-import { is_deno, strftime_ISO8601 } from "../lib/util.ts"
+import { initialize_in_worker as initialize_pyodide } from '../lib/pyodide.ts'
+import { is_deno, strftime_ISO8601 } from '../lib/util.ts'
 
-import type { AppConfig }         from "../index.tsx"
-import type { InferenceEvent }    from "./mseed-heatmap.tsx"
-import type { IPyodide }          from "../lib/pyodide.ts"
-import type { Marker, MarkerVisual } from "./d3-map.tsx"
-import type { MSEED_Meta }        from "../../wasm-cpp/mseed-wasm.ts"
-import type { MSEED_FileAndMeta } from "../lib/file-input.ts"
-import type { Station }           from "../lib/station-xml.ts"
-import type { QuakeEvent }        from "../lib/quakeml.ts"
+import type { AppConfig }         from '../index.tsx'
+import type { InferenceEvent }    from './mseed-heatmap.tsx'
+import type { IPyodide }          from '../lib/pyodide.ts'
+import type { Marker, MarkerVisual } from './d3-map.tsx'
+import type { MSEED_Meta }        from '../../wasm-cpp/mseed-wasm.ts'
+import type { MSEED_FileAndMeta } from '../lib/file-input.ts'
+import type { Station }           from '../lib/station-xml.ts'
+import type { QuakeEvent }        from '../lib/quakeml.ts'
 
 
 
@@ -48,15 +49,15 @@ export class MainContent extends preact.Component<MainContentProps> {
         const panels = [
             {
                 key: 'plot',
-                label: '1D Plot',
-                element: <PlotImage 
-                    ref = {this.plotimg_ref} 
-                    $is_loading = {this.$plots_loading} 
+                label: 'Signal',
+                element: <D3SignalPlot
+                    $plot_data  = {this.$signal_plot_data}
+                    $is_loading = {this.$plots_loading}
                 />,
             },
             {
                 key: 'spectrogram',
-                label: '2D Spectrogram',
+                label: 'Spectrogram',
                 element: <PlotImage 
                     ref = {this.spectrogram_img_ref} 
                     $is_loading = {this.$plots_loading} 
@@ -111,7 +112,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             }}>
                 <SelectablePanelsRow
                     items={panels}
-                    bottom_left_element={<AudioPlaybackControls />}
+                    // bottom_left_element={<AudioPlaybackControls />}
                     initial_preference={['plot', 'spectrogram', 'map']}
                 />
             </div>
@@ -258,6 +259,9 @@ export class MainContent extends preact.Component<MainContentProps> {
     /** Indicates if we are reading data and rendering plots. */
     $plots_loading: Signal<boolean> = new Signal(false)
 
+    /** Currently active data in the 1D signal plot */
+    $signal_plot_data: Signal<SignalPlotData | null> = new Signal(null)
+
     pyodide:IPyodide|undefined;
 
     /** Called when user clicks on an item in the heatmap.
@@ -292,14 +296,6 @@ export class MainContent extends preact.Component<MainContentProps> {
             }
             console.log('data size:', data.length, i0, i1)
 
-            const promise0:Promise<File|Error> = this.pyodide.plot_data(
-                data,
-                i0,
-                i1,
-                mseed.meta.start,
-                mseed.meta.samplerate,
-                mseed.meta.code,
-            )
             const promise1:Promise<File|Error> = this.pyodide.plot_spectrogram(
                 data,
                 i0,
@@ -309,14 +305,16 @@ export class MainContent extends preact.Component<MainContentProps> {
                 mseed.meta.code,
             )
 
-            const pngfile0:File|Error = await promise0;
-            const pngfile1:File|Error = await promise1;
-            if(pngfile0 instanceof Error) {
-                console.error(`Error plotting data: ${pngfile0.message}`)
-                return;
+            this.$signal_plot_data.value = {
+                data,
+                i0,
+                i1,
+                start_time: mseed.meta.start,
+                sample_rate_hz: mseed.meta.samplerate,
+                title: mseed.meta.code,
             }
-            this.plotimg_ref.current?.set_src(pngfile0)
 
+            const pngfile1:File|Error = await promise1;
             if(pngfile1 instanceof Error) {
                 console.error(`Error plotting spectrogram: ${pngfile1.message}`)
                 return;
@@ -329,9 +327,9 @@ export class MainContent extends preact.Component<MainContentProps> {
 
 
     // references to components
-    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
     spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
     mps_img_ref:preact.RefObject<PlotImage> = preact.createRef()
+
 }
 
 
