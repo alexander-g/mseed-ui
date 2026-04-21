@@ -7,6 +7,10 @@ import {
     is_mseed,
 } from "../frontend/lib/mseed-parsing.ts";
 
+import { initialize } from '../wasm-cpp/mseed-wasm.ts'
+
+
+
 
 const MSEED_FILES: string[] = [
     // bug: little endian
@@ -14,6 +18,9 @@ const MSEED_FILES: string[] = [
     // big endian
     path.fromFileUrl(import.meta.resolve('./assets/2018-01-28T00:00:00-CN.SHB..BHZ')),
 ]
+
+const NOT_A_MSEED:string = 
+    path.fromFileUrl(import.meta.resolve('./assets/events.xml'))
 
 
 
@@ -41,7 +48,43 @@ Deno.test('mseed-parsing0', async (t:Deno.TestContext) => {
         assert(!(output instanceof Error))
         assert(output.starttime.getUTCFullYear() == 2018)
     })
+
+    await t.step('not-mseed', async () => {
+        const notmseed= Deno.readFileSync(NOT_A_MSEED)
+        assert( !is_mseed( new DataView(notmseed.buffer) ) )
+
+        const blob = new Blob([notmseed])
+        const output:MSeedMetadata|Error = await read_mseed_metadata(blob)
+        assert(output instanceof Error)
+    })
 })
 
 
+
+Deno.test('mseed-reading', async (t:Deno.TestContext) => {
+    const tremorwasm = await initialize()
+
+    await t.step('big-endian', async () => {
+        const mseeddata= Deno.readFileSync(MSEED_FILES[1]!)
+        const file = new File([mseeddata], 'file.mseed')
+        const result = await tremorwasm.read_data(file)
+        assert( !(result instanceof Error) )
+        assert( result.byteLength > 0 )
+    })
+
+    await t.step('little-endian', async () => {
+        const mseeddata= Deno.readFileSync(MSEED_FILES[0]!)
+        const file = new File([mseeddata], 'file.mseed')
+        const result = await tremorwasm.read_data(file)
+        assert( !(result instanceof Error) )
+        assert( result.byteLength > 0 )
+    })
+
+    await t.step('not-mseed', async () => {
+        const notmseed= Deno.readFileSync(NOT_A_MSEED)
+        const file = new File([notmseed], 'file.mseed')
+        const result = await tremorwasm.read_data(file)
+        assert( result instanceof Error )
+    })
+})
 
