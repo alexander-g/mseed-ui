@@ -14,7 +14,6 @@
     "npm:@types/node@*": "24.2.0",
     "npm:d3-tile@1.0.0": "1.0.0",
     "npm:d3@7.9.0": "7.9.0_d3-selection@3.0.0",
-    "npm:openseadragon@6.0.1": "6.0.1",
     "npm:preact-render-to-string@6.6.5": "6.6.5_preact@10.28.0",
     "npm:preact@10.28.0": "10.28.0",
     "npm:pyodide@0.29.3": "0.29.3"
@@ -450,9 +449,6 @@
     "internmap@2.0.3": {
       "integrity": "sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg=="
     },
-    "openseadragon@6.0.1": {
-      "integrity": "sha512-tXqm73FlgqkiOJ91N0vSDjHm5RVEm2RNDBP360dE5YV2XpMmawhCRWDkkVfsRg3rNe0iv32ACGUQ4jViKR542A=="
-    },
     "preact-render-to-string@6.6.5_preact@10.28.0": {
       "integrity": "sha512-O6MHzYNIKYaiSX3bOw0gGZfEbOmlIDtDfWwN1JJdc/T3ihzRT6tGGSEWE088dWrEDGa1u7101q+6fzQnO9XCPA==",
       "dependencies": [
@@ -511,7 +507,6 @@
       "npm:@types/d3@7.4.3",
       "npm:d3-tile@1.0.0",
       "npm:d3@7.9.0",
-      "npm:openseadragon@6.0.1",
       "npm:preact-render-to-string@6.6.5",
       "npm:preact@10.28.0",
       "npm:pyodide@0.29.3"
