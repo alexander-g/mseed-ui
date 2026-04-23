@@ -174,6 +174,10 @@ export class D3SignalPlot extends preact.Component<D3SignalPlotProps> {
     override componentWillUnmount(): void {
         this.resize_observer?.disconnect()
         this.resize_observer = null
+
+        // unsubscribe
+        this.#_plotdata_subscription()
+        this.#_containersize_subscription()
     }
 
     #_plotdata_subscription = this.props.$plot_data.subscribe(() => {
