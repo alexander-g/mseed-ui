@@ -297,14 +297,24 @@ export class MainContent extends preact.Component<MainContentProps> {
             }
             console.log('data size:', data.length, i0, i1)
 
-            const promise1:Promise<File|Error> = this.pyodide.plot_spectrogram(
-                data,
-                i0,
-                i1,
-                mseed.meta.start,
-                mseed.meta.samplerate,
-                mseed.meta.code,
-            )
+            const spectrogram_promise:Promise<File|Error> =
+                this.pyodide.plot_spectrogram(
+                    data,
+                    i0,
+                    i1,
+                    mseed.meta.start,
+                    mseed.meta.samplerate,
+                    mseed.meta.code,
+                )
+            const mps_promise:Promise<File|Error> =
+                this.pyodide.plot_modulation_power_spectrum(
+                    data,
+                    i0,
+                    i1,
+                    mseed.meta.start,
+                    mseed.meta.samplerate,
+                    mseed.meta.code,
+                )
 
             this.$signal_plot_data.value = {
                 data,
@@ -315,12 +325,21 @@ export class MainContent extends preact.Component<MainContentProps> {
                 title: mseed.meta.code,
             }
 
-            const pngfile1:File|Error = await promise1;
-            if(pngfile1 instanceof Error) {
-                console.error(`Error plotting spectrogram: ${pngfile1.message}`)
+            const spectrogram_png:File|Error = await spectrogram_promise
+            if(spectrogram_png instanceof Error) {
+                console.error(`Error plotting spectrogram: ${spectrogram_png.message}`)
                 return;
             }
-            this.spectrogram_img_ref.current?.set_src(pngfile1)
+            this.spectrogram_img_ref.current?.set_src(spectrogram_png)
+
+            const mps_png:File|Error = await mps_promise
+            if(mps_png instanceof Error) {
+                console.error(
+                    `Error plotting modulation power spectrum: ${mps_png.message}`
+                )
+                return
+            }
+            this.mps_img_ref.current?.set_src(mps_png)
         } finally {
             this.$plots_loading.value = false
         }

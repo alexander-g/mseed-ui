@@ -35,6 +35,16 @@ export interface IPyodide {
         sample_rate_hz: number,
         title:          string,
     ): Promise<File|Error>;
+
+    /** Plot modulation power spectrum and return a PNG file. */
+    plot_modulation_power_spectrum(
+        data: Int32Array,
+        i0: number,
+        i1: number,
+        start_time: Date,
+        sample_rate_hz: number,
+        title: string,
+    ): Promise<File|Error>;
 }
 
 
@@ -72,6 +82,28 @@ export class PyodideInWorker implements IPyodide {
             return internal as Error;
 
         return internal.plot_spectrogram(data, i0, i1, start_time, sample_rate_hz, title)
+    }
+
+    async plot_modulation_power_spectrum(
+        data: Int32Array,
+        i0: number,
+        i1: number,
+        start_time: Date,
+        sample_rate_hz: number,
+        title: string,
+    ): Promise<File|Error> {
+        const internal:IPyodide|Error = await this.readypromise;
+        if(internal instanceof Error)
+            return internal as Error;
+
+        return internal.plot_modulation_power_spectrum(
+            data,
+            i0,
+            i1,
+            start_time,
+            sample_rate_hz,
+            title,
+        )
     }
 }
 
@@ -129,6 +161,36 @@ export class Pyodide implements IPyodide {
                 '/plt.png'
             )
             const pngdata:Uint8Array<ArrayBuffer> = 
+                this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
+            return new File([pngdata], 'plot.png')
+        } catch (e) {
+            return new Error(`${e}`)
+        }
+    }
+
+    async plot_modulation_power_spectrum(
+        data: Int32Array,
+        i0: number,
+        i1: number,
+        start_time: Date,
+        sample_rate_hz: number,
+        title: string,
+    ): Promise<File|Error> {
+
+        const plot_fn:(...x:unknown[]) => void = this.pyodide.globals.get(
+            'plot_modulation_power_spectrum'
+        )
+        try{
+            await plot_fn(
+                this.pyodide.toPy(data),
+                i0,
+                i1,
+                start_time.getTime()/1000,
+                sample_rate_hz,
+                title,
+                '/plt.png'
+            )
+            const pngdata:Uint8Array<ArrayBuffer> =
                 this.pyodide.FS.readFile('/plt.png', {encoding: 'binary'})
             return new File([pngdata], 'plot.png')
         } catch (e) {
@@ -254,6 +316,12 @@ class PyodideToWorkerInterface implements IPyodide {
     ): ReturnType<IPyodide['plot_spectrogram']> {
         return this._plot('plot-spectrogram', ...x)
     }
+
+    plot_modulation_power_spectrum(
+        ...x:Parameters<IPyodide['plot_modulation_power_spectrum']>
+    ): ReturnType<IPyodide['plot_modulation_power_spectrum']> {
+        return this._plot('plot-modulation-power-spectrum', ...x)
+    }
 }
 
 
@@ -341,4 +409,3 @@ if(import.meta.main) {
     
     console.log('done');
 }
-

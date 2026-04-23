@@ -86,6 +86,12 @@ class Spectrogram(tp.NamedTuple):
     n_per_segment: int
 
 
+class ModulationPowerSpectrum(tp.NamedTuple):
+    carrier_axis:    npt.NDArray[np.float64]  # Hz
+    modulation_axis: npt.NDArray[np.float64]  # 1/Hz
+    data:            npt.NDArray[np.float64]
+
+
 def create_spectrogram(
     signal:     npt.NDArray[np.int32],
     frequency:  float,
@@ -122,6 +128,31 @@ def create_spectrogram(
     return Spectrogram(f_axis, t_axis, Z, n_per_segment)
 
 
+def create_modulation_power_spectrum(
+    signal: npt.NDArray[np.int32],
+    frequency: float,
+) -> ModulationPowerSpectrum:
+    '''Compute modulation power spectrum from a 1D signal.'''
+    spec: Spectrogram = create_spectrogram(signal, frequency)
+    spec_log_data: npt.NDArray[np.float64] = np.log10(np.abs(spec.data) + 1.0)
+
+    mps_complex: npt.NDArray[np.complex128] = np.fft.fft(spec_log_data, axis=1)
+    mps_data: npt.NDArray[np.float64] = np.log10(np.abs(mps_complex) ** 2 + 1.0)
+
+
+    dt = spec.t_axis[1]-spec.t_axis[0]
+    modulation_f_axis = np.fft.fftfreq(mps_data.shape[1], d=dt)
+    positives = (modulation_f_axis > 0)
+
+
+    carrier_f_axis = spec.f_axis
+    modulation_f_axis = modulation_f_axis[positives]
+    mps_data = mps_data[:,positives]
+
+    return ModulationPowerSpectrum(carrier_f_axis, modulation_f_axis, mps_data)
+
+
+
 def plot_spectrogram(
     data: npt.NDArray[np.int32],
     i0:  int,
@@ -156,7 +187,7 @@ def plot_spectrogram(
     ax.pcolor(time_axis, spec.f_axis, speclogdata, vmin=0, vmax=+4) # type: ignore [arg-type]
     ax.set_xlabel('Time (UTC)')
     ax.set_ylabel('Frequency (Hz)')
-    ax.set_title(title)
+    ax.set_title(f'{title} - Spectrogram')
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M:%S'))
     
     fig.autofmt_xdate()
@@ -165,4 +196,47 @@ def plot_spectrogram(
     if output_path is not None:
         fig.savefig(output_path)
     
+    plt.close(fig)
+
+
+def plot_modulation_power_spectrum(
+    data: npt.NDArray[np.int32],
+    i0: int,
+    i1: int,
+    start_timestamp_s: float,
+    sample_rate_hz: float,
+    title: str,
+    output_path: tp.Optional[str],
+) -> None:
+    '''Plot modulation power spectrum and optionally save it to a PNG file.'''
+    _ = start_timestamp_s
+    data = np.asarray(data, dtype=np.int32)
+    start: int
+    stop: int
+    start, stop = _slice_bounds(i0, i1, data.size)
+
+    sliced_data: npt.NDArray[np.int32] = data[start:stop]
+    mps: ModulationPowerSpectrum = create_modulation_power_spectrum(
+        sliced_data,
+        sample_rate_hz,
+    )
+
+    fig: matplotlib.figure.Figure
+    ax: matplotlib.axes.Axes
+    fig, ax = plt.subplots()
+    ax.pcolor(
+        mps.modulation_axis,
+        mps.carrier_axis,
+        mps.data,
+        # shading='auto',
+    )
+    ax.set_xlabel('Modulation Frequency (1/Hz)')
+    ax.set_ylabel('Carrier Frequency (Hz)')
+    ax.set_title(f'{title} - Modulation Power Spectrum')
+
+    plt.tight_layout()
+
+    if output_path is not None:
+        fig.savefig(output_path)
+
     plt.close(fig)
