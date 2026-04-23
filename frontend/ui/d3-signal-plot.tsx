@@ -1,5 +1,6 @@
 import { preact, Signal, signals, JSX } from '../dep.ts'
 import { OverlayDiv } from './overlay-div.tsx'
+import { strftime_ISO8601_time, strftime_ISO8601_datetime } from "../lib/util.ts"
 
 import * as d3 from 'd3'
 
@@ -280,7 +281,7 @@ export class D3SignalPlot extends preact.Component<D3SignalPlotProps> {
         const line_path: string | null = line_generator(line_values)
 
         const tick_format = (d: Date, index:number) => 
-            d3.timeFormat((index == 0)? '%Y-%m-%d %H:%M:%S' : '%H:%M:%S')(d)
+            (index == 0)? strftime_ISO8601_datetime(d) : strftime_ISO8601_time(d)
         const x_axis: d3.Axis<Date|d3.NumberValue> = d3.axisBottom(x_scale)
             .ticks(5)
             // @ts-ignore yeah whatever

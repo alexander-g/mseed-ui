@@ -1,5 +1,5 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
-import { strftime_ISO8601 } from "../lib/util.ts";
+import { strftime_ISO8601_datetime } from "../lib/util.ts";
 
 import * as d3 from "d3";
 import {
@@ -671,7 +671,7 @@ export function compute_hover_position_from_mouse(props: {
     return {
         overlay_x,
         overlay_y,
-        x_label: strftime_ISO8601(new Date(x_seconds * 1000)),
+        x_label: strftime_ISO8601_datetime(new Date(x_seconds * 1000)),
         y_label: y_value,
         data_label,
         item_index: hover_item_index,

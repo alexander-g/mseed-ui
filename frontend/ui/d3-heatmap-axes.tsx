@@ -7,7 +7,7 @@ import type {
     SVGPlotDimensions,
     RowsCols,
 } from './d3-heatmap.tsx'
-import { strftime_ISO8601 } from "../lib/util.ts";
+import { strftime_ISO8601_datetime } from "../lib/util.ts";
 
 
 
@@ -86,7 +86,7 @@ export class Axes extends preact.Component<{
                 )
             )
             // TODO: too many assumptions for this component
-            .tickFormat( t => strftime_ISO8601(new Date( x_axis[Number(t)]! * 1000 ) )  )
+            .tickFormat( t => strftime_ISO8601_datetime(new Date( x_axis[Number(t)]! * 1000 ) )  )
         const d3_y_axis:d3.Axis<d3.NumberValue> = 
             d3.axisLeft(zy)
             .tickValues(d3.range(0, rows, 5))

@@ -9,7 +9,7 @@ import { SelectablePanelsRow } from './selectable-panels-row.tsx'
 import { tremorwasm }    from '../lib/file-input.ts'
 
 import { initialize_in_worker as initialize_pyodide } from '../lib/pyodide.ts'
-import { is_deno, strftime_ISO8601 } from '../lib/util.ts'
+import { is_deno, strftime_ISO8601_datetime } from '../lib/util.ts'
 
 import type { AppConfig }         from '../index.tsx'
 import type { InferenceEvent }    from './mseed-heatmap.tsx'
@@ -175,7 +175,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             (event:QuakeEvent) => ({
                 latitude:  event.latitude,
                 longitude: event.longitude,
-                label:     `Event ${strftime_ISO8601(event.time)}`,
+                label:     `Event ${strftime_ISO8601_datetime(event.time)}`,
                 visual: {
                     shape:           'diamond',
                     color:           '#1f6fb2',
@@ -292,6 +292,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             const data:Int32Array|Error = await tremorwasm.read_data(file)
             if(data instanceof Error) {
                 console.log(`Could not read mseed data of ${file.name}`)
+                console.log(data as Error)
                 return
             }
             console.log('data size:', data.length, i0, i1)
