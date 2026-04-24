@@ -279,26 +279,26 @@ class PyodideToWorkerInterface implements IPyodide {
         }
         const promise:Promise<File|Error> = 
             new Promise( (resolve: (x:File|Error) => void) => {
-                this.worker.addEventListener('message', (e:MessageEvent) => {
+                // TODO: remove event listener
+                const onmessage = (e:MessageEvent) => {
                     const message:WorkerMessage = e.data;
                     
-                    if(message instanceof Error) {
-                        resolve(message as Error)
-                        return;
-                    } else if (message.message != 'plot-data-result') {
-                        resolve(
-                            new Error(`Unexpected worker message: ${message.message}`)
-                        )
-                        return;
-                    } else if (message.uuid != command.uuid) 
+                    let result: File|Error;
+                    if(message instanceof Error)
+                        result = message as Error;
+                    else if (message.message != 'plot-data-result')
+                        result = new Error(`Unexpected worker message: ${message.message}`)
+                    else if (message.uuid != command.uuid) 
                         // message is for another promise
                         return;
-                    // else   
+                    else
+                        result = new File([message.outputdata_png], 'plot.png')
 
-                    const pngfile = new File([message.outputdata_png], 'plot.png')
-                    resolve(pngfile)
+                    this.worker.removeEventListener('message', onmessage)
+                    resolve(result)
                     return;
-                })
+                }
+                this.worker.addEventListener('message', onmessage)
             } )
         this.worker.postMessage(command);
         return promise;

@@ -73,7 +73,7 @@ def test_create_modulation_power_spectrum():
 
     mps = pyodide_plot.create_modulation_power_spectrum(x, frequency)
     assert mps.data.size > 0
-    assert mps.data.shape == (mps.carrier_axis.size, mps.modulation_axis.size)
+    assert mps.data.shape == (mps.spectral_axis.size, mps.temporal_axis.size)
 
 
 def test_create_modulation_power_spectrum_invalid_input():
@@ -85,9 +85,9 @@ def test_create_modulation_power_spectrum_invalid_input():
 
 
 def test_plot_modulation_power_spectrum_short_slice():
-    x = np.random.randint(0, 100, size=(50,), dtype='int32')
+    x = np.random.randint(0, 100, size=(250,), dtype='int32')
     i0 = 10
-    i1 = 18
+    i1 = 88
     start_timestamp_s = time.time()
     sample_rate = 50
     title = 'pytest'
