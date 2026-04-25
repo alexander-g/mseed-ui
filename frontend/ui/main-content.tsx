@@ -19,7 +19,7 @@ import type { MSEED_Meta }        from '../../wasm-cpp/mseed-wasm.ts'
 import type { MSEED_FileAndMeta } from '../lib/file-input.ts'
 import type { Station }           from '../lib/station-xml.ts'
 import type { QuakeEvent }        from '../lib/quakeml.ts'
-
+import type { AudioWaveform }     from './audio-playback-controls.tsx'
 
 
 
@@ -112,8 +112,10 @@ export class MainContent extends preact.Component<MainContentProps> {
             }}>
                 <SelectablePanelsRow
                     items={panels}
-                    // bottom_left_element={<AudioPlaybackControls />}
-                    initial_preference={['plot', 'spectrogram', 'map']}
+                    bottom_left_element = {
+                        <AudioPlaybackControls $audiodata={this.$audiodata} />
+                    }
+                    initial_preference  = {['plot', 'spectrogram', 'map']}
                 />
             </div>
         </div>
@@ -261,6 +263,9 @@ export class MainContent extends preact.Component<MainContentProps> {
 
     /** Currently active data in the 1D signal plot */
     $signal_plot_data: Signal<SignalPlotData | null> = new Signal(null)
+
+    /** Currently active data in the audio playback component */
+    $audiodata: Signal<AudioWaveform | null> = new Signal(null)
 
     pyodide:IPyodide|undefined;
 

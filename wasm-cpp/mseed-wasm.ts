@@ -87,7 +87,7 @@ export class TremorWasm {
                 nsamplestoread,
             );
             if(rc != 0)
-                return new Error('Could not read mseed meta data')
+                return new Error(`Could not read mseed. (${rc})`)
         
             const starttime_u64:BigUint64Array = new BigUint64Array(
                 this.wasm.HEAPU8.slice(
