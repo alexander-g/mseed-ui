@@ -13,8 +13,6 @@
     "@std/internal":        "jsr:@std/internal@1.0.10",
     "@std/path":            "jsr:@std/path@1.1.2",
 
-    "openseadragon":        "npm:openseadragon@6.0.1",
-
     "d3":                   "npm:d3@7.9.0",
     "d3-tile":              "npm:d3-tile@1.0.0",
     "@types/d3":            "npm:@types/d3@7.4.3",

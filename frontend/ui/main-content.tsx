@@ -1,21 +1,24 @@
-import { preact, Signal, signals, JSX } from "../dep.ts"
+import { preact, Signal, signals, JSX } from '../dep.ts'
 
-import { D3Map }         from "./d3-map.tsx"
-import { MSEED_Heatmap } from "./mseed-heatmap.tsx"
-import { PlotImage }     from "./plot-image.tsx"
-import { tremorwasm }    from "../lib/file-input.ts"
+import { D3Map }         from './d3-map.tsx'
+import { D3SignalPlot, type SignalPlotData } from './d3-signal-plot.tsx'
+import { MSEED_Heatmap } from './mseed-heatmap.tsx'
+import { PlotImage }     from './plot-image.tsx'
+import { AudioPlaybackControls } from './audio-playback-controls.tsx'
+import { SelectablePanelsRow } from './selectable-panels-row.tsx'
+import { tremorwasm }    from '../lib/file-input.ts'
 
-import { initialize_in_worker as initialize_pyodide } from "../lib/pyodide.ts"
-import { is_deno, strftime_ISO8601 } from "../lib/util.ts"
+import { initialize_in_worker as initialize_pyodide } from '../lib/pyodide.ts'
+import { is_deno, strftime_ISO8601_datetime } from '../lib/util.ts'
 
-import type { AppConfig }         from "../index.tsx"
-import type { InferenceEvent }    from "./mseed-heatmap.tsx"
-import type { IPyodide }          from "../lib/pyodide.ts"
-import type { Marker, MarkerVisual } from "./d3-map.tsx"
-import type { MSEED_Meta }        from "../../wasm-cpp/mseed-wasm.ts"
-import type { MSEED_FileAndMeta } from "../lib/file-input.ts"
-import type { Station }           from "../lib/station-xml.ts"
-import type { QuakeEvent }        from "../lib/quakeml.ts"
+import type { AppConfig }         from '../index.tsx'
+import type { InferenceEvent }    from './mseed-heatmap.tsx'
+import type { IPyodide }          from '../lib/pyodide.ts'
+import type { Marker, MarkerVisual } from './d3-map.tsx'
+import type { MSEED_Meta }        from '../../wasm-cpp/mseed-wasm.ts'
+import type { MSEED_FileAndMeta } from '../lib/file-input.ts'
+import type { Station }           from '../lib/station-xml.ts'
+import type { QuakeEvent }        from '../lib/quakeml.ts'
 
 
 
@@ -43,6 +46,43 @@ type MainContentProps = {
  *  Coordinating between them. */
 export class MainContent extends preact.Component<MainContentProps> {
     render(): JSX.Element {
+        const panels = [
+            {
+                key: 'plot',
+                label: 'Signal',
+                element: <D3SignalPlot
+                    $plot_data  = {this.$signal_plot_data}
+                    $is_loading = {this.$plots_loading}
+                />,
+            },
+            {
+                key: 'spectrogram',
+                label: 'Spectrogram',
+                element: <PlotImage 
+                    ref = {this.spectrogram_img_ref} 
+                    $is_loading = {this.$plots_loading} 
+                />,
+            },
+            {
+                key: 'mps',
+                label: 'Modulation Power Spectrum',
+                element: <PlotImage 
+                    ref = {this.mps_img_ref} 
+                    $is_loading = {this.$plots_loading} 
+                />,
+            },
+            {
+                key: 'map',
+                label: 'Map',
+                element: <D3Map 
+                    $markers             = {this.$map_markers} 
+                    on_marker_hover      = {this.on_marker_hover} 
+                    $highlighted_markers = {this.$highlighted_station_index}
+                    $overlay_visible     = {this.$map_overlay_visible}
+                />,
+            },
+        ]
+
         return (
         <div style = {{
             display: 'flex',
@@ -67,19 +107,13 @@ export class MainContent extends preact.Component<MainContentProps> {
 
             {/* Row 2 */}
             <div style = {{
-                display: 'flex',
                 width: '100%',
                 height: '50%',
             }}>
-                <PlotImage ref={this.plotimg_ref} />
-                
-                <PlotImage ref={this.spectrogram_img_ref} />
-                
-                <D3Map 
-                    $markers = {this.$map_markers} 
-                    on_marker_hover = {this.on_marker_hover} 
-                    $highlighted_markers = {this.$highlighted_station_index}
-                    $overlay_visible = {this.$map_overlay_visible}
+                <SelectablePanelsRow
+                    items={panels}
+                    // bottom_left_element={<AudioPlaybackControls />}
+                    initial_preference={['plot', 'spectrogram', 'map']}
                 />
             </div>
         </div>
@@ -141,7 +175,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             (event:QuakeEvent) => ({
                 latitude:  event.latitude,
                 longitude: event.longitude,
-                label:     `Event ${strftime_ISO8601(event.time)}`,
+                label:     `Event ${strftime_ISO8601_datetime(event.time)}`,
                 visual: {
                     shape:           'diamond',
                     color:           '#1f6fb2',
@@ -222,6 +256,11 @@ export class MainContent extends preact.Component<MainContentProps> {
     }
 
 
+    /** Indicates if we are reading data and rendering plots. */
+    $plots_loading: Signal<boolean> = new Signal(false)
+
+    /** Currently active data in the 1D signal plot */
+    $signal_plot_data: Signal<SignalPlotData | null> = new Signal(null)
 
     pyodide:IPyodide|undefined;
 
@@ -229,8 +268,10 @@ export class MainContent extends preact.Component<MainContentProps> {
      *  Reading the corresponding segment from the MSEED file and forwarding
      *  to other components for visualization. */
     on_heatmap_item_select = async (selected_file_index:number, i0:number, i1:number) => {
-        this.plotimg_ref.current?.set_loading(true)
-        this.spectrogram_img_ref.current?.set_loading(true)
+        if(this.$plots_loading.value)
+            return
+
+        this.$plots_loading.value = true
 
         try {
             if(this.pyodide == undefined) {
@@ -251,50 +292,64 @@ export class MainContent extends preact.Component<MainContentProps> {
             const data:Int32Array|Error = await tremorwasm.read_data(file)
             if(data instanceof Error) {
                 console.log(`Could not read mseed data of ${file.name}`)
+                console.log(data as Error)
                 return
             }
             console.log('data size:', data.length, i0, i1)
 
-            const promise0:Promise<File|Error> = this.pyodide.plot_data(
+            const spectrogram_promise:Promise<File|Error> =
+                this.pyodide.plot_spectrogram(
+                    data,
+                    i0,
+                    i1,
+                    mseed.meta.start,
+                    mseed.meta.samplerate,
+                    mseed.meta.code,
+                )
+            const mps_promise:Promise<File|Error> =
+                this.pyodide.plot_modulation_power_spectrum(
+                    data,
+                    i0,
+                    i1,
+                    mseed.meta.start,
+                    mseed.meta.samplerate,
+                    mseed.meta.code,
+                )
+
+            this.$signal_plot_data.value = {
                 data,
                 i0,
                 i1,
-                mseed.meta.start,
-                mseed.meta.samplerate,
-                mseed.meta.code,
-            )
-            const promise1:Promise<File|Error> = this.pyodide.plot_spectrogram(
-                data,
-                i0,
-                i1,
-                mseed.meta.start,
-                mseed.meta.samplerate,
-                mseed.meta.code,
-            )
+                start_time: mseed.meta.start,
+                sample_rate_hz: mseed.meta.samplerate,
+                title: mseed.meta.code,
+            }
 
-            const pngfile0:File|Error = await promise0;
-            const pngfile1:File|Error = await promise1;
-            if(pngfile0 instanceof Error) {
-                console.error(`Error plotting data: ${pngfile0.message}`)
+            const spectrogram_png:File|Error = await spectrogram_promise
+            if(spectrogram_png instanceof Error) {
+                console.error(`Error plotting spectrogram: ${spectrogram_png.message}`)
                 return;
             }
-            this.plotimg_ref.current?.set_src(pngfile0)
+            this.spectrogram_img_ref.current?.set_src(spectrogram_png)
 
-            if(pngfile1 instanceof Error) {
-                console.error(`Error plotting spectrogram: ${pngfile1.message}`)
-                return;
+            const mps_png:File|Error = await mps_promise
+            if(mps_png instanceof Error) {
+                console.error(
+                    `Error plotting modulation power spectrum: ${mps_png.message}`
+                )
+                return
             }
-            this.spectrogram_img_ref.current?.set_src(pngfile1)
+            this.mps_img_ref.current?.set_src(mps_png)
         } finally {
-            this.plotimg_ref.current?.set_loading(false)
-            this.spectrogram_img_ref.current?.set_loading(false)
+            this.$plots_loading.value = false
         }
     }
 
 
     // references to components
-    plotimg_ref:preact.RefObject<PlotImage> = preact.createRef()
     spectrogram_img_ref:preact.RefObject<PlotImage> = preact.createRef()
+    mps_img_ref:preact.RefObject<PlotImage> = preact.createRef()
+
 }
 
 

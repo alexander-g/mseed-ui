@@ -35,6 +35,10 @@ export function strftime_UTC(fmt:string, d:Date){
 }
 
 
-export function strftime_ISO8601(d:Date) {
+export function strftime_ISO8601_datetime(d:Date) {
     return strftime_UTC('%Y-%m-%dT%H:%M:%S', d)
+}
+
+export function strftime_ISO8601_time(d:Date) {
+    return strftime_UTC('%H:%M:%S', d)
 }

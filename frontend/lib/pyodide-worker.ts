@@ -14,7 +14,7 @@ export type WorkerInitCommand = {
 
 
 export type WorkerPlotDataCommand = {
-    command: 'plot-data'|'plot-spectrogram';
+    command: 'plot-data'|'plot-spectrogram'|'plot-modulation-power-spectrum';
 
     /** Data to plot */
     data: Int32Array;
@@ -90,7 +90,11 @@ self.onmessage = async (e:MessageEvent) => {
             pyodide = pyo;
             result = {message:'ready'}
         }
-    } else if(data.command == 'plot-data' || data.command == 'plot-spectrogram') {
+    } else if(
+        data.command == 'plot-data'
+        || data.command == 'plot-spectrogram'
+        || data.command == 'plot-modulation-power-spectrum'
+    ) {
         if(pyodide == null)
             result = new Error('Pyodide in worker not initialized');
         else
@@ -114,6 +118,8 @@ async function handle_plot_data(
         ? pyodide.plot_data.bind(pyodide)
         : data.command == 'plot-spectrogram'
             ? pyodide.plot_spectrogram.bind(pyodide)
+            : data.command == 'plot-modulation-power-spectrum'
+                ? pyodide.plot_modulation_power_spectrum.bind(pyodide)
             : new Error(`Unexpected command: ${data.command}`);
     if(plot_fn instanceof Error)
         return plot_fn as Error
