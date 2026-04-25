@@ -161,14 +161,39 @@ export class AudioPlaybackControls extends preact.Component<AudioPlaybackControl
     $position_seconds: Signal<number> = new Signal(0)
 
     on_start_click = (): void => {
+        const waveform:AudioWaveform|null = this.props.$audiodata.value
+        if(waveform == null)
+            return
+
+        const duration_seconds:number = get_duration_seconds(waveform)
+        if(duration_seconds <= 0)
+            return
+
+        // all browsers must support 8khz - 96khz
+        // waveform = resample_to_samplerate_range(waveform, 8000, 96000)
+
+        const start_position_seconds:number = clamp_audio_value(
+            this.$position_seconds.value,
+            0,
+            duration_seconds,
+        )
         this.$is_playing.value = true
+        const start_result:void|Error =
+            this.start_playback_from(waveform, start_position_seconds)
+        if(start_result instanceof Error) {
+            this.$is_playing.value = false
+            return
+        }
     }
 
     on_pause_click = (): void => {
+        this.update_position_from_audio_clock()
+        this.stop_playback()
         this.$is_playing.value = false
     }
 
     on_stop_click = (): void => {
+        this.stop_playback()
         this.$is_playing.value = false
         this.$position_seconds.value = 0
         this.props.on_position_change?.(0)
@@ -182,6 +207,9 @@ export class AudioPlaybackControls extends preact.Component<AudioPlaybackControl
             return
 
         this.$speed.value = parsed
+
+        if(this.$is_playing.value)
+            this.restart_playback_at_current_position()
     }
 
     on_gain_input = (event:Event): void => {
@@ -192,6 +220,8 @@ export class AudioPlaybackControls extends preact.Component<AudioPlaybackControl
             return
 
         this.$gain.value = parsed
+        if(this.gain_node != null)
+            this.gain_node.gain.value = this.$gain.value
     }
 
     on_position_input = (event:Event): void => {
@@ -205,7 +235,183 @@ export class AudioPlaybackControls extends preact.Component<AudioPlaybackControl
 
         this.$position_seconds.value = parsed
         this.props.on_position_change?.(parsed)
+
+        if(this.$is_playing.value)
+            this.restart_playback_at_current_position()
     }
+
+    override componentDidUpdate(
+        previous_props:AudioPlaybackControlsProps,
+    ): void {
+        if(previous_props.$audiodata.value === this.props.$audiodata.value)
+            return
+
+        this.stop_playback()
+        this.$is_playing.value = false
+        this.$position_seconds.value = 0
+        this.props.on_position_change?.(0)
+    }
+
+    override componentWillUnmount(): void {
+        this.stop_playback()
+        if(this.audio_context != null)
+            this.audio_context.close()
+    }
+
+    /** Play from a position and start position updates. */
+    private start_playback_from(
+        waveform:AudioWaveform,
+        position_seconds:number,
+    ): void|Error {
+        this.stop_playback()
+
+        const audio_context:AudioContext|Error = create_audio_context()
+        if(audio_context instanceof Error)
+            return audio_context
+
+        const audio_buffer:AudioBuffer|Error =
+            build_audio_buffer(audio_context, waveform)
+        if(audio_buffer instanceof Error)
+            return audio_buffer
+
+        const source_node:AudioBufferSourceNode =
+            audio_context.createBufferSource()
+        source_node.buffer = audio_buffer
+        source_node.playbackRate.value = this.$speed.value
+
+        const gain_node:GainNode = audio_context.createGain()
+        gain_node.gain.value = this.$gain.value
+
+        source_node.connect(gain_node)
+        gain_node.connect(audio_context.destination)
+
+        this.audio_context = audio_context
+        this.source_node = source_node
+        this.gain_node = gain_node
+        this.playback_start_seconds = position_seconds
+        this.playback_started_at = audio_context.currentTime
+
+        try {
+            source_node.start(0, position_seconds)
+        } catch (error:unknown) {
+            return new Error(String(error))
+        }
+
+        this.schedule_position_updates()
+    }
+
+    /** Stop audio source and cancel position updates. */
+    private stop_playback(): void {
+        if(this.animation_frame_id != null) {
+            cancelAnimationFrame(this.animation_frame_id)
+            this.animation_frame_id = null
+        }
+
+        if(this.source_node != null) {
+            try {
+                this.source_node.stop()
+            } catch {
+                // ignore repeated stop
+            }
+            try {
+                this.source_node.disconnect()
+            } catch {
+                // ignore disconnect errors
+            }
+        }
+
+        if(this.gain_node != null) {
+            try {
+                this.gain_node.disconnect()
+            } catch {
+                // ignore disconnect errors
+            }
+        }
+
+        if(this.audio_context != null) {
+            this.audio_context.close().catch((): void => {})
+        }
+
+        this.audio_context = null
+        this.source_node = null
+        this.gain_node = null
+        this.playback_started_at = null
+        this.playback_start_seconds = null
+    }
+
+    /** Update position from audio clock and notify listeners. */
+    private update_position_from_audio_clock(): void {
+        if(this.audio_context == null)
+            return
+        if(this.playback_started_at == null)
+            return
+        if(this.playback_start_seconds == null)
+            return
+
+        const computed_position:number|Error =
+            compute_playback_position_seconds(
+                this.playback_start_seconds,
+                this.playback_started_at,
+                this.audio_context.currentTime,
+                this.$speed.value,
+            )
+        if(computed_position instanceof Error)
+            return
+
+        const duration_seconds:number =
+            get_duration_seconds(this.props.$audiodata.value)
+        const clamped_seconds:number = clamp_audio_value(
+            computed_position,
+            0,
+            duration_seconds,
+        )
+
+        this.$position_seconds.value = clamped_seconds
+        this.props.on_position_change?.(clamped_seconds)
+
+        if(duration_seconds > 0 && clamped_seconds >= duration_seconds)
+            this.stop_playback_at_end(duration_seconds)
+    }
+
+    /** Schedule animation frame position updates. */
+    private schedule_position_updates(): void {
+        if(!this.$is_playing.value)
+            return
+
+        this.animation_frame_id = requestAnimationFrame((): void => {
+            this.update_position_from_audio_clock()
+            this.schedule_position_updates()
+        })
+    }
+
+    /** Restart playback to apply rate or seek changes. */
+    private restart_playback_at_current_position(): void {
+        const waveform:AudioWaveform|null = this.props.$audiodata.value
+        if(waveform == null)
+            return
+
+        this.update_position_from_audio_clock()
+        const position_seconds:number = this.$position_seconds.value
+        const start_result:void|Error =
+            this.start_playback_from(waveform, position_seconds)
+        if(start_result instanceof Error)
+            return
+    }
+
+    /** Stop playback when reaching the end. */
+    private stop_playback_at_end(duration_seconds:number): void {
+        this.stop_playback()
+        this.$is_playing.value = false
+        this.$position_seconds.value = duration_seconds
+        this.props.on_position_change?.(duration_seconds)
+    }
+
+    private audio_context:AudioContext|null = null
+    private source_node:AudioBufferSourceNode|null = null
+    private gain_node:GainNode|null = null
+    private playback_started_at:number|null = null
+    private playback_start_seconds:number|null = null
+    private animation_frame_id:number|null = null
 }
 
 
@@ -264,6 +470,29 @@ export function get_position_status_text(
     return `${formatted_position} / ${formatted_duration}`
 }
 
+/** Compute playback position from audio clock values. */
+export function compute_playback_position_seconds(
+    playback_start_seconds:number,
+    playback_started_at:number,
+    current_time_seconds:number,
+    speed:number,
+): number|Error {
+    if(!Number.isFinite(playback_start_seconds))
+        return new Error('Invalid playback start seconds')
+    if(!Number.isFinite(playback_started_at))
+        return new Error('Invalid playback start time')
+    if(!Number.isFinite(current_time_seconds))
+        return new Error('Invalid current time')
+    if(!Number.isFinite(speed) || speed <= 0)
+        return new Error('Invalid playback speed')
+
+    if(current_time_seconds < playback_started_at)
+        return new Error('Current time is before start time')
+
+    const elapsed_seconds:number = current_time_seconds - playback_started_at
+    return playback_start_seconds + (elapsed_seconds * speed)
+}
+
 /** Compute the number of seconds for an audio waveform */
 function get_duration_seconds(audio:AudioWaveform|null): number {
     if(audio == null)
@@ -274,3 +503,70 @@ function get_duration_seconds(audio:AudioWaveform|null): number {
         return 0
     return seconds
 }
+
+/** Create a safe AudioContext for playback. */
+function create_audio_context(): AudioContext|Error {
+    try {
+        return new AudioContext()
+    } catch (error:unknown) {
+        return new Error(String(error))
+    }
+}
+
+/** Build AudioBuffer from waveform data. */
+function build_audio_buffer(
+    audio_context:AudioContext,
+    waveform:AudioWaveform,
+): AudioBuffer|Error {
+    const length:number = waveform.data.length
+    if(length <= 0)
+        return new Error('Empty audio data')
+
+    const channels:number = 1
+    try {
+        const buffer:AudioBuffer = audio_context.createBuffer(
+            channels,
+            length,
+            waveform.samplerate,
+        )
+        buffer.copyToChannel(waveform.data as Float32Array<ArrayBuffer>, 0)
+        return buffer
+    } catch (error:unknown) {
+        return new Error(String(error))
+    }
+}
+
+
+/** Linear interpolation of a waveform to a given sample rate */
+export function resample(wave: AudioWaveform, target_rate: number): AudioWaveform {
+    if(target_rate === wave.samplerate)
+        return wave;
+
+    const src: Float32Array = wave.data;
+    const ratio: number = target_rate / wave.samplerate;
+    const output_len: number = Math.max(1, Math.floor(src.length * ratio));
+    const output = new Float32Array(output_len);
+
+    for(let i:  number = 0; i < output_len; i++) {
+      const t:  number = i / ratio;
+      const i0: number = Math.floor(t);
+      const i1: number = Math.min(i0 + 1, src.length - 1);
+      const fraction: number = t - i0;
+      output[i] = src[i0]! * (1 - fraction) + src[i1]! * fraction;
+    }
+    return { data: output, samplerate: target_rate };
+}
+
+/** Make sure waveform sample rate is in a valid range */
+export function resample_to_samplerate_range(
+    wave: AudioWaveform, 
+    minimum_rate: number = 8000, 
+    maximum_rate: number = 96000
+) {
+    const target_rate: number = 
+        Math.max( Math.min(wave.samplerate, maximum_rate), minimum_rate )
+    
+    return (wave.samplerate == target_rate)? wave : resample(wave, target_rate);
+}
+
+

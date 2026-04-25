@@ -39,9 +39,22 @@ export type WorkerPlotDataCommand = {
 
 }
 
+export type WorkerPrepareForAudioCommand = {
+    command: 'prepare-for-audio';
+
+    /** Raw input mseed signal */
+    data: Int32Array;
+
+    /** Input signal sampling rate in Hz */
+    sample_rate_hz: number;
+}
+
+
+
 export type WorkerCommand = 
     WorkerInitCommand
-    | WorkerPlotDataCommand;
+    | WorkerPlotDataCommand
+    | WorkerPrepareForAudioCommand;
 
 
 
@@ -63,9 +76,18 @@ export type WorkerPlotDataResult = {
     outputdata_png: Uint8Array<ArrayBuffer>;
 }
 
+export type WorkerPrepareForAudioResult = {
+    message: 'prepare-for-audio-result';
+
+    /** Processed audio, ready for playback */
+    audiosignal: Float32Array;
+}
+
+
 type WorkerResult = 
     WorkerReadyResult 
     | WorkerPlotDataResult 
+    | WorkerPrepareForAudioResult
     | Error;
 export type WorkerMessage = WorkerResult;
 
@@ -99,6 +121,11 @@ self.onmessage = async (e:MessageEvent) => {
             result = new Error('Pyodide in worker not initialized');
         else
             result = await handle_plot_data(data, pyodide)
+    } else if (data.command == 'prepare-for-audio') {
+        if(pyodide == null)
+            result = new Error('Pyodide in worker not initialized');
+        else
+            result = await handle_prepare_for_audio(data, pyodide)
     }
     else
         result = new Error(
@@ -145,6 +172,20 @@ async function handle_plot_data(
     
     return message;
 }
+
+
+async function handle_prepare_for_audio(
+    data: WorkerPrepareForAudioCommand, 
+    pyodide: Pyodide
+): Promise<WorkerPrepareForAudioResult|Error> {
+    const output: Float32Array|Error = 
+        await pyodide.prepare_obs_signal_for_audio(data.data, data.sample_rate_hz)  
+    if(output instanceof Error)
+        return output as Error;
+
+    return {message:'prepare-for-audio-result', audiosignal:output}
+}
+
 
 
 

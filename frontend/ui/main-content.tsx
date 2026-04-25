@@ -329,6 +329,10 @@ export class MainContent extends preact.Component<MainContentProps> {
                 sample_rate_hz: mseed.meta.samplerate,
                 title: mseed.meta.code,
             }
+            this.$audiodata.value = { 
+                data:       await slice_and_prepare_audio(data, i0, i1, mseed.meta.samplerate, this.pyodide!), 
+                samplerate: 8000,
+            }
 
             const spectrogram_png:File|Error = await spectrogram_promise
             if(spectrogram_png instanceof Error) {
@@ -369,4 +373,26 @@ function station_has_mseed_meta(
     }
 
     return false
+}
+
+
+
+async function slice_and_prepare_audio(
+    data: Int32Array, 
+    i0:   number, 
+    i1:   number,
+    sample_rate_hz: number,
+    pyo:  IPyodide,
+): Promise<Float32Array> {
+    i0 = Math.max(i0, 0)
+    i1 = Math.min(i1, data.length)
+
+    const sliced: Int32Array = data.slice(i0, i1)
+    
+    const result:Error|Float32Array = 
+        await pyo.prepare_obs_signal_for_audio(sliced, sample_rate_hz)
+    if(result instanceof Error)
+        return new Float32Array([])
+    // else
+    return result;
 }
