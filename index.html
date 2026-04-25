@@ -29,25 +29,68 @@
 					</svg>
 				</div>
 			</div>
-			<div style="display:flex;width:100%;height:50%;">
-				<div class="container" style="position:relative;width:100%;">
-					<img style="width:100%;height:100%;border:1px gray solid;" />
-					<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">
-						Select a MSEED channel and time to plot here.
+			<div style="width:100%;height:50%;">
+				<div style="display:flex;flex-direction:column;height:100%;width:100%;">
+					<div style="display:flex;gap:8px;padding:8px;height:100%;min-height:0px;">
+						<div style="flex:1 1 0%;min-width:0px;height:100%;">
+							<div class="d3-container d3-signal-plot" style="position:relative;width:100%;height:100%;user-select:none;">
+								<svg width="100%" height="100%" viewBox="0 0 0 0">
+									<defs>
+										<clipPath id="signal-clip-0">
+											<rect x="0" y="0" width="1" height="1"></rect>
+										</clipPath>
+									</defs>
+									<g transform="translate(60,24)">
+										<g clip-path="url(#signal-clip-0)">
+											<path fill="none" stroke="#1f6fb2" stroke-width="1.5"></path>
+										</g>
+										<g></g>
+										<g transform="translate(0,1)"></g>
+										<text x="0.5" y="-8" text-anchor="middle" font-size="12px" font-family="sans-serif"></text>
+										<text x="0.5" y="33" text-anchor="middle" font-size="11px" font-family="sans-serif">Time (UTC)</text>
+										<text x="-0.5" y="-46" transform="rotate(-90)" text-anchor="middle" font-size="11px" font-family="sans-serif">Amplitude</text>
+									</g>
+								</svg>
+								<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">
+									Select a MSEED channel and time to plot here.
+								</div>
+							</div>
+						</div>
+						<div style="flex:1 1 0%;min-width:0px;height:100%;">
+							<div class="container" style="position:relative;width:100%;">
+								<img style="width:100%;height:100%;border:1px gray solid;" />
+								<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">
+									Select a MSEED channel and time to plot here.
+								</div>
+							</div>
+						</div>
+						<div style="flex:1 1 0%;min-width:0px;height:100%;display:none;">
+							<div class="container" style="position:relative;width:100%;">
+								<img style="width:100%;height:100%;border:1px gray solid;" />
+								<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">
+									Select a MSEED channel and time to plot here.
+								</div>
+							</div>
+						</div>
+						<div style="flex:1 1 0%;min-width:0px;height:100%;display:none;">
+							<div class="d3-container d3-map" style="position:relative;width:100%;height:100%;">
+								<svg width="0" height="0" style="background-color:rgb(224,230,224);">
+									<g class="tiles" pointer-events="none"></g>
+									<g class="annotations"></g>
+								</svg>
+								<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">No stations loaded.</div>
+							</div>
+						</div>
 					</div>
-				</div>
-				<div class="container" style="position:relative;width:100%;">
-					<img style="width:100%;height:100%;border:1px gray solid;" />
-					<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">
-						Select a MSEED channel and time to plot here.
+					<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-top:1px solid #d7d7d7;font-size:12px;color:#4b4b4b;">
+						<div></div>
+						<div style="display:flex;flex-wrap:wrap;gap:6px;">
+							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;background-color:#2e4964;color:#ffffff;" type="button" aria-pressed="true">Signal</button>
+							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;background-color:#2e4964;color:#ffffff;" type="button" aria-pressed="true">Spectrogram</button>
+							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;cursor:pointer;background-color:#ffffff;color:#2e2e2e;" type="button" aria-pressed="false">Modulation Power Spectrum</button>
+							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;cursor:pointer;background-color:#ffffff;color:#2e2e2e;" type="button" aria-pressed="false">Map</button>
+						</div>
 					</div>
-				</div>
-				<div class="d3-container d3-map" style="position:relative;width:100%;">
-					<svg width="0" height="0" style="background-color:rgb(224,230,224);">
-						<g class="tiles" pointer-events="none"></g>
-						<g class="annotations"></g>
-					</svg>
-					<div class="overlay" style="background:honeydew;opacity:0.6;position:absolute;top:0px;left:0px;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-family:sans-serif;pointer-events:none;">No stations loaded.</div>
 				</div>
 			</div>
 		</div>
