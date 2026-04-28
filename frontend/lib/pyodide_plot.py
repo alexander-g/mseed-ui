@@ -249,8 +249,14 @@ def create_modulation_power_spectrum(
     db_res = 50.0
     step   = 1
     # clipping sample rate due to memory issues
-    frequency   = min(50, frequency)
-    signal_50hz = resample_to_freq(signal, frequency, 50)
+    new_frequency = min(50, frequency)
+    signal_50hz   = resample_to_freq(signal, frequency, new_frequency)
+    frequency     = new_frequency
+
+    b, a = butter(3, [2, 8], 'bandpass', fs=frequency)
+    signal = lfilter(b, a, signal)
+
+
     spec: Spectrogram = create_spectrogram(
         signal_50hz, 
         frequency, 
