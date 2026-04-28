@@ -96,8 +96,7 @@ class App extends preact.Component {
             (processed: number, total: number) => {
                 this.$drop_progress.value = { processed, total }
                 console.log(`Progress: ${processed}/${total} files processed`)
-            },
-            /* pool_size = */ 0,
+            }
         )
         this.$drop_progress.value = null
         const t1:number = performance.now()

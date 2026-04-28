@@ -1,6 +1,7 @@
 import { preact, Signal, signals, JSX } from "../dep.ts"
 
-import {type MSEED_Meta} from "../../wasm-cpp/mseed-wasm.ts"
+import { combine_mseed_codes } from "../lib/mseed-parsing.ts";
+import type { MSeedMetadata } from "../lib/mseed-parsing.ts";
 import type { QuakeEvent } from "../lib/quakeml.ts";
 import { D3Heatmap } from "../ui/d3-heatmap.tsx"
 import { type Station } from "../lib/station-xml.ts";
@@ -33,7 +34,7 @@ export type InferenceEvent = {
 /** Wrapper around the MSEED-agnostic D3Heatmap */
 export class MSEED_Heatmap extends preact.Component<{
     /** Metadata loaded from MSEED files */
-    $mseed_meta:Readonly< Signal<MSEED_Meta[]> >,
+    $mseed_meta:Readonly< Signal<MSeedMetadata[]> >,
 
     $inference: Readonly<Signal<InferenceEvent[]> >,
 
@@ -97,7 +98,7 @@ export class MSEED_Heatmap extends preact.Component<{
     })
 
     private $transformed:Readonly<Signal<TransformedHeatmapData>> = signals.computed(() => {
-        const files:MSEED_Meta[] = this.props.$mseed_meta.value
+        const files:MSeedMetadata[] = this.props.$mseed_meta.value
         const inference:InferenceEvent[] = this.props.$inference.value
         return this.transform_heatmap_data(files, inference, HARDCODED_BIN_LENGTH_SECONDS)
     })
@@ -117,7 +118,7 @@ export class MSEED_Heatmap extends preact.Component<{
 
     /** Itemize MSEED meta data into bins of equal size */
     transform_heatmap_data(
-        files:     MSEED_Meta[], 
+        files:     MSeedMetadata[], 
         inference: InferenceEvent[],
         bin_length_seconds: number,
     ):TransformedHeatmapData {
@@ -131,7 +132,7 @@ export class MSEED_Heatmap extends preact.Component<{
 
         const inferencemap:Record<string, Date[]> = inference2map(inference)
         const all_times:number[] = files
-            .map((item:MSEED_Meta) => [item.start.getTime(), item.end.getTime()])
+            .map((item:MSeedMetadata) => [item.starttime.getTime(), item.endtime.getTime()])
             .flat()
             .sort((a:number,b:number)=>a-b)
 
@@ -143,20 +144,22 @@ export class MSEED_Heatmap extends preact.Component<{
         const x_axis:number[] = range(tstart, tend, bin_length_seconds)
 
         const all_codes:string[] = Array.from(
-            new Set(files.map((item:MSEED_Meta) => item.code))
+            new Set(files.map((item:MSeedMetadata) => combine_mseed_codes(item)))
         ).sort()
 
         const all_items:HeatmapDataItemWithFile[] = []
         for(let fileindex:number = 0; fileindex < files.length; fileindex++) {
-            const meta:MSEED_Meta = files[fileindex]!
-            const meta_start_s:number = meta.start.getTime() / 1000
-            const meta_end_s:number   = meta.end.getTime() / 1000
+            const meta:MSeedMetadata = files[fileindex]!
+            const code:string = combine_mseed_codes(meta)
+
+            const meta_start_s:number = meta.starttime.getTime() / 1000
+            const meta_end_s:number   = meta.endtime.getTime() / 1000
             // aligning to bin length
             const t0:number = meta_start_s - (meta_start_s % bin_length_seconds)
             const t1:number = meta_end_s - (meta_end_s % bin_length_seconds)
             const index0:number = (t0 - tstart) / bin_length_seconds
             const index1:number = (t1 - tstart) / bin_length_seconds
-            const yindex:number = all_codes.indexOf(meta.code)
+            const yindex:number = all_codes.indexOf(code)
 
             for(let j:number = index0; j < index1 + 1; j++) {
                 const timestamp:number = j * bin_length_seconds + tstart
@@ -167,7 +170,7 @@ export class MSEED_Heatmap extends preact.Component<{
                 all_items.push({
                     x: j,
                     y: yindex,
-                    value: find_inference(inferencemap, meta.code, date) * 0.9 + Math.random() * 0.1,
+                    value: find_inference(inferencemap, code, date) * 0.9 + Math.random() * 0.1,
                     mseedindex: fileindex,
                     timestamp,
                 })
@@ -183,24 +186,26 @@ export class MSEED_Heatmap extends preact.Component<{
 
 
     on_heatmap_select = (index:number) => {
-        const item:HeatmapDataItemWithFile|undefined = this.$transformed_files.value[index];
+        const item:HeatmapDataItemWithFile|undefined = 
+            this.$transformed_files.value[index];
         if(item == undefined) {
             console.error(`No corresponding item for index ${index}`)
             return;
         }
-        const meta:MSEED_Meta = this.props.$mseed_meta.value[item.mseedindex]!
+        const meta:MSeedMetadata = this.props.$mseed_meta.value[item.mseedindex]!
         
         // starting time in the file, but not necessarily in the first item
-        const meta_start_s = meta.start.getTime() / 1000
+        const meta_start_s = meta.starttime.getTime() / 1000
         // need to align to bin length
         // TODO: un-hardcode
-        const first_item_start_s = meta_start_s - (meta_start_s % HARDCODED_BIN_LENGTH_SECONDS)
-        const t0 = item.timestamp;
+        const first_item_start_s: number = 
+            meta_start_s - (meta_start_s % HARDCODED_BIN_LENGTH_SECONDS)
+        const t0: number = item.timestamp;
 
         const start_seconds_within_file = t0 - first_item_start_s;
         
-        const i0 = (start_seconds_within_file) * meta.samplerate;
-        const i1 = (start_seconds_within_file + HARDCODED_BIN_LENGTH_SECONDS) * meta.samplerate;
+        const i0: number = start_seconds_within_file * meta.samplerate;
+        const i1: number = i0 + HARDCODED_BIN_LENGTH_SECONDS * meta.samplerate;
         this.props.on_click(item.mseedindex, i0, i1);
     }
 

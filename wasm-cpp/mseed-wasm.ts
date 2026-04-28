@@ -33,7 +33,7 @@ type TremorWASM_Module = {
 }
 
 
-export type MSEED_Meta = {
+type MSEED_Meta = {
     start: Date
     end:   Date
     code:  string

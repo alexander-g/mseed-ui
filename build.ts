@@ -20,9 +20,6 @@ const HARDCODED_INDEX_TSX:string = './frontend/index.tsx'
 const HARDCODED_PYODIDE_WORKER_JS:string = './frontend/lib/pyodide-worker.ts'
 const HARDCODED_OUTPUTFILE_PYODIDE_WORKER_JS:string = 'pyodide-worker.ts.js'
 
-const HARDCODED_MSEED_WORKER_JS:string = './frontend/lib/mseed-worker.ts'
-const HARDCODED_OUTPUTFILE_MSEED_WORKER_JS:string = 'mseed-worker.ts.js'
-
 const HARDCODED_PYODIDE_DIR:string = './frontend/lib'
 
 
@@ -102,11 +99,6 @@ async function bundle_pyodide_worker(outputdir:string, minify:boolean) {
     return await bundle_js_file(HARDCODED_PYODIDE_WORKER_JS, outputpath, minify)
 }
 
-async function bundle_mseed_worker(outputdir:string, minify:boolean) {
-    const outputpath:string = 
-        path.join(outputdir, HARDCODED_OUTPUTFILE_MSEED_WORKER_JS)
-    return await bundle_js_file(HARDCODED_MSEED_WORKER_JS, outputpath, minify)
-}
 
 function copy_pyodide_scripts(outputdir:string) {
     for(const py_script of PYODIDE_SCRIPTS) {
@@ -175,7 +167,6 @@ export async function build_all(
     await bundle_index_js(outputdir, minify);
     await bundle_pyodide_worker(outputdir, minify);
     await copy_pyodide_scripts(outputdir);
-    await bundle_mseed_worker(outputdir, minify);
     
     if(vendor_pyodide)
         await copy_pyodide_files(outputdir, );

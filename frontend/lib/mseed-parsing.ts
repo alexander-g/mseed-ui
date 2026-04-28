@@ -353,3 +353,8 @@ export function is_mseed(view:DataView): boolean {
 
 
 
+export function combine_mseed_codes(meta: MSeedMetadata): string {
+    return `${meta.network}.${meta.station}.${meta.location}.${meta.channel}`
+}
+
+

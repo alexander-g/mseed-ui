@@ -6,7 +6,8 @@ import { MSEED_Heatmap } from './mseed-heatmap.tsx'
 import { PlotImage }     from './plot-image.tsx'
 import { AudioPlaybackControls } from './audio-playback-controls.tsx'
 import { SelectablePanelsRow } from './selectable-panels-row.tsx'
-import { tremorwasm }    from '../lib/file-input.ts'
+import { tremorwasm }          from '../lib/file-input.ts'
+import { combine_mseed_codes } from "../lib/mseed-parsing.ts"
 
 import { initialize_in_worker as initialize_pyodide } from '../lib/pyodide.ts'
 import { is_deno, strftime_ISO8601_datetime } from '../lib/util.ts'
@@ -15,8 +16,8 @@ import type { AppConfig }         from '../index.tsx'
 import type { InferenceEvent }    from './mseed-heatmap.tsx'
 import type { IPyodide }          from '../lib/pyodide.ts'
 import type { Marker, MarkerVisual } from './d3-map.tsx'
-import type { MSEED_Meta }        from '../../wasm-cpp/mseed-wasm.ts'
 import type { MSEED_FileAndMeta } from '../lib/file-input.ts'
+import type { MSeedMetadata }     from "../lib/mseed-parsing.ts"
 import type { Station }           from '../lib/station-xml.ts'
 import type { QuakeEvent }        from '../lib/quakeml.ts'
 import type { AudioWaveform }     from './audio-playback-controls.tsx'
@@ -136,27 +137,39 @@ export class MainContent extends preact.Component<MainContentProps> {
 
 
     /** MSEED meta data without the files */
-    $mseed_meta: Readonly<Signal<MSEED_Meta[]>> = signals.computed(
+    $mseed_meta: Readonly<Signal<MSeedMetadata[]>> = signals.computed(
         () => this.props.$mseeds.value.map( m => m.meta )
+    )
+
+    /** Stations partitioned into those with loaded mseed metadata and without */
+    $paritioned_stations: Readonly<Signal<PartitionedStations>> = signals.computed(
+        () => {
+            const stations:Station[] = this.props.$stations.value
+            const mseed_meta:MSeedMetadata[] = this.$mseed_meta.value
+
+            const stations_with_mseed_meta: Station[] = []
+            const stations_without_mseed_meta: Station[] = []
+            for(const station of stations){
+                if(station_has_mseed_meta(station, mseed_meta))
+                    stations_with_mseed_meta.push(station)
+                else
+                    stations_without_mseed_meta.push(station)
+            }
+            return {
+                with_meta:    stations_with_mseed_meta,
+                without_meta: stations_without_mseed_meta,
+            }
+        }
     )
 
     /** Stations converted to D3Map Markers */
     $map_markers:Readonly<Signal<Marker[]>> = signals.computed( () => {
-        const mseed_meta:MSEED_Meta[] = this.$mseed_meta.value
-        const stations:Station[] = this.props.$stations.value
-        const station_markers:Marker[] = stations.map((station:Station) => {
-            const has_mseed_meta:boolean = 
-                station_has_mseed_meta(station, mseed_meta);
-            const visual:MarkerVisual = has_mseed_meta
-                ? {
-                    // station with associated mseed data (red)
-                    shape:           'circle',
-                    color:           'red',
-                    highlight_color: '#f57c00',
-                    stroke_color:    '#ffffff',
-                    size:            6,
-                }
-                : {
+        const stations:PartitionedStations = this.$paritioned_stations.value;
+        
+        // first markers without mseeds, because of z-ordering
+        const station_markers: Marker[] = stations.without_meta.map(
+            (station: Station) => {
+                const visual:MarkerVisual = {
                     // station without mseed data (gray)
                     shape:           'circle',
                     color:           '#9aa4ad',
@@ -164,14 +177,31 @@ export class MainContent extends preact.Component<MainContentProps> {
                     stroke_color:    '#3f0f25',
                     size:            5
                 }
-
-            return {
-                latitude:  station.latitude,
-                longitude: station.longitude,
-                label:     station.code,
-                visual,
+                return {
+                    latitude:  station.latitude,
+                    longitude: station.longitude,
+                    label:     station.code,
+                    visual,
+                }
             }
-        })
+        ).concat( stations.with_meta.map(
+            (station: Station) => {
+                const visual:MarkerVisual = {
+                    // station with associated mseed data (red)
+                    shape:           'circle',
+                    color:           'red',
+                    highlight_color: '#f57c00',
+                    stroke_color:    '#ffffff',
+                    size:            6,
+                }
+                return {
+                    latitude:  station.latitude,
+                    longitude: station.longitude,
+                    label:     station.code,
+                    visual,
+                }
+            }
+        ) )
 
         const event_markers:Marker[] = this.$highlighted_events.value.map(
             (event:QuakeEvent) => ({
@@ -230,10 +260,14 @@ export class MainContent extends preact.Component<MainContentProps> {
         }
         else {
             const mseed:MSEED_FileAndMeta = mseeds[index]!
-            const stations:Station[] = this.props.$stations.value
+            const stations:Station[] = [
+                // same order as fed into map
+                ...this.$paritioned_stations.value.without_meta,
+                ...this.$paritioned_stations.value.with_meta
+            ]
             for(const station_index in stations) {
                 const station:Station = stations[station_index]!
-                if(mseed.meta.code.includes(`.${station.code}.`)) {
+                if(station_has_mseed_meta(station, [mseed.meta])) {
                     this.$highlighted_station_index.value = [Number(station_index)];
                     this.$highlighted_station.value = station;
                     return;
@@ -302,32 +336,33 @@ export class MainContent extends preact.Component<MainContentProps> {
             }
             console.log('data size:', data.length, i0, i1)
 
+            const code: string = combine_mseed_codes(mseed.meta)
             const spectrogram_promise:Promise<File|Error> =
                 this.pyodide.plot_spectrogram(
                     data,
                     i0,
                     i1,
-                    mseed.meta.start,
+                    mseed.meta.starttime,
                     mseed.meta.samplerate,
-                    mseed.meta.code,
+                    code,
                 )
             const mps_promise:Promise<File|Error> =
                 this.pyodide.plot_modulation_power_spectrum(
                     data,
                     i0,
                     i1,
-                    mseed.meta.start,
+                    mseed.meta.starttime,
                     mseed.meta.samplerate,
-                    mseed.meta.code,
+                    code,
                 )
 
             this.$signal_plot_data.value = {
                 data,
                 i0,
                 i1,
-                start_time: mseed.meta.start,
+                start_time:     mseed.meta.starttime,
                 sample_rate_hz: mseed.meta.samplerate,
-                title: mseed.meta.code,
+                title:          code,
             }
             this.$audiodata.value = { 
                 data:       await slice_and_prepare_audio(data, i0, i1, mseed.meta.samplerate, this.pyodide!), 
@@ -364,16 +399,18 @@ export class MainContent extends preact.Component<MainContentProps> {
 
 /** Check if a station has matching MSEED meta. */
 function station_has_mseed_meta(
-    station:Station,
-    mseed_meta:MSEED_Meta[],
+    station:    Station,
+    mseed_meta: MSeedMetadata[],
 ): boolean {
     for(const meta of mseed_meta) {
-        if(meta.code.includes(`.${station.code}.`))
+        if(meta.station == station.code)
             return true
     }
 
     return false
 }
+
+
 
 
 
@@ -395,4 +432,11 @@ async function slice_and_prepare_audio(
         return new Float32Array([])
     // else
     return result;
+}
+
+
+/** Helper type to partition stations with and without loaded mseed metadata */
+type PartitionedStations = {
+    with_meta:    Station[];
+    without_meta: Station[];
 }
