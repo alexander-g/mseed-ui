@@ -7,7 +7,8 @@ import { D3Heatmap } from "../ui/d3-heatmap.tsx"
 import { type Station } from "../lib/station-xml.ts";
 import {
     type HoverCallbackPosition, 
-    type DataItem as HeatmapDataItem 
+    type DataItem as HeatmapDataItem,
+    type RGB,
 } from "../ui/d3-heatmap.tsx"
 
 import { range } from 'd3';
@@ -18,6 +19,8 @@ import { range } from 'd3';
 const HARDCODED_BIN_LENGTH_SECONDS:number = 60*5;
 // at least 30 seconds for an item atm
 const HARDCODED_MINIMUM_BIN_LENGTH_SECONDS:number = 30;
+
+const INFERENCE_EVENT_COLOR:RGB = { r: 248, g: 220, b: 70 }
 
 
 type HeatmapDataItemWithFile = HeatmapDataItem & {
@@ -146,6 +149,7 @@ export class MSEED_Heatmap extends preact.Component<{
         const all_codes:string[] = Array.from(
             new Set(files.map((item:MSeedMetadata) => combine_mseed_codes(item)))
         ).sort()
+        const station_colors:Record<string, RGB> = create_station_colors(all_codes)
 
         const all_items:HeatmapDataItemWithFile[] = []
         for(let fileindex:number = 0; fileindex < files.length; fileindex++) {
@@ -167,10 +171,18 @@ export class MSEED_Heatmap extends preact.Component<{
                     continue;
 
                 const date:Date = new Date(timestamp * 1000)
+                const has_inference:boolean = find_inference(
+                    inferencemap,
+                    code,
+                    date,
+                )
+                const color:RGB = has_inference
+                    ? INFERENCE_EVENT_COLOR
+                    : station_colors[code]!
                 all_items.push({
                     x: j,
                     y: yindex,
-                    value: find_inference(inferencemap, code, date) * 0.9 + Math.random() * 0.1,
+                    color,
                     mseedindex: fileindex,
                     timestamp,
                 })
@@ -276,6 +288,7 @@ type ItemizedEvent = {
 
 
 
+
 function inference2map(inferences:InferenceEvent[]): Record<string, Date[]> {
     const output:Record<string, Date[]> = {}
     for(const inference of inferences) {
@@ -284,15 +297,97 @@ function inference2map(inferences:InferenceEvent[]): Record<string, Date[]> {
     return output;
 }
 
-function find_inference(inferencemap:Record<string, Date[]>, code:string, date:Date) {
+function find_inference(
+    inferencemap:Record<string, Date[]>,
+    code:string,
+    date:Date,
+): boolean {
     for(const eventtime of inferencemap[code] ?? []) {
         const event_time_s:number = eventtime.getTime() / 1000
         const event_time_s_aligned:number = 
             event_time_s - (event_time_s % HARDCODED_BIN_LENGTH_SECONDS);
         
         if(event_time_s_aligned * 1000 == date.getTime())
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
+/** Create stable data/background colors for stations. */
+function create_station_colors(codes:string[]): Record<string, RGB> {
+    const station_palette:Record<string, RGB> = {}
+    const output:Record<string, RGB> = {}
+    for(const code of codes) {
+        const station_code:string = get_station_code_from_mseed_code(code)
+        const colors:RGB = 
+            station_palette[station_code] ?? create_station_palette(station_code)
+        station_palette[station_code] = colors
+        output[code] = colors
+    }
+    return output
+}
+
+/** Extract station code from a NET.STA.LOC.CHAN string. */
+function get_station_code_from_mseed_code(mseed_code:string): string {
+    const parts:string[] = mseed_code.split('.')
+    return parts[1] ?? mseed_code
+}
+
+/** Create data and background colors from a station code. */
+function create_station_palette(station_code:string): RGB {
+    const hue:number = hash_string_to_unit_interval(station_code) * 360
+    return hsl_to_rgb(hue, 0.30, 0.20)
+}
+
+/** Convert HSL (degrees, 0..1, 0..1) into RGB (0..255). */
+function hsl_to_rgb(h:number, s:number, l:number): RGB {
+    const hue:number = ((h % 360) + 360) % 360
+    const chroma:number = (1 - Math.abs(2 * l - 1)) * s
+    const hue_section:number = hue / 60
+    const second_component:number = chroma * (1 - Math.abs(hue_section % 2 - 1))
+
+    let r1:number = 0
+    let g1:number = 0
+    let b1:number = 0
+
+    if(hue_section >= 0 && hue_section < 1) {
+        r1 = chroma
+        g1 = second_component
+    } else if(hue_section >= 1 && hue_section < 2) {
+        r1 = second_component
+        g1 = chroma
+    } else if(hue_section >= 2 && hue_section < 3) {
+        g1 = chroma
+        b1 = second_component
+    } else if(hue_section >= 3 && hue_section < 4) {
+        g1 = second_component
+        b1 = chroma
+    } else if(hue_section >= 4 && hue_section < 5) {
+        r1 = second_component
+        b1 = chroma
+    } else {
+        r1 = chroma
+        b1 = second_component
+    }
+
+    const m:number = l - chroma / 2
+    return {
+        r: to_rgb_channel(r1 + m),
+        g: to_rgb_channel(g1 + m),
+        b: to_rgb_channel(b1 + m),
+    }
+}
+
+/** Convert a 0..1 channel to 0..255. */
+function to_rgb_channel(channel:number): number {
+    return Math.max(0, Math.min(255, Math.round(channel * 255)))
+}
+
+/** Convert a string into a stable 0..1 value. */
+function hash_string_to_unit_interval(value:string): number {
+    let hash:number = 0
+    for(let index:number = 0; index < value.length; index++)
+        hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0
+    const normalized:number = Math.abs(hash % 10000) / 10000
+    return normalized
+}

@@ -34,8 +34,8 @@ Deno.test('get_rows_cols derives grid extents from items', () => {
     assert(get_rows_cols([]) == null)
 
     const rows_cols = get_rows_cols([
-        { x: 2, y: 5, value: 1 },
-        { x: 4, y: 8, value: 0.5 },
+        { x: 2, y: 5, color: 1 },
+        { x: 4, y: 8, color: 0.5 },
     ])
 
     assert(rows_cols?.cols == 3)
@@ -84,8 +84,8 @@ Deno.test('marker rect helpers build expected layer rectangles', () => {
 
 Deno.test('item index map resolves item by coordinate', () => {
     const item_index_by_coord = create_item_index_by_coord([
-        { x: 0, y: 0, value: 0.1 },
-        { x: 3, y: 2, value: 0.9 },
+        { x: 0, y: 0, color: 0.1 },
+        { x: 3, y: 2, color: 0.9 },
     ])
 
     assert(get_item_index_at(item_index_by_coord, 0, 0) == 0)
@@ -95,7 +95,7 @@ Deno.test('item index map resolves item by coordinate', () => {
 
 Deno.test('compute_hover_position_from_mouse returns hover details', () => {
     const item_index_by_coord = create_item_index_by_coord([
-        { x: 1, y: 0, value: 1 },
+        { x: 1, y: 0, color: 1 },
     ])
 
     const hover = compute_hover_position_from_mouse({

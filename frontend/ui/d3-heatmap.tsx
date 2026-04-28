@@ -14,7 +14,7 @@ import { Axes } from "./d3-heatmap-axes.tsx";
 export type DataItem = {
     x:     number,
     y:     number,
-    value: number,
+    color: number|RGB,
 }
 
 /** Values returned to the external `on_hover()` callback */
@@ -51,7 +51,7 @@ export class D3Heatmap extends preact.Component<{
     svgimage_ref:  preact.RefObject<SVGImageElement> = preact.createRef();
     resize_observer: ResizeObserver|null = null
 
-    private margin: PlotMargin = { top: 20, right: 5, bottom: 30, left: 60 }
+    private margin: PlotMargin = { top: 5, right: 5, bottom: 30, left: 60 }
     private $container_size: Signal<Size> = new Signal({ width: 0, height: 0 })
     private $hover_position: Signal<HoverPosition|null> = new Signal(null)
     private heatmap_image_url:string|null = null
@@ -257,17 +257,22 @@ export class D3Heatmap extends preact.Component<{
         const canvas = new OffscreenCanvas(w, h);
         const ctx:OffscreenRenderingContext = canvas.getContext('2d')!;
         ctx.clearRect(0,0,w,h)
-        ctx.fillStyle = "#888888";
-        ctx.fillRect(0, 0, w, h);
-
+        ctx.fillStyle = '#b0b0b0'
+        ctx.fillRect(0, 0, w, h)
 
         const imdata:ImageData = ctx.getImageData(0,0,w,h);
         const buffer:Uint8ClampedArray = imdata.data; // w*h*4
         for(const item of data) {
             const index:number = item.y * w * 4 + item.x * 4;
-            buffer[index + 0] = item.value * 255; 
-            buffer[index + 1] = item.value * 255;
-            buffer[index + 2] = 0;
+            if(typeof item.color == 'number') {
+                buffer[index + 0] = item.color * 255; 
+                buffer[index + 1] = item.color * 255;
+                buffer[index + 2] = 0;
+            } else {
+                buffer[index + 0] = item.color.r; 
+                buffer[index + 1] = item.color.g;
+                buffer[index + 2] = item.color.b;
+            }
             buffer[index + 3] = 255;
         }
         ctx.putImageData(imdata,0,0);
@@ -678,4 +683,11 @@ export function compute_hover_position_from_mouse(props: {
         x: col,
         y: row,
     }
+}
+
+
+export type RGB = {
+    r: number;
+    g: number;
+    b: number;
 }
