@@ -4,6 +4,7 @@ import { is_deno, fetch_no_throw } from "./util.ts";
 import type { 
     WorkerInitCommand,
     WorkerPlotDataCommand,
+    WorkerPrepareForAudioCommand,
     WorkerMessage,
 } from "./pyodide-worker.ts";
 
@@ -45,6 +46,12 @@ export interface IPyodide {
         sample_rate_hz: number,
         title: string,
     ): Promise<File|Error>;
+
+    /** Convert a raw mseed signal to an audio signal */
+    prepare_obs_signal_for_audio(
+        data: Int32Array, 
+        sample_rate_hz: number
+    ): Promise<Float32Array|Error>;
 }
 
 
@@ -104,6 +111,17 @@ export class PyodideInWorker implements IPyodide {
             sample_rate_hz,
             title,
         )
+    }
+
+    async prepare_obs_signal_for_audio(
+        data: Int32Array,
+        sample_rate_hz: number,
+    ): Promise<Float32Array|Error> {
+        const internal:IPyodide|Error = await this.readypromise;
+        if(internal instanceof Error)
+            return internal as Error;
+
+        return internal.prepare_obs_signal_for_audio(data,sample_rate_hz)
     }
 }
 
@@ -223,6 +241,23 @@ export class Pyodide implements IPyodide {
 
         return all_files;
     }
+
+    async prepare_obs_signal_for_audio(
+        data: Int32Array, 
+        sample_rate_hz: number
+    ): Promise<Float32Array | Error> {
+        const py_fn:(...x:unknown[]) => void = 
+            this.pyodide.globals.get('prepare_obs_signal_for_audio')
+        
+        try {
+            await py_fn(data, sample_rate_hz, '/audiodata.bin')
+            const audiodata_u8:Uint8Array<ArrayBuffer> =
+                this.pyodide.FS.readFile('/audiodata.bin', {encoding: 'binary'})
+            return new Float32Array(audiodata_u8.buffer)
+        } catch (e) {
+            return new Error(`${e}`)
+        }
+    }
 }
 
 
@@ -279,7 +314,6 @@ class PyodideToWorkerInterface implements IPyodide {
         }
         const promise:Promise<File|Error> = 
             new Promise( (resolve: (x:File|Error) => void) => {
-                // TODO: remove event listener
                 const onmessage = (e:MessageEvent) => {
                     const message:WorkerMessage = e.data;
                     
@@ -287,7 +321,8 @@ class PyodideToWorkerInterface implements IPyodide {
                     if(message instanceof Error)
                         result = message as Error;
                     else if (message.message != 'plot-data-result')
-                        result = new Error(`Unexpected worker message: ${message.message}`)
+                        // result = new Error(`Unexpected worker message: ${message.message}`)
+                        return;
                     else if (message.uuid != command.uuid) 
                         // message is for another promise
                         return;
@@ -321,6 +356,41 @@ class PyodideToWorkerInterface implements IPyodide {
         ...x:Parameters<IPyodide['plot_modulation_power_spectrum']>
     ): ReturnType<IPyodide['plot_modulation_power_spectrum']> {
         return this._plot('plot-modulation-power-spectrum', ...x)
+    }
+
+    prepare_obs_signal_for_audio(
+        data: Int32Array, 
+        sample_rate_hz: number
+    ): Promise<Float32Array | Error> {
+        const command: WorkerPrepareForAudioCommand = {
+            command: 'prepare-for-audio',
+            data,
+            sample_rate_hz
+        }
+
+        const promise:Promise<Float32Array|Error> = 
+            new Promise( (resolve: (x:Float32Array|Error) => void) => {
+                const onmessage = (e:MessageEvent) => {
+                    const message:WorkerMessage = e.data;
+                    
+                    let result: Float32Array|Error;
+                    if(message instanceof Error)
+                        result = message as Error;
+                    else if (message.message != 'prepare-for-audio-result')
+                        //result = new Error(`Unexpected worker message: ${message.message}`)
+                        return;
+                    else
+                        result = message.audiosignal
+
+                    this.worker.removeEventListener('message', onmessage)
+                    resolve(result)
+                    return;
+                }
+                this.worker.addEventListener('message', onmessage)
+            } )
+        this.worker.postMessage(command);
+        return promise;
+
     }
 }
 

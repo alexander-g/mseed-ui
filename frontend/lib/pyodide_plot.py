@@ -11,7 +11,8 @@ import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-from scipy.signal import stft, resample
+import scipy
+from scipy.signal import stft, resample, butter, lfilter
 
 
 def _slice_bounds(i0: int, i1: int, n_samples: int) -> tuple[int, int]:
@@ -403,3 +404,36 @@ def plot_modulation_power_spectrum(
         fig.savefig(output_path)
 
     plt.close(fig)
+
+
+
+def prepare_obs_signal_for_audio(
+    signal: npt.NDArray[np.int32], 
+    fs:     float,
+    output_path: tp.Optional[str] = None
+) -> npt.NDArray[np.float32]:
+    signal = signal - np.median(signal) # type: ignore
+
+    #target_fs = 44100
+    target_fs = 8000
+    fs_factor = target_fs / fs
+    speedup   = 8
+
+    n = int(len(signal) * fs_factor // speedup)
+    signal_indices = np.arange(len(signal))
+    interp_values  = np.linspace(0, signal_indices[-1], n)
+
+    interp_signal = scipy.interpolate.interp1d(
+        signal_indices, 
+        signal, 
+        kind='cubic',
+    )(interp_values).astype('float32')
+    interp_signal = interp_signal / np.percentile( np.abs(interp_signal[32:-32] ), 99.8 )
+    interp_signal = np.clip(interp_signal, -5, 5)
+
+    interp_signal = interp_signal.astype('float32')
+    if output_path is not None:
+        open(output_path, 'wb').write(interp_signal.tobytes())
+    return interp_signal
+
+

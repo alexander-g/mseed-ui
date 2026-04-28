@@ -154,14 +154,7 @@ export class SelectablePanelsRow extends preact.Component<SelectablePanelsRowPro
     /** Build inline button CSS styles. */
     get_button_style(key:string): preact.CSSProperties {
         const selected:boolean = this.is_visible(key)
-        return {
-            padding: '4px 8px',
-            border: '1px solid #bdbdbd',
-            borderRadius: '4px',
-            cursor: selected? null : 'pointer',
-            backgroundColor: selected ? '#2e4964' : '#ffffff',
-            color: selected ? '#ffffff' : '#2e2e2e',
-        }
+        return get_selectable_button_style(selected)
     }
 
     /** Store container size and enforce visibility. */
@@ -221,4 +214,18 @@ function get_initial_preference(
         .filter(key => !filtered.includes(key))
 
     return [...filtered, ...missing]
+}
+
+/** Return shared style for panel-like buttons. */
+export function get_selectable_button_style(
+    selected:boolean,
+): preact.CSSProperties {
+    return {
+        padding: '4px 8px',
+        border: '1px solid #bdbdbd',
+        borderRadius: '4px',
+        cursor: selected ? null : 'pointer',
+        backgroundColor: selected ? '#2e4964' : '#ffffff',
+        color: selected ? '#ffffff' : '#2e2e2e',
+    }
 }

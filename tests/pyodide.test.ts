@@ -73,3 +73,20 @@ Deno.test("pyodide-in-worker", async (t:Deno.TestContext) => {
     })
 })
 
+
+Deno.test("pyodide-prepare-audio-in-worker", async (t:Deno.TestContext) => {
+    const pyo:IPyodide|Error = await initialize_in_worker()
+    assert(!(pyo instanceof Error))
+
+    await t.step("prepare_audio", async () => {
+        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
+        const promise:Promise<Float32Array|Error> = 
+            pyo.prepare_obs_signal_for_audio( data, 8 );
+        const result:Float32Array|Error = await with_timeout(promise, 20000); 
+
+        assert(!(result instanceof Error))
+        console.log(result.length)
+        assert( result.length >= (data.length * 1000 / 8) )
+    })
+})
+

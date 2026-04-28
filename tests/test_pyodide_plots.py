@@ -105,3 +105,13 @@ def test_plot_modulation_power_spectrum_short_slice():
     )
 
     assert os.path.exists(output_path)
+
+
+def test_prepare_for_audio():
+    x = np.random.randint(0, 100, size=(250,), dtype='int32')
+    fs = 100
+
+    tempdir = tempfile.TemporaryDirectory()
+    output_path = os.path.join(tempdir.name, 'audio.bin')
+    pyodide_plot.prepare_obs_signal_for_audio(x, fs, output_path)
+    assert os.path.exists(output_path)
