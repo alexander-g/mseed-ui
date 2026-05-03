@@ -4,6 +4,8 @@ import {
     find_iso_time,
     parse_station_code_from_filename,
 } from '../frontend/lib/file-input.ts'
+import { combine_mseed_codes } from "../frontend/lib/mseed-parsing.ts"
+
 import * as path from '@std/path'
 import { assert } from 'asserts'
 
@@ -27,8 +29,7 @@ Deno.test('process_dropped_files() with mseed files', async () => {
         (_processed: number, _total: number) => {
             progress_count++
             //console.log(`Progress: ${processed}/${total}`)
-        },
-        /*pool_size = */ 2,
+        }
     )
 
     assert(processed.mseeds.length == 3)
@@ -39,7 +40,7 @@ Deno.test('process_dropped_files() with mseed files', async () => {
 
 
     // bug: duplicate station codes
-    const unique_codes = new Set(processed.mseeds.map( m => m.meta.code ))
+    const unique_codes = new Set(processed.mseeds.map( m => combine_mseed_codes(m.meta) ))
     assert(unique_codes.size == 3)
     
 })
