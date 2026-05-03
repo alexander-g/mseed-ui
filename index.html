@@ -1,6 +1,8 @@
 <html>
 	<head>
-		<title>MSEED UI</title>
+		<title>
+			SEAL - Seismic Exploration &amp; Analysis Lab
+		</title>
 		<script type="module" src="index.tsx.js"></script>
 		<script>
 			window.app_config = {"pyodide_vendored":false}
@@ -16,7 +18,7 @@
 								<rect x="0" y="0" width="1" height="1"></rect>
 							</clipPath>
 						</defs>
-						<g transform="translate(60,20)">
+						<g transform="translate(60,5)">
 							<g clip-path="url(#heatmap-clip-0)">
 								<g transform="translate(0,0) scale(1,1)">
 									<image x="0" y="0" width="1" height="1" image-rendering="pixelated" preserveAspectRatio="none"></image>
@@ -83,7 +85,30 @@
 						</div>
 					</div>
 					<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-top:1px solid #d7d7d7;font-size:12px;color:#4b4b4b;">
-						<div></div>
+						<div>
+							<div style="display:flex;align-items:center;flex-wrap:wrap;row-gap:8px;column-gap:12px;color:#3f3f3f;font-size:12px;">
+								<div style="display:flex;align-items:center;gap:6px;">
+									<button type="button" style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;cursor:pointer;background-color:#ffffff;color:#2e2e2e;" disabled>Start</button>
+									<button type="button" style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;cursor:pointer;background-color:#ffffff;color:#2e2e2e;" disabled>Pause</button>
+									<button type="button" style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;cursor:pointer;background-color:#ffffff;color:#2e2e2e;" disabled>Stop</button>
+								</div>
+								<label style="display:flex;align-items:center;gap:6px;">
+									<span>Speed</span>
+									<input type="range" min="0.5" max="10" step="0.5" value="1" disabled />
+									<span style="min-width:42px;">1.00x</span>
+								</label>
+								<label style="display:flex;align-items:center;gap:6px;">
+									<span>Gain</span>
+									<input type="range" min="0" max="5" step="0.1" value="1" disabled />
+									<span style="min-width:42px;">1.00</span>
+								</label>
+								<label style="display:flex;align-items:center;gap:6px;min-width:220px;flex:1 1 220px;">
+									<span>Position</span>
+									<input type="range" min="0" max="1" step="0.01" value="0" disabled style="flex:1 1 auto;" />
+									<output>00:00.000 / 00:00.000</output>
+								</label>
+							</div>
+						</div>
 						<div style="display:flex;flex-wrap:wrap;gap:6px;">
 							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;background-color:#2e4964;color:#ffffff;" type="button" aria-pressed="true">Signal</button>
 							<button style="padding:4px 8px;border:1px solid #bdbdbd;border-radius:4px;background-color:#2e4964;color:#ffffff;" type="button" aria-pressed="true">Spectrogram</button>
@@ -94,6 +119,10 @@
 				</div>
 			</div>
 		</div>
-		<div style="background:honeydew;position:fixed;width:100%;height:100%;top:0px;left:0px;opacity:1;pointer-events:none;font-family:sans-serif;display:flex;justify-content:center;align-items:center;">Drop MSEED files to get started.</div>
+		<div style="background:honeydew;position:fixed;width:100%;height:100%;top:0px;left:0px;opacity:1;pointer-events:none;font-family:sans-serif;display:flex;justify-content:center;align-items:center;text-align:center;">
+			Drop files to get started.
+			<br />
+			Supported file types: MiniSEED, QuakeML, StationXML.
+		</div>
 	</body>
 </html>
