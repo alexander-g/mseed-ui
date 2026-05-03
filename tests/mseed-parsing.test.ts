@@ -13,12 +13,14 @@ import { initialize } from '../wasm-cpp/mseed-wasm.ts'
 
 
 const MSEED_FILES: string[] = [
-    // bug: little endian
+    // bug: little endian (i32)
     path.fromFileUrl(import.meta.resolve('./assets/X2.H030.00.HHE.D.2022.132_slice')),
-    // big endian
+    // big endian (i32)
     path.fromFileUrl(import.meta.resolve('./assets/2018-01-28T00:00:00-CN.SHB..BHZ')),
     // f64
     path.fromFileUrl(import.meta.resolve('./assets/synthetic-f64.mseed')),
+    // + multitrace
+    path.fromFileUrl(import.meta.resolve('./assets/synthetic-f64-dual-trace.mseed')),
 ]
 
 const NOT_A_MSEED:string = 
@@ -91,6 +93,14 @@ Deno.test('mseed-reading', async (t:Deno.TestContext) => {
 
     await t.step('f64', async () => {
         const mseeddata= Deno.readFileSync(MSEED_FILES[2]!)
+        const file = new File([mseeddata], 'file.mseed')
+        const result = await tremorwasm.read_data(file)
+        assert( !(result instanceof Error) )
+        assert( result.byteLength > 0 )
+    })
+
+    await t.step('f64-dual-trace', async () => {
+        const mseeddata= Deno.readFileSync(MSEED_FILES[3]!)
         const file = new File([mseeddata], 'file.mseed')
         const result = await tremorwasm.read_data(file)
         assert( !(result instanceof Error) )
