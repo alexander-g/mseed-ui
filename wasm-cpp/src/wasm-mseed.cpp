@@ -39,8 +39,8 @@ int32_t read_mseed(
 
     // optional outputs
     // buffer for waveform samples, can be null
-    int32_t*   samplebuffer,
-    // size of samplebuffer in number of samples (i.e. x0.25 bytes)
+    float*     samplebuffer,
+    // size of samplebuffer in number of samples (i.e. x4 bytes)
     int32_t    samplebuffersize
 ) {
     const bool metadata_only = (samplebuffer == nullptr || samplebuffersize == 0);
@@ -70,24 +70,43 @@ int32_t read_mseed(
 
     if(mstl->numtraceids == 0)
         return NO_TRACES_IN_FILE;
-    if(mstl->numtraceids > 1)
-        // only one supported for now
-        return TOO_MANY_TRACES_IN_FILE;
-    
 
-    const MS3TraceID* trace = mstl->traces.next[0];
+    // NOTE: for now, if there are multiple traces, using the largest only
+    const MS3TraceID* trace = nullptr;
+    int64_t largest_sample_count = -1;
+    for(int32_t trace_index = 0; trace_index < mstl->numtraceids; trace_index++) {
+        const MS3TraceID* current = mstl->traces.next[trace_index];
+        if(current == nullptr || current->first == nullptr)
+            continue;
+
+        const int64_t sample_count = current->first->samplecnt;
+        if(sample_count > largest_sample_count) {
+            trace = current;
+            largest_sample_count = sample_count;
+        }
+    }
+
     if(trace == nullptr)
         // should not happen
         return NO_TRACES_IN_FILE;
 
-    if(trace->numsegments != 1)
-        return INVALID_NUMBER_OF_SEGMENTS;
+    const MS3TraceSeg* segment = nullptr;
+    largest_sample_count = -1;
+    for(const MS3TraceSeg* current = trace->first; current != nullptr;
+        current = current->next) {
+        if(current->samplecnt > largest_sample_count) {
+            segment = current;
+            largest_sample_count = current->samplecnt;
+        }
+    }
 
+    if(segment == nullptr)
+        return INVALID_NUMBER_OF_SEGMENTS;
 
     *starttime  = trace->earliest;
     *endtime    = trace->latest;
-    *nsamples   = trace->first->samplecnt;
-    *samplerate = trace->first->samprate;
+    *nsamples   = segment->samplecnt;
+    *samplerate = segment->samprate;
 
     char network[8], station[8], location[8], channel[8];
     const int rc = ms_sid2nslc_n(
@@ -111,19 +130,28 @@ int32_t read_mseed(
 
 
     if(!metadata_only) {
-        if(trace->first->sampletype != 'i')
-            return SAMPLETYPE_NOT_IMPLEMENTED;
+        int64_t n_samples = samplebuffersize;
+        if(n_samples > segment->samplecnt)
+            n_samples = segment->samplecnt;
 
-        std::memcpy(
-            samplebuffer, 
-            trace->first->datasamples, 
-            samplebuffersize * sizeof(*samplebuffer)
-        );
+        if(segment->sampletype == 'i') {
+            const int32_t* src = static_cast<const int32_t*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = static_cast<float>(src[i]);
+        } else if(segment->sampletype == 'f') {
+            const float* src = static_cast<const float*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = src[i];
+        } else if(segment->sampletype == 'd') {
+            const double* src = static_cast<const double*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = static_cast<float>(src[i]);
+        } else {
+            return SAMPLETYPE_NOT_IMPLEMENTED;
+        }
     }
 
     return OK;
 }
 
 } // extern "C"
-
-

@@ -42,7 +42,7 @@ type MSEED_Meta = {
 }
 
 type MSEED_ReadResult = {
-    data: Int32Array|null;
+    data: Float32Array|null;
     meta: MSEED_Meta;
 }
 
@@ -71,7 +71,7 @@ export class TremorWasm {
             if(nsamplestoread < 0)
                 return new Error('Invalid number of samples to read')
             const samplebuffersize:number = 
-                nsamplestoread * Int32Array.BYTES_PER_ELEMENT;
+                nsamplestoread * Float32Array.BYTES_PER_ELEMENT;
             const samplebuffer_p:pointer = 
                 (nsamplestoread > 0) ? this.#malloc(samplebuffersize) : 0;
 
@@ -120,9 +120,9 @@ export class TremorWasm {
                 ).buffer,
             ).replace(/\0/g, '');
 
-            const samplebuffer:Int32Array|null = 
+            const samplebuffer:Float32Array|null = 
                 (nsamplestoread > 0)
-                ? new Int32Array(
+                ? new Float32Array(
                     this.wasm.HEAPU8.slice(
                         samplebuffer_p, 
                         samplebuffer_p + samplebuffersize
@@ -151,7 +151,7 @@ export class TremorWasm {
         }
     }
 
-    async read_data(file:File): Promise<Int32Array|Error> {
+    async read_data(file:File): Promise<Float32Array|Error> {
         const meta:MSEED_Meta|Error = await this.read_metadata(file);
         if(meta instanceof Error)
             return meta as Error;
@@ -192,5 +192,4 @@ export const initialize:Iinitialize = async () => {
 
     return new TremorWasm(wasm);
 }
-
 

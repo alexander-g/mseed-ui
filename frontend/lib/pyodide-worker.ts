@@ -17,7 +17,7 @@ export type WorkerPlotDataCommand = {
     command: 'plot-data'|'plot-spectrogram'|'plot-modulation-power-spectrum';
 
     /** Data to plot */
-    data: Int32Array;
+    data: Float32Array;
 
     /** Slice start index in data. */
     i0: number;
@@ -43,7 +43,7 @@ export type WorkerPrepareForAudioCommand = {
     command: 'prepare-for-audio';
 
     /** Raw input mseed signal */
-    data: Int32Array;
+    data: Float32Array;
 
     /** Input signal sampling rate in Hz */
     sample_rate_hz: number;

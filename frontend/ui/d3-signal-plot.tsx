@@ -7,7 +7,7 @@ import * as d3 from 'd3'
 
 /** Signal plot inputs derived from MSEED selection */
 export type SignalPlotData = {
-    data: Int32Array,
+    data: Float32Array,
     i0: number,
     i1: number,
     start_time: Date,
@@ -225,7 +225,8 @@ export class D3SignalPlot extends preact.Component<D3SignalPlotProps> {
             plot_data.i1,
             plot_data.data.length,
         )
-        const sliced_data: Int32Array = plot_data.data.slice(bounds.start, bounds.stop)
+        const sliced_data: Float32Array =
+            plot_data.data.slice(bounds.start, bounds.stop)
         if(sliced_data.length == 0) {
             this.#clear_plot()
             this.$initialized.value = false
@@ -384,8 +385,8 @@ export function compute_time_domain(
 
 /** Compute y domain and enforce minimum range based on std(data) */
 export function compute_signal_y_domain(
-    full_data: Int32Array,
-    sliced_data: Int32Array,
+    full_data: Float32Array,
+    sliced_data: Float32Array,
 ): [number, number] | Error {
     if(full_data.length == 0 || sliced_data.length == 0)
         return new Error('No data to plot.')
@@ -412,7 +413,7 @@ export function compute_signal_y_domain(
 }
 
 /** Compute standard deviation without throwing */
-function compute_standard_deviation(data: Int32Array): number | Error {
+function compute_standard_deviation(data: Float32Array): number | Error {
     const n_samples: number = data.length
     if(n_samples == 0)
         return new Error('No data to plot.')

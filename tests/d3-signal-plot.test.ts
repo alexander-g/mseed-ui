@@ -35,8 +35,8 @@ Deno.test('compute_time_domain returns error for invalid inputs', () => {
 })
 
 Deno.test('compute_signal_y_domain enforces minimum std range', () => {
-    const full_data = new Int32Array([9, 10, 11, 12])
-    const sliced_data = new Int32Array([10, 10])
+    const full_data = new Float32Array([9, 10, 11, 12])
+    const sliced_data = new Float32Array([10, 10])
     const domain = compute_signal_y_domain(full_data, sliced_data)
     assert(!(domain instanceof Error))
     assert(domain[0] < 10)
@@ -44,8 +44,8 @@ Deno.test('compute_signal_y_domain enforces minimum std range', () => {
 })
 
 Deno.test('compute_signal_y_domain uses sliced min max when valid', () => {
-    const full_data = new Int32Array([10, 20, 10, 20])
-    const sliced_data = new Int32Array([10, 20])
+    const full_data = new Float32Array([10, 20, 10, 20])
+    const sliced_data = new Float32Array([10, 20])
     const domain = compute_signal_y_domain(full_data, sliced_data)
     assert(!(domain instanceof Error))
     assert(domain[0] == 10)

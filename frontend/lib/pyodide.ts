@@ -19,7 +19,7 @@ export const PYODIDE_SCRIPTS:string[] = [PLOT_DATA_PY_SCRIPT]
 export interface IPyodide {
     /** Plot a 1D time series via matplotlib and return a PNG file. */
     plot_data(
-        data:Int32Array,
+        data:Float32Array,
         i0:number,
         i1:number,
         start_time:Date,
@@ -29,7 +29,7 @@ export interface IPyodide {
 
     /** Plot a 1D time series as a spectrogram and return a PNG file. */
     plot_spectrogram(
-        data: Int32Array,
+        data: Float32Array,
         i0:   number,
         i1:   number,
         start_time:     Date,
@@ -39,7 +39,7 @@ export interface IPyodide {
 
     /** Plot modulation power spectrum and return a PNG file. */
     plot_modulation_power_spectrum(
-        data: Int32Array,
+        data: Float32Array,
         i0: number,
         i1: number,
         start_time: Date,
@@ -49,7 +49,7 @@ export interface IPyodide {
 
     /** Convert a raw mseed signal to an audio signal */
     prepare_obs_signal_for_audio(
-        data: Int32Array, 
+        data: Float32Array, 
         sample_rate_hz: number
     ): Promise<Float32Array|Error>;
 }
@@ -62,7 +62,7 @@ export class PyodideInWorker implements IPyodide {
     constructor(private readypromise:Promise<PyodideToWorkerInterface|Error>){}
 
     async plot_data(
-        data:Int32Array,
+        data:Float32Array,
         i0:number,
         i1:number,
         start_time:Date,
@@ -77,7 +77,7 @@ export class PyodideInWorker implements IPyodide {
     }
 
     async plot_spectrogram(
-        data:Int32Array,
+        data:Float32Array,
         i0:number,
         i1:number,
         start_time:Date,
@@ -92,7 +92,7 @@ export class PyodideInWorker implements IPyodide {
     }
 
     async plot_modulation_power_spectrum(
-        data: Int32Array,
+        data: Float32Array,
         i0: number,
         i1: number,
         start_time: Date,
@@ -114,7 +114,7 @@ export class PyodideInWorker implements IPyodide {
     }
 
     async prepare_obs_signal_for_audio(
-        data: Int32Array,
+        data: Float32Array,
         sample_rate_hz: number,
     ): Promise<Float32Array|Error> {
         const internal:IPyodide|Error = await this.readypromise;
@@ -131,7 +131,7 @@ export class Pyodide implements IPyodide {
     constructor(private pyodide:pyo.PyodideAPI){}
 
     async plot_data(
-        data:Int32Array,
+        data:Float32Array,
         i0:number,
         i1:number,
         start_time:Date,
@@ -159,7 +159,7 @@ export class Pyodide implements IPyodide {
     }
 
     async plot_spectrogram(
-        data: Int32Array,
+        data: Float32Array,
         i0:   number,
         i1:   number,
         start_time:     Date,
@@ -187,7 +187,7 @@ export class Pyodide implements IPyodide {
     }
 
     async plot_modulation_power_spectrum(
-        data: Int32Array,
+        data: Float32Array,
         i0: number,
         i1: number,
         start_time: Date,
@@ -243,7 +243,7 @@ export class Pyodide implements IPyodide {
     }
 
     async prepare_obs_signal_for_audio(
-        data: Int32Array, 
+        data: Float32Array, 
         sample_rate_hz: number
     ): Promise<Float32Array | Error> {
         const py_fn:(...x:unknown[]) => void = 
@@ -295,7 +295,7 @@ class PyodideToWorkerInterface implements IPyodide {
 
     private _plot(
         plotcommand: WorkerPlotDataCommand['command'],
-        data: Int32Array,
+        data: Float32Array,
         i0:number,
         i1:number,
         start_time:Date,
@@ -359,7 +359,7 @@ class PyodideToWorkerInterface implements IPyodide {
     }
 
     prepare_obs_signal_for_audio(
-        data: Int32Array, 
+        data: Float32Array, 
         sample_rate_hz: number
     ): Promise<Float32Array | Error> {
         const command: WorkerPrepareForAudioCommand = {
