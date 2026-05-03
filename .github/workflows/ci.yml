@@ -125,4 +125,4 @@ jobs:
           git commit -m "$TAGNAME"
           git tag --force $TAGNAME
           git push origin gh-pages
-          git push origin --tags
+          git push --force origin --tags
