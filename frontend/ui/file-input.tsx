@@ -3,7 +3,11 @@ import { JSX }     from 'preact'
 import { Signal }  from '@preact/signals'
 
 
-const MESSAGE_UNINITIALIZED = 'Drop MSEED files to get started.'
+const MESSAGE_UNINITIALIZED = <>
+    Drop files to get started. 
+    <br/>
+    Supported file types: MiniSEED, QuakeML, StationXML.
+</>
 const MESSAGE_CAN_DROP      = 'Drop files here.'
 const MESSAGE_LOADING       = 'Loading...'
 
@@ -26,7 +30,7 @@ export class DropZone extends preact.Component<{
 
     $css_display:Signal<'none'|'flex'> = new Signal('flex')
     $background: Signal<string|null>   = new Signal(BACKGROUNDCOLOR_UNINITIALIZED)
-    $message:    Signal<string>        = new Signal(MESSAGE_UNINITIALIZED)
+    $message:    Signal<string|JSX.Element>        = new Signal(MESSAGE_UNINITIALIZED)
     $opacity:    Signal<0|1>           = new Signal(1)
 
     #_ = this.props.$initialized.subscribe(
@@ -39,7 +43,7 @@ export class DropZone extends preact.Component<{
             progress == null
                 ? MESSAGE_LOADING
                 : `Loading ${progress.processed}/${progress.total}...`
-        const message:string =
+        const message:string|JSX.Element =
             this.$message.value == MESSAGE_LOADING
                 ? loading_message
                 : this.$message.value
@@ -58,6 +62,7 @@ export class DropZone extends preact.Component<{
                 display:        this.$css_display.value,
                 justifyContent: 'center',
                 alignItems:     'center',
+                textAlign:      'center',
             }}
         >
             { message }

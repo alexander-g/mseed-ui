@@ -150,7 +150,11 @@ function Head(props:HeadProps): JSX.Element {
 /** Main JSX entry point */
 export function Index(config?:AppConfig): JSX.Element {
     return <html>
-        <Head title="MSEED UI" import_src="index.tsx.js" config={config ?? null}/>
+        <Head 
+            title      = "SEAL - Seismic Exploration & Analysis Lab" 
+            import_src = "index.tsx.js" 
+            config     = {config ?? null}
+        />
         <App />
     </html>
 }
