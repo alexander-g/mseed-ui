@@ -57,7 +57,7 @@ export class TremorWasm {
 
     private async _read(file:File, nsamplestoread:number): Promise<MSEED_ReadResult|Error> {
         try {
-            const buffer:Uint8Array = await file.bytes()
+            const buffer:Uint8Array = new Uint8Array(await file.arrayBuffer())
             const buffer_p:pointer  = this.#malloc(buffer.length)
             this.wasm.HEAPU8.set(buffer, buffer_p);
 
