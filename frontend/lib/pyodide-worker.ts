@@ -162,13 +162,16 @@ async function handle_plot_data(
     if(output instanceof Error)
         return output as Error;
     
-    const outputdata_png:Uint8Array<ArrayBuffer>|Error = 
-        await output.bytes().catch(_ => new Error())
+    const outputdata_png:ArrayBuffer|Error = 
+        await output.arrayBuffer().catch(_ => new Error())
     if(outputdata_png instanceof Error)
         return outputdata_png as Error;
 
-    const message:WorkerPlotDataResult = 
-        {message:'plot-data-result', outputdata_png, uuid:data.uuid};
+    const message:WorkerPlotDataResult = {
+        message: 'plot-data-result', 
+        outputdata_png: new Uint8Array(outputdata_png), 
+        uuid: data.uuid
+    };
     
     return message;
 }
