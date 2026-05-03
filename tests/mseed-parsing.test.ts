@@ -17,6 +17,8 @@ const MSEED_FILES: string[] = [
     path.fromFileUrl(import.meta.resolve('./assets/X2.H030.00.HHE.D.2022.132_slice')),
     // big endian
     path.fromFileUrl(import.meta.resolve('./assets/2018-01-28T00:00:00-CN.SHB..BHZ')),
+    // f64
+    path.fromFileUrl(import.meta.resolve('./assets/synthetic-f64.mseed')),
 ]
 
 const NOT_A_MSEED:string = 
@@ -85,6 +87,14 @@ Deno.test('mseed-reading', async (t:Deno.TestContext) => {
         const file = new File([notmseed], 'file.mseed')
         const result = await tremorwasm.read_data(file)
         assert( result instanceof Error )
+    })
+
+    await t.step('f64', async () => {
+        const mseeddata= Deno.readFileSync(MSEED_FILES[2]!)
+        const file = new File([mseeddata], 'file.mseed')
+        const result = await tremorwasm.read_data(file)
+        assert( !(result instanceof Error) )
+        assert( result.byteLength > 0 )
     })
 })
 

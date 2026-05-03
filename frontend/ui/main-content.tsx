@@ -328,7 +328,7 @@ export class MainContent extends preact.Component<MainContentProps> {
             const file:File = mseed.file;
             
             console.log('reading file: ', file.name)
-            const data:Int32Array|Error = await tremorwasm.read_data(file)
+            const data:Float32Array|Error = await tremorwasm.read_data(file)
             if(data instanceof Error) {
                 console.log(`Could not read mseed data of ${file.name}`)
                 console.log(data as Error)
@@ -415,7 +415,7 @@ function station_has_mseed_meta(
 
 
 async function slice_and_prepare_audio(
-    data: Int32Array, 
+    data: Float32Array, 
     i0:   number, 
     i1:   number,
     sample_rate_hz: number,
@@ -424,7 +424,7 @@ async function slice_and_prepare_audio(
     i0 = Math.max(i0, 0)
     i1 = Math.min(i1, data.length)
 
-    const sliced: Int32Array = data.slice(i0, i1)
+    const sliced: Float32Array = data.slice(i0, i1)
     
     const result:Error|Float32Array = 
         await pyo.prepare_obs_signal_for_audio(sliced, sample_rate_hz)

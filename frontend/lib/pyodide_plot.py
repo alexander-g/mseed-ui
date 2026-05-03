@@ -25,7 +25,7 @@ def _slice_bounds(i0: int, i1: int, n_samples: int) -> tuple[int, int]:
 
 
 def plot_data(
-    data: npt.NDArray[np.int32],
+    data: npt.NDArray[np.float32],
     i0: int,
     i1: int,
     start_timestamp_s: float,
@@ -35,14 +35,14 @@ def plot_data(
 ) -> None:
     """Plot a time slice and optionally save it to a PNG file."""
     # NOTE: data is a memoryview when called from JS, making sure its numpy
-    data = np.asarray(data, dtype=np.int32)
+    data = np.asarray(data, dtype=np.float32)
     start: int
     stop: int
     start, stop = _slice_bounds(i0, i1, data.size)
 
     start_time = dt.datetime.fromtimestamp(start_timestamp_s, tz=dt.timezone.utc)
 
-    sliced_data: npt.NDArray[np.int32] = data[start:stop]
+    sliced_data: npt.NDArray[np.float32] = data[start:stop]
     time_axis: list[dt.datetime] = [
         start_time + dt.timedelta(seconds=float(idx) / sample_rate_hz)
             for idx in range(start, stop)
@@ -94,7 +94,7 @@ class ModulationPowerSpectrum(tp.NamedTuple):
 
 
 def create_spectrogram(
-    signal:     npt.NDArray[np.int32],
+    signal:     npt.NDArray[np.float32],
     frequency:  float,
     frequency_resolution = 0.5,
     step:       tp.Optional[int] = None,
@@ -241,7 +241,7 @@ def resample_to_freq(signal: npt.NDArray, og_fs:float, target_fs:float):
     return resample(signal, target_len)
 
 def create_modulation_power_spectrum(
-    signal:    npt.NDArray[np.int32],
+    signal:    npt.NDArray[np.float32],
     frequency: float,
     normalize: bool = True
 ) -> ModulationPowerSpectrum:
@@ -322,7 +322,7 @@ def create_modulation_power_spectrum(
 
 
 def plot_spectrogram(
-    data: npt.NDArray[np.int32],
+    data: npt.NDArray[np.float32],
     i0:  int,
     i1:  int,
     start_timestamp_s: float,
@@ -332,14 +332,14 @@ def plot_spectrogram(
 ):
     """Visualize a time slice as a spectrogram and optionally save it to a PNG file."""
     # NOTE: data is a memoryview when called from JS, making sure its numpy
-    data = np.asarray(data, dtype=np.int32)
+    data = np.asarray(data, dtype=np.float32)
     start: int
     stop: int
     start, stop = _slice_bounds(i0, i1, data.size)
 
     start_time = dt.datetime.fromtimestamp(start_timestamp_s, tz=dt.timezone.utc)
 
-    sliced_data: npt.NDArray[np.int32] = data[start:stop]
+    sliced_data: npt.NDArray[np.float32] = data[start:stop]
 
 
     spec = create_spectrogram(sliced_data, sample_rate_hz)
@@ -368,7 +368,7 @@ def plot_spectrogram(
 
 
 def plot_modulation_power_spectrum(
-    data: npt.NDArray[np.int32],
+    data: npt.NDArray[np.float32],
     i0: int,
     i1: int,
     start_timestamp_s: float,
@@ -378,12 +378,12 @@ def plot_modulation_power_spectrum(
 ) -> None:
     '''Plot modulation power spectrum and optionally save it to a PNG file.'''
     _ = start_timestamp_s
-    data = np.asarray(data, dtype=np.int32)
+    data = np.asarray(data, dtype=np.float32)
     start: int
     stop: int
     start, stop = _slice_bounds(i0, i1, data.size)
 
-    sliced_data: npt.NDArray[np.int32] = data[start:stop]
+    sliced_data: npt.NDArray[np.float32] = data[start:stop]
     mps: ModulationPowerSpectrum = create_modulation_power_spectrum(
         sliced_data,
         sample_rate_hz,
@@ -414,7 +414,7 @@ def plot_modulation_power_spectrum(
 
 
 def prepare_obs_signal_for_audio(
-    signal: npt.NDArray[np.int32], 
+    signal: npt.NDArray[np.float32], 
     fs:     float,
     output_path: tp.Optional[str] = None
 ) -> npt.NDArray[np.float32]:
@@ -441,5 +441,4 @@ def prepare_obs_signal_for_audio(
     if output_path is not None:
         open(output_path, 'wb').write(interp_signal.tobytes())
     return interp_signal
-
 

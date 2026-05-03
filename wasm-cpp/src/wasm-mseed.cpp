@@ -39,8 +39,8 @@ int32_t read_mseed(
 
     // optional outputs
     // buffer for waveform samples, can be null
-    int32_t*   samplebuffer,
-    // size of samplebuffer in number of samples (i.e. x0.25 bytes)
+    float*     samplebuffer,
+    // size of samplebuffer in number of samples (i.e. x4 bytes)
     int32_t    samplebuffersize
 ) {
     const bool metadata_only = (samplebuffer == nullptr || samplebuffersize == 0);
@@ -111,19 +111,29 @@ int32_t read_mseed(
 
 
     if(!metadata_only) {
-        if(trace->first->sampletype != 'i')
-            return SAMPLETYPE_NOT_IMPLEMENTED;
+        const MS3TraceSeg* segment = trace->first;
+        int64_t n_samples = samplebuffersize;
+        if(n_samples > segment->samplecnt)
+            n_samples = segment->samplecnt;
 
-        std::memcpy(
-            samplebuffer, 
-            trace->first->datasamples, 
-            samplebuffersize * sizeof(*samplebuffer)
-        );
+        if(segment->sampletype == 'i') {
+            const int32_t* src = static_cast<const int32_t*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = static_cast<float>(src[i]);
+        } else if(segment->sampletype == 'f') {
+            const float* src = static_cast<const float*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = src[i];
+        } else if(segment->sampletype == 'd') {
+            const double* src = static_cast<const double*>(segment->datasamples);
+            for(int64_t i = 0; i < n_samples; i++)
+                samplebuffer[i] = static_cast<float>(src[i]);
+        } else {
+            return SAMPLETYPE_NOT_IMPLEMENTED;
+        }
     }
 
     return OK;
 }
 
 } // extern "C"
-
-

@@ -31,7 +31,7 @@ Deno.test( "pyodide-main-thread", async (t:Deno.TestContext) => {
     })
 
     await t.step("run_maplotlib_plot", async () => {
-        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
+        const data = new Float32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
         const pngfile:File|Error = 
             await pyo.plot_data( data, 2, 6, new Date(Date.now()), 2.5, 'TESTDATA' );
         
@@ -62,7 +62,7 @@ Deno.test("pyodide-in-worker", async (t:Deno.TestContext) => {
     assert(!(pyo instanceof Error))
 
     await t.step("run_maplotlib_plot", async () => {
-        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
+        const data = new Float32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
         const promise:Promise<File|Error> = 
             pyo.plot_data( data, 2, 6, new Date(Date.now()), 2.5, 'TESTDATA' );
         const pngfile:Error|File = await with_timeout(promise, 20000); 
@@ -79,7 +79,7 @@ Deno.test("pyodide-prepare-audio-in-worker", async (t:Deno.TestContext) => {
     assert(!(pyo instanceof Error))
 
     await t.step("prepare_audio", async () => {
-        const data = new Int32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
+        const data = new Float32Array([0,10,30,10,20,30,25,25,26,22,10,10,9])
         const promise:Promise<Float32Array|Error> = 
             pyo.prepare_obs_signal_for_audio( data, 8 );
         const result:Float32Array|Error = await with_timeout(promise, 20000); 
@@ -89,4 +89,3 @@ Deno.test("pyodide-prepare-audio-in-worker", async (t:Deno.TestContext) => {
         assert( result.length >= (data.length * 1000 / 8) )
     })
 })
-
